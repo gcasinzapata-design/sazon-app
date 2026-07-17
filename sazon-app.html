@@ -423,28 +423,21 @@ async function requestOTP(){
   btn.textContent = 'Enviando código...';
 
   try {
-    // Validar antes que el email esté en la tabla users
-    // Nota: Sin sesión, RLS bloquea SELECT. Usamos RPC pública o intentamos OTP directo.
-    // Supabase Auth OTP: si el email no existe, crea usuario automáticamente.
-    // Para restringir a whitelist, validamos DESPUÉS del login contra tabla users.
+    // Estrategia: permitimos que Supabase envíe OTP a cualquier email.
+    // La whitelist REAL se valida DESPUÉS del login contra la tabla users.
+    // Si el email no está en users, hacemos logout y mostramos unauth.
+    // Esto es más robusto que depender de shouldCreateUser: false.
 
     const { error } = await APP.supabase.auth.signInWithOtp({
       email,
       options: {
-        shouldCreateUser: false,  // NO crear usuarios nuevos automáticamente
+        shouldCreateUser: true,  // permite que Supabase acepte cualquier email
       }
     });
 
     if(error) {
-      // Si el error es "signup disabled" o similar, el email no está registrado
-      if(/signup|not.*allowed|not.*found/i.test(error.message)) {
-        // Mostrar unauth
-        const waMsg = encodeURIComponent(`Hola, quiero contratar el servicio de Sazón Growth Partner. Mi correo es ${email}.`);
-        $('waContactBtn').href = `https://wa.me/${CFG.contact.whatsapp.replace(/[^0-9]/g,'')}?text=${waMsg}`;
-        showAuthStep('unauth');
-      } else {
-        authMsg('authMsgEmail', 'Error: ' + error.message, 'err');
-      }
+      // Errores reales (rate limit, red, etc)
+      authMsg('authMsgEmail', 'Error: ' + error.message, 'err');
       return;
     }
 
@@ -512,9 +505,13 @@ async function loadUserProfile(){
       .single();
 
     if(userErr || !userData) {
-      // Usuario en auth pero no en tabla users → no autorizado
+      // Usuario en auth pero no en tabla users → no autorizado (whitelist real)
       await APP.supabase.auth.signOut();
-      showLoginError('Tu cuenta no está registrada en el sistema. Contacta a Sazón.');
+      const waMsg = encodeURIComponent(`Hola, quiero contratar el servicio de Sazón Growth Partner. Mi correo es ${APP.session.user.email}.`);
+      $('waContactBtn').href = `https://wa.me/${CFG.contact.whatsapp.replace(/[^0-9]/g,'')}?text=${waMsg}`;
+      show('authOverlay', true);
+      showAuthStep('unauth');
+      $('bootScreen').style.display = 'none';
       return;
     }
 
