@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sazón · Growth Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- Supabase JS SDK v2 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Sazón config -->
+<script src="./sazon-config.js"></script>
+
+<style>
+:root{
+  --r:#C8392B; --rlit:rgba(200,57,43,.08);
+  --d:#0F0F0D; --dlit:rgba(15,15,13,.06);
+  --c:#F5F0E8; --w:#EDE4CE;
+  --g:#C8A045; --glit:rgba(200,160,69,.1);
+  --gr:#2D6A4F; --grlit:rgba(45,106,79,.08);
+  --t:#1A1814; --m:#6B6560;
+  --l:rgba(26,24,20,.1); --bg:#E8E4DA;
+  --rad:3px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--t);font-size:14px;line-height:1.5;}
+
+/* ── LOADING SCREEN (aparece antes que auth se resuelva) ─────────── */
+.boot-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.boot-logo{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--t);}
+.boot-logo span{color:var(--r);}
+.boot-spinner{width:38px;height:38px;border:3px solid var(--l);border-top-color:var(--r);border-radius:50%;animation:spin 1s linear infinite;}
+.boot-status{font-size:.75rem;color:var(--m);}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── AUTH SCREEN ────────────────────────────────────────────────── */
+.auth-overlay{position:fixed;inset:0;background:var(--bg);z-index:900;display:none;align-items:center;justify-content:center;padding:20px;}
+.auth-overlay.on{display:flex;}
+.auth-box{background:var(--c);border:1px solid var(--l);border-radius:4px;width:100%;max-width:400px;overflow:hidden;}
+.auth-head{background:var(--d);padding:24px 28px;text-align:center;}
+.auth-logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:#fff;margin-bottom:4px;}
+.auth-logo span{color:var(--r);}
+.auth-tag{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:2.5px;color:rgba(255,255,255,.4);}
+.auth-body{padding:28px;}
+.auth-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;margin-bottom:5px;text-align:center;}
+.auth-sub{font-size:.75rem;color:var(--m);text-align:center;margin-bottom:18px;line-height:1.5;}
+.auth-input{width:100%;padding:11px 14px;border:1px solid var(--l);border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:.85rem;background:#fff;color:var(--t);margin-bottom:10px;}
+.auth-input:focus{outline:none;border-color:var(--r);}
+.auth-input.otp{font-family:'DM Mono',monospace;font-size:1.4rem;letter-spacing:8px;text-align:center;padding:11px 6px;font-weight:700;}
+.auth-btn{width:100%;padding:11px;background:var(--r);color:#fff;border:none;border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1.2px;}
+.auth-btn:hover{background:#a82d22;}
+.auth-btn:disabled{background:var(--m);cursor:default;}
+.auth-link{display:block;text-align:center;margin-top:10px;font-size:.7rem;color:var(--m);cursor:pointer;}
+.auth-link:hover{color:var(--r);text-decoration:underline;}
+.auth-msg{padding:9px 11px;border-radius:var(--rad);font-size:.7rem;margin-bottom:12px;display:none;line-height:1.5;}
+.auth-msg.err{background:rgba(200,57,43,.08);color:var(--r);border:1px solid rgba(200,57,43,.2);display:block;}
+.auth-msg.ok{background:var(--grlit);color:var(--gr);border:1px solid rgba(45,106,79,.2);display:block;}
+.auth-meta{font-size:.6rem;color:var(--m);text-align:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--l);}
+
+/* Unauthorized modal */
+.unauth-box{max-width:440px;}
+.unauth-icon{width:54px;height:54px;border-radius:50%;background:var(--rlit);display:flex;align-items:center;justify-content:center;font-size:1.7rem;margin:0 auto 14px;}
+.unauth-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:900;text-align:center;margin-bottom:8px;}
+.unauth-msg{font-size:.78rem;color:var(--m);text-align:center;line-height:1.55;margin-bottom:16px;}
+.wa-btn{display:block;width:100%;padding:12px;background:#25D366;color:#fff;border:none;border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px;text-align:center;text-decoration:none;}
+.wa-btn:hover{background:#1ea954;}
+
+/* Suspended modal */
+.suspended-box{max-width:480px;}
+.suspended-icon{width:60px;height:60px;border-radius:50%;background:rgba(200,57,43,.12);display:flex;align-items:center;justify-content:center;font-size:1.9rem;margin:0 auto 14px;}
+
+/* ── SUBSCRIPTION BANNER (mensajes de estado de pago) ──────────── */
+.sub-banner{padding:9px 24px;font-size:.72rem;font-weight:500;text-align:center;line-height:1.5;position:sticky;top:0;z-index:150;display:none;}
+.sub-banner.on{display:block;}
+.sub-banner.trial   {background:rgba(45,106,79,.12);  color:var(--gr);   border-bottom:1px solid rgba(45,106,79,.25);}
+.sub-banner.grace   {background:rgba(200,160,69,.15); color:#6b4800;     border-bottom:1px solid rgba(200,160,69,.4);}
+.sub-banner.past_due{background:rgba(200,57,43,.10);  color:var(--r);    border-bottom:1px solid rgba(200,57,43,.3);}
+.sub-banner strong{font-weight:700;}
+.sub-banner a{color:inherit;text-decoration:underline;font-weight:700;margin-left:6px;}
+
+/* ── NAV ────────────────────────────────────────────────────────── */
+.nav{background:var(--d);padding:0 24px;height:46px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1rem;font-weight:900;color:#fff;display:flex;align-items:center;gap:10px;}
+.nav-logo span{color:var(--r);}
+.nav-tag{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,.25);}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.nav-user{font-size:.68rem;color:rgba(255,255,255,.5);padding:3px 10px;background:rgba(255,255,255,.05);border-radius:100px;}
+.nav-brand{font-size:.68rem;font-weight:600;padding:3px 10px;background:var(--rlit);color:var(--r);border-radius:100px;border:1px solid rgba(200,57,43,.2);}
+.nav-plan{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;padding:2px 8px;border-radius:100px;background:var(--glit);color:#6b4800;}
+.btn{padding:6px 14px;border:none;border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:.7rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.8px;transition:all .15s;}
+.btn-ghost{background:rgba(255,255,255,.07);color:rgba(255,255,255,.55);}
+.btn-ghost:hover{background:rgba(255,255,255,.12);color:#fff;}
+.btn-red{background:var(--r);color:#fff;}
+.btn-red:hover{background:#a82d22;}
+.btn-sm{padding:5px 11px;font-size:.65rem;}
+
+/* ── TAB BAR con candados ──────────────────────────────────────── */
+.tab-bar{background:var(--d);display:flex;overflow-x:auto;border-bottom:2px solid rgba(255,255,255,.05);scrollbar-width:none;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab-group{display:flex;padding:0 6px;}
+.tab-sep{width:1px;background:rgba(255,255,255,.08);margin:8px 2px;flex-shrink:0;}
+.tab{display:flex;align-items:center;gap:5px;padding:10px 12px;cursor:pointer;color:rgba(255,255,255,.38);font-size:.7rem;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .15s;flex-shrink:0;}
+.tab:hover{color:rgba(255,255,255,.7);}
+.tab.active{color:#fff;border-bottom-color:var(--r);}
+.tab-ico{font-size:.8rem;}
+.tab-locked{opacity:.4;cursor:pointer;position:relative;}
+.tab-locked:hover{opacity:.65;color:rgba(255,255,255,.55);}
+.tab-locked .lock-ico{font-size:.65rem;}
+
+/* Upgrade modal */
+.upgrade-modal{position:fixed;inset:0;background:rgba(15,15,13,.75);z-index:800;display:none;align-items:center;justify-content:center;padding:20px;}
+.upgrade-modal.on{display:flex;}
+.upgrade-box{background:var(--c);border-radius:4px;max-width:520px;width:100%;overflow:hidden;}
+.upgrade-head{background:linear-gradient(135deg,var(--r),#a82d22);padding:20px 24px;color:#fff;text-align:center;}
+.upgrade-icon{font-size:2.2rem;margin-bottom:6px;}
+.upgrade-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;margin-bottom:4px;}
+.upgrade-tab{font-size:.7rem;opacity:.9;}
+.upgrade-body{padding:22px 26px;}
+.upgrade-body p{font-size:.78rem;color:var(--m);line-height:1.6;margin-bottom:14px;}
+.upgrade-body strong{color:var(--t);}
+.upgrade-benefits{background:var(--w);padding:14px 16px;border-radius:var(--rad);margin-bottom:16px;font-size:.72rem;line-height:1.65;}
+.upgrade-benefit{display:flex;align-items:flex-start;gap:6px;padding:2px 0;}
+.upgrade-benefit:before{content:"✓";color:var(--gr);font-weight:bold;flex-shrink:0;}
+.upgrade-actions{display:flex;gap:8px;}
+.upgrade-actions button{flex:1;padding:11px;border:none;border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px;}
+.upgrade-actions .btn-close{background:rgba(15,15,13,.06);color:var(--m);}
+.upgrade-actions .btn-contact{background:#25D366;color:#fff;}
+
+/* ── CONTENT ───────────────────────────────────────────────────── */
+.app-content{display:none;}
+.app-content.on{display:block;}
+.app-panel{padding:24px;}
+.welcome-empty{max-width:520px;margin:40px auto;text-align:center;padding:30px;}
+.welcome-empty h2{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;margin-bottom:10px;}
+.welcome-empty p{color:var(--m);font-size:.85rem;line-height:1.6;margin-bottom:20px;}
+
+/* Analysis list */
+.analyses-list{max-width:900px;margin:0 auto;padding:20px 0;}
+.analysis-card{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);padding:14px 18px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:14px;}
+.analysis-info{flex:1;}
+.analysis-name{font-weight:700;font-size:.9rem;margin-bottom:3px;}
+.analysis-meta{font-size:.7rem;color:var(--m);}
+.analysis-actions{display:flex;gap:6px;}
+
+/* Placeholder */
+.stub-panel{max-width:640px;margin:60px auto;text-align:center;padding:40px 24px;background:var(--c);border:1px solid var(--l);border-radius:4px;}
+.stub-panel h2{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;margin-bottom:10px;}
+.stub-panel p{color:var(--m);font-size:.85rem;line-height:1.6;margin-bottom:14px;}
+.stub-status{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--gr);background:var(--grlit);display:inline-block;padding:5px 12px;border-radius:100px;}
+</style>
+</head>
+<body>
+
+<!-- ═══ BOOT SCREEN (mientras carga Supabase) ══════════════════ -->
+<div class="boot-screen" id="bootScreen">
+  <div class="boot-logo">Sazón<span>.</span></div>
+  <div class="boot-spinner"></div>
+  <div class="boot-status" id="bootStatus">Iniciando...</div>
+</div>
+
+<!-- ═══ AUTH OVERLAY ═══════════════════════════════════════════ -->
+<div class="auth-overlay" id="authOverlay">
+  <!-- Email step -->
+  <div class="auth-box" id="authEmailStep">
+    <div class="auth-head">
+      <div class="auth-logo">Sazón<span>.</span></div>
+      <div class="auth-tag">Growth Engine</div>
+    </div>
+    <div class="auth-body">
+      <div class="auth-title">Ingresa a tu cuenta</div>
+      <div class="auth-sub">Te enviaremos un código de acceso a tu correo</div>
+      <div class="auth-msg" id="authMsgEmail"></div>
+      <input type="email" id="authEmail" class="auth-input" placeholder="tu@correo.com" autocomplete="email">
+      <button class="auth-btn" id="authEmailBtn">Continuar</button>
+      <div class="auth-meta">Acceso solo para clientes activos · Servicio de Sazón Growth Partner</div>
+    </div>
+  </div>
+
+  <!-- OTP step -->
+  <div class="auth-box" id="authOtpStep" style="display:none">
+    <div class="auth-head">
+      <div class="auth-logo">Sazón<span>.</span></div>
+      <div class="auth-tag">Growth Engine</div>
+    </div>
+    <div class="auth-body">
+      <div class="auth-title">Código enviado</div>
+      <div class="auth-sub">Revisa tu correo <strong id="authEmailDisplay"></strong></div>
+      <div class="auth-msg" id="authMsgOtp"></div>
+      <input type="text" id="authOtp" class="auth-input otp" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+      <button class="auth-btn" id="authOtpBtn">Verificar y entrar</button>
+      <a class="auth-link" id="authBackLink">← Usar otro correo</a>
+    </div>
+  </div>
+
+  <!-- Unauthorized -->
+  <div class="auth-box unauth-box" id="authUnauthStep" style="display:none">
+    <div class="auth-body" style="padding:32px 28px">
+      <div class="unauth-icon">🔒</div>
+      <div class="unauth-title">Acceso no autorizado</div>
+      <div class="unauth-msg">El correo que ingresaste no está registrado como cliente activo. Contacta a Sazón para contratar el servicio y obtener acceso al Growth Engine.</div>
+      <a class="wa-btn" id="waContactBtn" target="_blank" rel="noopener">💬 Contactar por WhatsApp</a>
+      <a class="auth-link" id="authBackLink2">← Usar otro correo</a>
+    </div>
+  </div>
+
+  <!-- Suspended -->
+  <div class="auth-box suspended-box" id="authSuspendedStep" style="display:none">
+    <div class="auth-body" style="padding:32px 28px">
+      <div class="suspended-icon">⚠️</div>
+      <div class="unauth-title">Cuenta suspendida</div>
+      <div class="unauth-msg" id="suspendedMsg">Tu suscripción no está al día. Regulariza tu pago para reactivar el acceso a la herramienta.</div>
+      <a class="wa-btn" id="waPaymentBtn" target="_blank" rel="noopener">💬 Regularizar pago por WhatsApp</a>
+      <a class="auth-link" id="authBackLink3">← Cerrar sesión</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SUBSCRIPTION BANNER ═══════════════════════════════════════ -->
+<div class="sub-banner" id="subBanner"></div>
+
+<!-- ═══ MAIN APP (oculto hasta que auth resuelva) ═════════════════ -->
+<div class="app-content" id="appContent">
+
+  <nav class="nav">
+    <div class="nav-logo">
+      Sazón<span>.</span>
+      <span class="nav-tag">Growth Engine</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-brand" id="navBrand">—</span>
+      <span class="nav-plan" id="navPlan">—</span>
+      <span class="nav-user" id="navUser">—</span>
+      <button class="btn btn-ghost btn-sm" id="btnLogout" title="Cerrar sesión">⎋ Salir</button>
+    </div>
+  </nav>
+
+  <div class="tab-bar" id="tabBar">
+    <!-- Tabs se renderizan dinámicamente según tier del usuario -->
+  </div>
+
+  <div class="app-panel" id="appPanel">
+    <div class="welcome-empty" id="welcomeEmpty">
+      <h2>Bienvenido a Sazón Growth Engine</h2>
+      <p>Aquí analizarás el desempeño de tu marca en las plataformas de delivery. Este es el <strong>Sprint 1</strong> del rebuild SaaS — auth, tiers y persistencia ya funcionan. Los módulos del motor se integrarán en el Sprint 2.</p>
+      <p style="font-size:.72rem">Usuario: <strong id="wUser">—</strong><br>Marca: <strong id="wBrand">—</strong><br>Plan: <strong id="wPlan">—</strong><br>Estado: <strong id="wStatus">—</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ UPGRADE MODAL ═══════════════════════════════════════════ -->
+<div class="upgrade-modal" id="upgradeModal">
+  <div class="upgrade-box">
+    <div class="upgrade-head">
+      <div class="upgrade-icon">🔒</div>
+      <div class="upgrade-title">Feature no disponible en tu plan</div>
+      <div class="upgrade-tab" id="upgradeTabName">—</div>
+    </div>
+    <div class="upgrade-body">
+      <p id="upgradeMsg">Este módulo está disponible en el plan <strong id="upgradeTargetPlan">Growth</strong> y superiores.</p>
+      <div class="upgrade-benefits" id="upgradeBenefits"></div>
+      <div class="upgrade-actions">
+        <button class="btn-close" id="upgradeCloseBtn">Cerrar</button>
+        <button class="btn-contact" id="upgradeContactBtn">💬 Actualizar plan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SAZÓN GROWTH ENGINE — MAIN APP LOGIC
+//  Sprint 1: Auth + Tiers + Multi-tenancy
+// ═══════════════════════════════════════════════════════════════════════
+
+const CFG = window.SAZON_CONFIG;
+
+// Estado global de la app
+const APP = {
+  supabase: null,
+  session: null,
+  user: null,          // registro de tabla `users`
+  brand: null,         // registro de tabla `brands`
+  subscription: null,  // registro de tabla `subscriptions`
+  tier: null,          // config del tier actual (de CFG.tiers)
+  currentTab: null,
+};
+
+// ─── Helpers UI ──────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const show = (id, on = true) => { const el = $(id); if(el){ if(on) el.classList.add('on'); else el.classList.remove('on'); }};
+const setBoot = msg => { const el = $('bootStatus'); if(el) el.textContent = msg; };
+const authMsg = (targetId, msg, type) => {
+  const el = $(targetId);
+  if(!el) return;
+  el.textContent = msg;
+  el.className = 'auth-msg ' + (type||'');
+};
+const showAuthStep = (step) => {
+  ['authEmailStep', 'authOtpStep', 'authUnauthStep', 'authSuspendedStep'].forEach(id => {
+    const el = $(id);
+    if(el) el.style.display = 'none';
+  });
+  const target = $('auth' + step[0].toUpperCase() + step.slice(1) + 'Step');
+  if(target) target.style.display = 'block';
+};
+
+const TAB_META = {
+  dashboard:  { icon: '📊', label: 'Dashboard' },
+  patrones:   { icon: '⏰', label: 'Patrones' },
+  precios:    { icon: '💡', label: 'Precios' },
+  menu:       { icon: '🍽️', label: 'Menú' },
+  combos:     { icon: '🎯', label: 'Combos' },
+  promos:     { icon: '📣', label: 'Promos' },
+  adq:        { icon: '🚀', label: 'Adquisición' },
+  ticket:     { icon: '💰', label: 'Ticket' },
+  retencion:  { icon: '🔁', label: 'Retención' },
+  financiero: { icon: '💸', label: 'Financiero' },
+  roadmap:    { icon: '📋', label: 'Roadmap' },
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════════════
+
+async function boot(){
+  setBoot('Conectando con Supabase...');
+  try {
+    APP.supabase = window.supabase.createClient(
+      CFG.supabase.url,
+      CFG.supabase.anonKey,
+      { auth: { persistSession: true, autoRefreshToken: true } }
+    );
+  } catch(err) {
+    setBoot('Error de conexión: ' + err.message);
+    return;
+  }
+
+  setBoot('Verificando sesión...');
+  const { data: { session } } = await APP.supabase.auth.getSession();
+
+  if(session) {
+    // Ya hay sesión, cargar datos del usuario
+    APP.session = session;
+    await loadUserProfile();
+  } else {
+    // Sin sesión, mostrar login
+    showLogin();
+  }
+
+  // Listener para cambios de sesión (login, logout, refresh)
+  APP.supabase.auth.onAuthStateChange((event, session) => {
+    if(event === 'SIGNED_OUT') {
+      location.reload();
+    }
+  });
+
+  bindAuthUI();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  AUTH FLOW
+// ═══════════════════════════════════════════════════════════════════════
+
+function showLogin(){
+  $('bootScreen').style.display = 'none';
+  show('authOverlay', true);
+  showAuthStep('email');
+  setTimeout(() => $('authEmail').focus(), 100);
+}
+
+function bindAuthUI(){
+  $('authEmailBtn').addEventListener('click', requestOTP);
+  $('authOtpBtn').addEventListener('click', verifyOTP);
+  $('authBackLink').addEventListener('click', resetAuthFlow);
+  $('authBackLink2').addEventListener('click', resetAuthFlow);
+  $('authBackLink3').addEventListener('click', async () => {
+    await APP.supabase.auth.signOut();
+    location.reload();
+  });
+  $('btnLogout').addEventListener('click', async () => {
+    if(!confirm('¿Cerrar sesión?')) return;
+    await APP.supabase.auth.signOut();
+    location.reload();
+  });
+
+  $('authEmail').addEventListener('keypress', e => { if(e.key==='Enter') requestOTP(); });
+  $('authOtp').addEventListener('keypress', e => { if(e.key==='Enter') verifyOTP(); });
+  $('authOtp').addEventListener('input', e => {
+    e.target.value = e.target.value.replace(/[^0-9]/g,'').slice(0,6);
+  });
+
+  // Upgrade modal
+  $('upgradeCloseBtn').addEventListener('click', () => show('upgradeModal', false));
+  $('upgradeContactBtn').addEventListener('click', () => {
+    const targetPlan = $('upgradeTargetPlan').textContent;
+    const msg = encodeURIComponent(`Hola, quiero actualizar a plan ${targetPlan} de Sazón Growth Engine.`);
+    window.open(`https://wa.me/${CFG.contact.whatsapp.replace(/[^0-9]/g,'')}?text=${msg}`, '_blank');
+  });
+}
+
+function resetAuthFlow(){
+  showAuthStep('email');
+  $('authEmail').value = '';
+  $('authOtp').value = '';
+  authMsg('authMsgEmail', '', '');
+  authMsg('authMsgOtp', '', '');
+  setTimeout(() => $('authEmail').focus(), 50);
+}
+
+async function requestOTP(){
+  const email = ($('authEmail').value || '').trim().toLowerCase();
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    authMsg('authMsgEmail', 'Ingresa un correo válido.', 'err');
+    return;
+  }
+
+  const btn = $('authEmailBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando código...';
+
+  try {
+    // Validar antes que el email esté en la tabla users
+    // Nota: Sin sesión, RLS bloquea SELECT. Usamos RPC pública o intentamos OTP directo.
+    // Supabase Auth OTP: si el email no existe, crea usuario automáticamente.
+    // Para restringir a whitelist, validamos DESPUÉS del login contra tabla users.
+
+    const { error } = await APP.supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,  // NO crear usuarios nuevos automáticamente
+      }
+    });
+
+    if(error) {
+      // Si el error es "signup disabled" o similar, el email no está registrado
+      if(/signup|not.*allowed|not.*found/i.test(error.message)) {
+        // Mostrar unauth
+        const waMsg = encodeURIComponent(`Hola, quiero contratar el servicio de Sazón Growth Partner. Mi correo es ${email}.`);
+        $('waContactBtn').href = `https://wa.me/${CFG.contact.whatsapp.replace(/[^0-9]/g,'')}?text=${waMsg}`;
+        showAuthStep('unauth');
+      } else {
+        authMsg('authMsgEmail', 'Error: ' + error.message, 'err');
+      }
+      return;
+    }
+
+    APP.pendingEmail = email;
+    $('authEmailDisplay').textContent = email;
+    showAuthStep('otp');
+    setTimeout(() => $('authOtp').focus(), 50);
+  } catch(err) {
+    authMsg('authMsgEmail', 'Error: ' + err.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Continuar';
+  }
+}
+
+async function verifyOTP(){
+  const code = ($('authOtp').value || '').trim();
+  if(code.length !== 6) {
+    authMsg('authMsgOtp', 'El código debe tener 6 dígitos.', 'err');
+    return;
+  }
+
+  const btn = $('authOtpBtn');
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+
+  try {
+    const { data, error } = await APP.supabase.auth.verifyOtp({
+      email: APP.pendingEmail,
+      token: code,
+      type: 'email',
+    });
+
+    if(error) {
+      authMsg('authMsgOtp', 'Código incorrecto o expirado.', 'err');
+      return;
+    }
+
+    APP.session = data.session;
+    // Cargar perfil y renderizar app
+    await loadUserProfile();
+  } catch(err) {
+    authMsg('authMsgOtp', 'Error: ' + err.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Verificar y entrar';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  USER PROFILE + BRAND + SUBSCRIPTION
+// ═══════════════════════════════════════════════════════════════════════
+
+async function loadUserProfile(){
+  setBoot('Cargando tu perfil...');
+  $('bootScreen').style.display = 'flex';
+  show('authOverlay', false);
+
+  try {
+    // 1. Get user record
+    const { data: userData, error: userErr } = await APP.supabase
+      .from('users')
+      .select('*')
+      .eq('id', APP.session.user.id)
+      .single();
+
+    if(userErr || !userData) {
+      // Usuario en auth pero no en tabla users → no autorizado
+      await APP.supabase.auth.signOut();
+      showLoginError('Tu cuenta no está registrada en el sistema. Contacta a Sazón.');
+      return;
+    }
+
+    APP.user = userData;
+
+    // Update last_login
+    await APP.supabase
+      .from('users')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', APP.user.id);
+
+    // 2. Si es sazon_admin, no tiene marca — modo especial
+    if(APP.user.role === 'sazon_admin') {
+      await renderAdminMode();
+      return;
+    }
+
+    // 3. Get brand
+    if(!APP.user.brand_id) {
+      showLoginError('Tu usuario no está asignado a ninguna marca. Contacta a Sazón.');
+      return;
+    }
+
+    const { data: brandData, error: brandErr } = await APP.supabase
+      .from('brands')
+      .select('*')
+      .eq('id', APP.user.brand_id)
+      .single();
+
+    if(brandErr || !brandData) {
+      showLoginError('No se pudo cargar la marca. Contacta a Sazón.');
+      return;
+    }
+
+    APP.brand = brandData;
+
+    // 4. Get subscription
+    const { data: subData, error: subErr } = await APP.supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('brand_id', APP.brand.id)
+      .single();
+
+    if(subErr || !subData) {
+      showLoginError('No se encontró suscripción activa para tu marca. Contacta a Sazón.');
+      return;
+    }
+
+    APP.subscription = subData;
+    APP.tier = CFG.tiers[subData.plan];
+
+    // 5. Verificar acceso según status
+    const behavior = CFG.subscriptionBehavior[subData.status];
+    if(behavior.access === 'blocked') {
+      showSuspended(subData.status);
+      return;
+    }
+
+    // 6. Render app!
+    renderApp();
+  } catch(err) {
+    console.error('loadUserProfile error:', err);
+    showLoginError('Error al cargar tu perfil: ' + err.message);
+  }
+}
+
+async function renderAdminMode(){
+  $('bootScreen').style.display = 'none';
+  show('appContent', true);
+  $('navUser').textContent = APP.user.email;
+  $('navBrand').textContent = '🛠 Modo Admin';
+  $('navPlan').textContent = 'SAZÓN';
+  $('navPlan').style.background = 'rgba(45,106,79,.15)';
+  $('navPlan').style.color = 'var(--gr)';
+
+  $('welcomeEmpty').innerHTML = `
+    <h2>Modo Administrador Sazón</h2>
+    <p>Estás autenticado como admin. En el Sprint 2 tendrás el panel de gestión de marcas, usuarios y suscripciones aquí.</p>
+    <p style="font-size:.72rem">Por ahora puedes verificar el estado del sistema y las marcas desde el <a href="https://supabase.com/dashboard/project/qetiugzeqyhicgwxxxvv" target="_blank" style="color:var(--r)">dashboard de Supabase</a>.</p>
+  `;
+  $('tabBar').innerHTML = '';
+}
+
+function showLoginError(msg){
+  $('bootScreen').style.display = 'none';
+  show('authOverlay', true);
+  showAuthStep('email');
+  authMsg('authMsgEmail', msg, 'err');
+}
+
+function showSuspended(status){
+  $('bootScreen').style.display = 'none';
+  show('authOverlay', true);
+  showAuthStep('suspended');
+  const messages = {
+    suspended: 'Tu suscripción está suspendida por falta de pago (más de 7 días de mora). Regulariza tu pago para reactivar el acceso.',
+    cancelled: 'Tu suscripción fue cancelada. Contáctanos si deseas reactivarla.',
+  };
+  $('suspendedMsg').textContent = messages[status] || messages.suspended;
+  const brandName = APP.brand?.name || 'mi cuenta';
+  const msg = encodeURIComponent(`Hola, necesito regularizar el pago de mi suscripción de Sazón (${brandName}).`);
+  $('waPaymentBtn').href = `https://wa.me/${CFG.contact.whatsapp.replace(/[^0-9]/g,'')}?text=${msg}`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  RENDER APP con tiers
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderApp(){
+  $('bootScreen').style.display = 'none';
+  show('appContent', true);
+
+  // Nav
+  $('navUser').textContent = APP.user.email;
+  $('navBrand').textContent = APP.brand.name;
+  $('navPlan').textContent = APP.tier.label;
+
+  // Subscription banner según estado
+  renderSubBanner();
+
+  // Tab bar según tier
+  renderTabBar();
+
+  // Welcome
+  $('wUser').textContent = APP.user.email;
+  $('wBrand').textContent = APP.brand.name;
+  $('wPlan').textContent = APP.tier.label + ' — $' + APP.tier.priceUsd + ' USD/mes';
+  $('wStatus').textContent = APP.subscription.status;
+}
+
+function renderSubBanner(){
+  const status = APP.subscription.status;
+  const behavior = CFG.subscriptionBehavior[status];
+  const banner = $('subBanner');
+  const waNumber = CFG.contact.whatsapp.replace(/[^0-9]/g,'');
+
+  if(!behavior.banner) {
+    banner.className = 'sub-banner';
+    return;
+  }
+
+  const trialDaysLeft = APP.subscription.trial_ends_at
+    ? Math.max(0, Math.ceil((new Date(APP.subscription.trial_ends_at) - new Date()) / 86400000))
+    : null;
+
+  const messages = {
+    trial: trialDaysLeft !== null
+      ? `<strong>Modo trial:</strong> te quedan <strong>${trialDaysLeft} días</strong> gratis del plan ${APP.tier.label}. <a href="https://wa.me/${waNumber}?text=${encodeURIComponent('Hola, quiero activar mi suscripción a Sazón')}" target="_blank">Activa tu suscripción</a>`
+      : '<strong>Modo trial activo.</strong> Contacta a Sazón para activar tu plan.',
+    grace: `<strong>Tu pago está atrasado.</strong> Regulariza en las próximas 72h para evitar interrupción del servicio. <a href="https://wa.me/${waNumber}?text=${encodeURIComponent('Hola, quiero regularizar mi pago de Sazón')}" target="_blank">Actualizar método de pago</a>`,
+    past_due: `<strong>Cuenta en modo lectura.</strong> No puedes ejecutar análisis nuevos. <a href="https://wa.me/${waNumber}?text=${encodeURIComponent('Hola, quiero regularizar mi pago de Sazón')}" target="_blank">Regularizar pago</a>`,
+  };
+
+  banner.innerHTML = messages[behavior.banner] || '';
+  banner.className = 'sub-banner ' + behavior.banner + ' on';
+}
+
+function renderTabBar(){
+  const tabBar = $('tabBar');
+  const allowedTabs = new Set(APP.tier.tabs);
+  const groups = [
+    ['dashboard'],
+    ['patrones', 'precios'],
+    ['menu', 'combos', 'promos'],
+    ['adq', 'ticket', 'retencion'],
+    ['financiero', 'roadmap'],
+  ];
+  let html = '';
+  groups.forEach((group, gi) => {
+    if(gi > 0) html += '<div class="tab-sep"></div>';
+    html += '<div class="tab-group">';
+    group.forEach(tabId => {
+      const meta = TAB_META[tabId];
+      if(!meta) return;
+      const isAllowed = allowedTabs.has(tabId);
+      const lockedClass = isAllowed ? '' : ' tab-locked';
+      html += `<div class="tab${lockedClass}" data-tab="${tabId}">
+        <span class="tab-ico">${meta.icon}</span>${meta.label}
+        ${isAllowed ? '' : '<span class="lock-ico">🔒</span>'}
+      </div>`;
+    });
+    html += '</div>';
+  });
+  tabBar.innerHTML = html;
+
+  // Bind click events
+  tabBar.querySelectorAll('.tab').forEach(el => {
+    el.addEventListener('click', () => {
+      const tabId = el.dataset.tab;
+      if(el.classList.contains('tab-locked')) {
+        showUpgradeModal(tabId);
+      } else {
+        selectTab(tabId, el);
+      }
+    });
+  });
+
+  // Auto-select dashboard
+  const dashTab = tabBar.querySelector('[data-tab="dashboard"]');
+  if(dashTab && allowedTabs.has('dashboard')) selectTab('dashboard', dashTab);
+}
+
+function selectTab(tabId, el){
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  APP.currentTab = tabId;
+  renderTabContent(tabId);
+}
+
+function renderTabContent(tabId){
+  const meta = TAB_META[tabId];
+  $('appPanel').innerHTML = `
+    <div class="stub-panel">
+      <h2>${meta.icon} ${meta.label}</h2>
+      <p>Este módulo estará disponible en el <strong>Sprint 2</strong> del rebuild SaaS. La lógica del motor ya está probada y validada en el v1 — solo se integrará con Supabase para persistir análisis por marca.</p>
+      <span class="stub-status">Sprint 1 completado — Auth + Tiers ✓</span>
+    </div>
+  `;
+}
+
+function showUpgradeModal(tabId){
+  const meta = TAB_META[tabId];
+  // ¿En qué plan aparece este tab?
+  let targetPlan = null;
+  ['growth', 'partner', 'enterprise'].forEach(planKey => {
+    if(!targetPlan && CFG.tiers[planKey].tabs.includes(tabId)) {
+      targetPlan = planKey;
+    }
+  });
+  if(!targetPlan) targetPlan = 'partner';
+
+  const planCfg = CFG.tiers[targetPlan];
+  $('upgradeTabName').textContent = meta.icon + ' ' + meta.label;
+  $('upgradeTargetPlan').textContent = planCfg.label;
+  $('upgradeMsg').innerHTML = `El módulo <strong>${meta.label}</strong> está disponible en el plan <strong>${planCfg.label}</strong> y superiores.`;
+
+  const benefitsMap = {
+    growth: [
+      'Motor de precios dinámico por bloque × día × plataforma',
+      'Combos automáticos por co-ocurrencia estadística',
+      'Estrategia de promociones en 3 capas',
+      'Ticket development con producto específico',
+      'Análisis de retención y adquisición',
+      'Hasta 5 sucursales · Historial 6 meses',
+    ],
+    partner: [
+      'Todo lo de Growth',
+      'Roadmap 90 días automatizado',
+      'Multi-marca (hasta 3)',
+      'Sucursales ilimitadas',
+      'Historial 12 meses',
+      'Onboarding asistido',
+    ],
+    enterprise: [
+      'Todo lo de Partner',
+      'Growth Manager dedicado',
+      'Capacitación operativa al equipo',
+      'Marcas y sucursales ilimitadas',
+      'Historial 24 meses',
+      'Soporte prioritario 24/7',
+    ],
+  };
+  const benefits = benefitsMap[targetPlan] || [];
+  $('upgradeBenefits').innerHTML = benefits.map(b => `<div class="upgrade-benefit">${b}</div>`).join('');
+
+  show('upgradeModal', true);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════════════════════
+
+if(document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+</script>
+</body>
+</html>
