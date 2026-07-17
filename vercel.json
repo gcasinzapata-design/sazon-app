@@ -1,5 +1,4 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
@@ -12,7 +11,7 @@
       ]
     }
   ],
-  "rewrites": [
-    { "source": "/", "destination": "/sazon-app.html" }
+  "redirects": [
+    { "source": "/", "destination": "/sazon-app", "permanent": false }
   ]
 }
