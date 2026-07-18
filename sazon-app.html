@@ -148,6 +148,401 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--t);font-s
 .stub-panel h2{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;margin-bottom:10px;}
 .stub-panel p{color:var(--m);font-size:.85rem;line-height:1.6;margin-bottom:14px;}
 .stub-status{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--gr);background:var(--grlit);display:inline-block;padding:5px 12px;border-radius:100px;}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SPRINT 2 A.2.1 — CSS del motor v1 (paneles vacíos por ahora)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── REPORT LAYOUT ── */
+.rpt{display:none;}
+.acc-bar{height:3px;background:linear-gradient(90deg,var(--r),var(--g));}
+.panel{display:none;padding:22px 24px;max-width:1200px;margin:0 auto;}
+.panel.active{display:block;}
+.panel-coming{display:flex;align-items:center;justify-content:center;min-height:300px;flex-direction:column;gap:10px;color:var(--m);}
+.panel-coming-ico{font-size:2.5rem;}
+.panel-coming-ttl{font-size:.9rem;font-weight:600;}
+.panel-coming-sub{font-size:.75rem;}
+
+/* ── DASHBOARD COMPONENTS ── */
+.section-head{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--l);}
+.section-ico{width:34px;height:34px;border-radius:50%;background:var(--rlit);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.section-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:900;}
+.section-sub{font-size:.7rem;color:var(--m);}
+
+/* KPI grid */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+.kpi-card{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);padding:13px 15px;position:relative;overflow:hidden;}
+.kpi-card.primary{border-left:3px solid var(--r);}
+.kpi-card.positive{border-left:3px solid var(--gr);}
+.kpi-card.warning{border-left:3px solid var(--g);}
+.kpi-lbl{font-size:.57rem;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--m);margin-bottom:5px;}
+.kpi-val{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:900;line-height:1;margin-bottom:3px;}
+.kpi-sub{font-size:.65rem;color:var(--m);}
+.kpi-delta{font-size:.65rem;font-weight:700;display:inline-flex;align-items:center;gap:2px;}
+.kpi-delta.up{color:var(--gr);}
+.kpi-delta.dn{color:var(--r);}
+.kpi-delta.flat{color:var(--m);}
+.kpi-trend{position:absolute;bottom:0;right:0;width:80px;height:30px;}
+
+/* Charts 2-col */
+.chart-grid-2{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px;}
+.chart-grid-2e{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.chart-card{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);padding:14px 16px;}
+.chart-ttl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--m);margin-bottom:10px;}
+.chart-wrap{position:relative;}
+
+/* Period selector */
+.period-bar{display:flex;align-items:center;gap:6px;margin-bottom:16px;}
+.period-btn{padding:4px 12px;border:1px solid var(--l);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;background:#fff;color:var(--m);}
+.period-btn.active{background:var(--r);color:#fff;border-color:var(--r);}
+.period-info{font-size:.68rem;color:var(--m);margin-left:auto;}
+
+/* Platform filter */
+.plat-filter{display:flex;align-items:center;gap:6px;margin-bottom:14px;}
+.plat-chip{padding:4px 10px;border-radius:100px;font-size:.66rem;font-weight:700;cursor:pointer;border:1px solid var(--l);background:#fff;color:var(--m);}
+.plat-chip.active-all{background:var(--d);color:#fff;border-color:var(--d);}
+.plat-chip.active-rappi{background:#FF6900;color:#fff;border-color:#FF6900;}
+.plat-chip.active-peya{background:#0064C8;color:#fff;border-color:#0064C8;}
+
+/* Alert strip */
+.alert{display:flex;gap:10px;padding:11px 14px;border-radius:var(--rad);margin-bottom:10px;font-size:.75rem;line-height:1.6;}
+.alert.err{background:rgba(200,57,43,.06);border:1px solid rgba(200,57,43,.2);}
+.alert.warn{background:rgba(200,160,69,.07);border:1px solid rgba(200,160,69,.25);}
+.alert.ok{background:var(--grlit);border:1px solid rgba(45,106,79,.2);}
+.alert-ico{font-size:1rem;flex-shrink:0;margin-top:1px;}
+.alert-body strong{color:var(--r);}
+
+/* Platform comparison table */
+.plat-table{width:100%;border-collapse:collapse;font-size:.76rem;}
+.plat-table thead tr{background:var(--d);color:#fff;}
+.plat-table thead th{padding:8px 12px;text-align:left;font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;}
+.plat-table tbody tr{border-bottom:1px solid var(--l);}
+.plat-table tbody tr:hover{background:rgba(200,57,43,.02);}
+.plat-table tbody td{padding:9px 12px;}
+
+/* Export bar */
+.export-bar{background:var(--d);padding:10px 24px;display:flex;gap:8px;align-items:center;position:sticky;bottom:0;z-index:100;}
+.eb-lbl{font-size:.58rem;color:rgba(255,255,255,.25);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-right:4px;}
+
+/* Semaphore dots */
+.dot-red{width:8px;height:8px;border-radius:50%;background:var(--r);display:inline-block;}
+.dot-yel{width:8px;height:8px;border-radius:50%;background:var(--g);display:inline-block;}
+.dot-grn{width:8px;height:8px;border-radius:50%;background:var(--gr);display:inline-block;}
+
+
+
+
+
+
+
+/* ── ETAPA 7: ROADMAP + NARRATIVA ── */
+.roadmap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+.rm-phase{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);overflow:hidden;}
+.rm-head{padding:14px 16px;color:#fff;}
+.rm-head.p1{background:linear-gradient(135deg,var(--r),#a82d22);}
+.rm-head.p2{background:linear-gradient(135deg,var(--g),#a87f30);}
+.rm-head.p3{background:linear-gradient(135deg,var(--gr),#1d4a35);}
+.rm-h-num{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;opacity:.7;margin-bottom:2px;}
+.rm-h-ttl{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:900;line-height:1.1;margin-bottom:3px;}
+.rm-h-sub{font-size:.66rem;opacity:.9;}
+.rm-body{padding:12px 16px;}
+.rm-goal{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.6px;color:var(--m);margin-bottom:5px;}
+.rm-goal-v{font-size:.78rem;line-height:1.5;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--l);}
+.rm-action{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--l);font-size:.7rem;line-height:1.5;}
+.rm-action:last-child{border-bottom:none;}
+.rm-act-n{width:18px;height:18px;border-radius:50%;background:var(--w);color:var(--m);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.62rem;flex-shrink:0;margin-top:1px;}
+.rm-act-t{flex:1;}
+.rm-act-t strong{display:block;color:var(--t);margin-bottom:1px;}
+.rm-act-t span{color:var(--m);font-size:.66rem;}
+.rm-tab{font-size:.55rem;font-weight:700;padding:1px 6px;border-radius:100px;background:rgba(15,15,13,.06);color:var(--m);margin-left:4px;text-transform:uppercase;letter-spacing:1px;}
+/* Narrative */
+.narrative-card{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);padding:18px 22px;margin-bottom:14px;}
+.narrative-card h3{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:900;margin-bottom:5px;display:flex;align-items:center;gap:8px;}
+.narrative-card h4{font-family:'Playfair Display',serif;font-size:.88rem;font-weight:900;margin:14px 0 5px 0;color:var(--r);}
+.narrative-card p{font-size:.8rem;line-height:1.7;color:var(--t);margin-bottom:8px;}
+.narrative-card p:last-child{margin-bottom:0;}
+.narrative-card strong{font-weight:700;}
+.narrative-card .narr-bullet{display:flex;gap:10px;font-size:.78rem;line-height:1.65;padding:5px 0;}
+.narrative-card .narr-bullet:before{content:"›";font-weight:700;color:var(--r);flex-shrink:0;font-size:.95rem;}
+.narrative-meta{font-size:.65rem;color:var(--m);font-style:italic;margin-top:14px;padding-top:10px;border-top:1px solid var(--l);}
+.exec-summary{background:var(--d);color:#fff;padding:20px 24px;border-radius:var(--rad);margin-bottom:14px;}
+.exec-summary h3{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;margin-bottom:5px;color:#fff;display:flex;align-items:center;gap:8px;}
+.exec-summary .ex-sub{font-size:.7rem;color:rgba(255,255,255,.55);margin-bottom:14px;}
+.exec-summary .ex-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;}
+.exec-summary .ex-stat-lbl{font-size:.54rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.5);margin-bottom:3px;}
+.exec-summary .ex-stat-v{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;line-height:1;}
+.exec-summary .ex-stat-d{font-size:.62rem;color:rgba(255,255,255,.65);margin-top:2px;}
+.exec-summary p{font-size:.78rem;line-height:1.7;color:rgba(255,255,255,.85);margin-bottom:6px;}
+.exec-summary p strong{color:#fff;}
+
+/* ── ETAPA 6: FINANCIERO COMPACTO + KPI TRACKER ── */
+.fin-numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.fin-card{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);padding:13px 16px;position:relative;}
+.fin-card.gmv{border-left:3px solid var(--r);}
+.fin-card.fee{border-left:3px solid var(--g);}
+.fin-card.ads{border-left:3px solid #C77CE4;}
+.fin-card.net{border-left:3px solid var(--gr);}
+.fin-lbl{font-size:.57rem;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--m);margin-bottom:5px;}
+.fin-val{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;line-height:1;margin-bottom:3px;}
+.fin-sub{font-size:.66rem;color:var(--m);}
+.fin-sub strong{color:var(--t);}
+/* KPI tracker */
+.kpi-tracker{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);padding:16px 18px;margin-bottom:14px;}
+.kt-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--l);}
+.kt-title{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:900;flex:1;}
+.kt-form{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:8px;align-items:end;margin-bottom:14px;padding:12px;background:var(--w);border-radius:var(--rad);}
+.kt-form label{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:1.6px;color:var(--m);display:block;margin-bottom:3px;}
+.kt-form input,.kt-form select{padding:6px 9px;border:1px solid var(--l);border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:.75rem;background:#fff;width:100%;}
+.kt-form button{padding:7px 16px;background:var(--r);color:#fff;border:none;border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:.7rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;}
+.kt-form button:hover{background:#a82d22;}
+.kt-table{width:100%;border-collapse:collapse;font-size:.72rem;}
+.kt-table thead tr{background:var(--d);color:#fff;}
+.kt-table thead th{padding:7px 10px;text-align:left;font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;}
+.kt-table thead th.num{text-align:right;}
+.kt-table tbody tr{border-bottom:1px solid var(--l);}
+.kt-table tbody tr:hover{background:rgba(200,57,43,.02);}
+.kt-table tbody td{padding:7px 10px;}
+.kt-table tbody td.num{text-align:right;font-family:'DM Mono',monospace;font-weight:500;}
+.kt-table tbody td.delta{font-size:.65rem;}
+.kt-table tbody td.delta.up{color:var(--gr);}
+.kt-table tbody td.delta.dn{color:var(--r);}
+.kt-table tbody td.delta.flat{color:var(--m);}
+.kt-action{cursor:pointer;color:var(--m);font-size:.85rem;}
+.kt-action:hover{color:var(--r);}
+.kt-empty{text-align:center;color:var(--m);font-style:italic;font-size:.72rem;padding:24px 0;}
+.kt-chart-wrap{margin-top:14px;padding:12px;background:var(--w);border-radius:var(--rad);}
+.kt-chart-ttl{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:1.6px;color:var(--m);margin-bottom:8px;}
+
+/* ── ETAPA 5: ADQUISICIÓN + TICKET + RETENCIÓN ── */
+.adq-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px;}
+.adq-product{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);padding:14px 16px;}
+.adq-prod-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--l);}
+.adq-prod-name{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:900;}
+.adq-prod-meta{font-size:.66rem;color:var(--m);margin-top:2px;}
+.adq-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.adq-section{padding:10px 12px;background:#fff;border:1px solid var(--l);border-radius:var(--rad);}
+.adq-section-h{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--m);margin-bottom:7px;display:flex;align-items:center;gap:5px;}
+.photo-checklist{font-size:.7rem;line-height:1.65;}
+.photo-check-item{display:flex;align-items:flex-start;gap:5px;padding:2px 0;}
+.photo-check-item:before{content:'☐';color:var(--m);font-weight:bold;margin-right:3px;}
+.desc-current{font-size:.7rem;color:var(--m);font-style:italic;margin-bottom:5px;padding:6px 8px;background:var(--w);border-radius:2px;}
+.desc-suggested{font-size:.72rem;line-height:1.55;padding:6px 8px;background:var(--grlit);border-radius:2px;border-left:2px solid var(--gr);}
+.kw-list{display:flex;flex-wrap:wrap;gap:3px;}
+.kw-chip-sm{font-size:.6rem;background:#fff;border:1px solid var(--l);padding:1px 6px;border-radius:100px;font-family:'DM Mono',monospace;}
+/* Ticket development */
+.ticket-summary{background:var(--c);border:1px solid var(--l);border-left:3px solid var(--r);border-radius:var(--rad);padding:14px 16px;margin-bottom:14px;}
+.ticket-summary h4{font-family:'Playfair Display',serif;font-size:1rem;font-weight:900;margin-bottom:6px;}
+.ticket-flow{display:flex;align-items:center;gap:14px;margin-top:8px;}
+.tf-step{flex:1;text-align:center;}
+.tf-step .tfs-lbl{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--m);margin-bottom:3px;}
+.tf-step .tfs-val{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;}
+.tf-step.now .tfs-val{color:var(--m);}
+.tf-step.target .tfs-val{color:var(--r);}
+.tf-arrow{font-size:1.2rem;color:var(--m);}
+.lever-card{background:#fff;border:1px solid var(--l);border-left:3px solid var(--g);border-radius:var(--rad);padding:12px 14px;margin-bottom:10px;}
+.lever-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:5px;gap:10px;}
+.lever-name{font-weight:700;font-size:.82rem;}
+.lever-impact{font-family:'DM Mono',monospace;font-weight:700;font-size:.74rem;color:var(--gr);white-space:nowrap;}
+.lever-desc{font-size:.7rem;color:var(--m);line-height:1.6;}
+.lever-prod{font-size:.66rem;color:var(--m);margin-top:5px;padding:5px 7px;background:var(--w);border-radius:2px;}
+.lever-prod strong{color:var(--t);}
+/* Retention */
+.ret-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.ret-action{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);padding:12px 14px;margin-bottom:10px;}
+.ret-action-h{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.ret-action-num{width:24px;height:24px;border-radius:50%;background:var(--gr);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.7rem;flex-shrink:0;}
+.ret-action-ttl{font-weight:700;font-size:.82rem;flex:1;}
+.ret-action-kpi{font-size:.6rem;font-weight:700;background:var(--grlit);color:var(--gr);padding:2px 8px;border-radius:100px;white-space:nowrap;}
+.ret-action-body{font-size:.7rem;line-height:1.65;color:var(--m);}
+.ret-action-body strong{color:var(--t);}
+
+/* ── ETAPA 4: COMBOS + PROMOS ── */
+.combo-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.combo-section{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);padding:14px 16px;}
+.combo-section-h{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--m);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.combo-card{background:#fff;border:1px solid var(--l);border-radius:var(--rad);padding:12px 14px;margin-bottom:10px;position:relative;}
+.combo-card.opt{border-left:3px solid var(--g);}
+.combo-card.new{border-left:3px solid var(--r);}
+.combo-tag-sm{position:absolute;top:10px;right:12px;font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;padding:2px 8px;border-radius:100px;}
+.combo-tag-new{background:rgba(200,57,43,.1);color:var(--r);}
+.combo-tag-opt{background:rgba(200,160,69,.1);color:#6b4800;}
+.combo-name{font-family:'Playfair Display',serif;font-size:.92rem;font-weight:900;margin-bottom:3px;padding-right:80px;}
+.combo-items{font-size:.7rem;color:var(--m);margin-bottom:8px;line-height:1.4;}
+.combo-prices{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-top:1px dashed var(--l);border-bottom:1px dashed var(--l);margin-bottom:8px;}
+.cp-block{flex:1;}
+.cp-lbl{font-size:.54rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--m);margin-bottom:1px;}
+.cp-val{font-family:'DM Mono',monospace;font-weight:700;font-size:.85rem;}
+.cp-val.list{color:var(--m);text-decoration:line-through;font-size:.75rem;}
+.cp-val.paid{color:var(--r);}
+.cp-val.save{color:var(--gr);font-size:.7rem;}
+.combo-why{font-size:.68rem;color:var(--m);line-height:1.55;padding:6px 8px;background:var(--w);border-radius:2px;}
+.combo-why strong{color:var(--t);}
+.combo-impact{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+.ci-pill{font-size:.6rem;font-weight:600;padding:2px 8px;border-radius:100px;background:rgba(45,106,79,.08);color:var(--gr);}
+.ci-pill.neg{background:rgba(200,57,43,.08);color:var(--r);}
+/* Combo option bars */
+.opt-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--l);font-size:.72rem;}
+.opt-row:last-child{border-bottom:none;}
+.opt-name{flex:1;}
+.opt-name.default{font-weight:700;}
+.opt-name .default-badge{font-size:.54rem;background:var(--grlit);color:var(--gr);padding:1px 6px;border-radius:100px;font-weight:700;margin-left:5px;letter-spacing:1px;text-transform:uppercase;}
+.opt-name .eliminate-badge{font-size:.54rem;background:rgba(200,57,43,.08);color:var(--r);padding:1px 6px;border-radius:100px;font-weight:700;margin-left:5px;letter-spacing:1px;text-transform:uppercase;}
+.opt-bar{width:80px;height:5px;background:rgba(107,101,96,.12);border-radius:3px;overflow:hidden;}
+.opt-bar-fill{height:100%;background:var(--gr);}
+.opt-bar-fill.weak{background:var(--r);}
+.opt-bar-fill.med{background:var(--g);}
+.opt-count{width:36px;text-align:right;font-family:'DM Mono',monospace;font-size:.66rem;color:var(--m);}
+.opt-pct{width:42px;text-align:right;font-size:.66rem;color:var(--m);}
+.opt-rec{font-size:.66rem;color:var(--m);padding:6px 8px;background:var(--w);border-radius:2px;margin-top:6px;line-height:1.55;}
+/* Promo layers */
+.layer-section{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);padding:14px 16px;margin-bottom:12px;}
+.layer-h{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.layer-num{width:26px;height:26px;border-radius:50%;background:var(--d);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:900;font-size:.78rem;}
+.layer-title{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:900;}
+.layer-sub{font-size:.65rem;color:var(--m);margin-bottom:10px;line-height:1.5;}
+.promo-card{background:#fff;border:1px solid var(--l);border-radius:var(--rad);padding:10px 12px;margin-bottom:8px;}
+.promo-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px;}
+.promo-name{font-weight:700;font-size:.78rem;flex:1;}
+.promo-when{font-size:.62rem;color:var(--m);font-family:'DM Mono',monospace;background:var(--w);padding:2px 7px;border-radius:100px;white-space:nowrap;}
+.promo-prod{font-size:.7rem;color:var(--m);margin-bottom:5px;line-height:1.45;}
+.promo-prod strong{color:var(--t);}
+.promo-mech{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px 0;border-top:1px dashed var(--l);margin-bottom:6px;}
+.pm-cell{text-align:center;}
+.pm-lbl{font-size:.52rem;font-weight:700;text-transform:uppercase;letter-spacing:1.3px;color:var(--m);}
+.pm-val{font-family:'DM Mono',monospace;font-weight:700;font-size:.78rem;margin-top:1px;}
+.pm-val.dto{color:var(--r);}
+.pm-val.pos{color:var(--gr);}
+.promo-impact{font-size:.66rem;color:var(--m);padding:6px 8px;background:var(--w);border-radius:2px;line-height:1.55;}
+.promo-impact strong{color:var(--t);}
+.promo-rules{font-size:.62rem;color:var(--m);margin-top:4px;font-style:italic;}
+
+/* ── ETAPA 3: MENÚ & PRICING ── */
+.menu-overview{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.mo-card{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);padding:12px 14px;}
+.mo-lbl{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--m);margin-bottom:4px;}
+.mo-val{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:900;line-height:1;margin-bottom:2px;}
+.mo-sub{font-size:.64rem;color:var(--m);}
+.bcg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.bcg-q{padding:14px 16px;border:1px solid var(--l);border-radius:var(--rad);min-height:140px;}
+.bcg-q.star{background:rgba(200,57,43,.04);border-left:3px solid var(--r);}
+.bcg-q.cow{background:rgba(200,160,69,.05);border-left:3px solid var(--g);}
+.bcg-q.q{background:rgba(43,87,151,.05);border-left:3px solid #2B5797;}
+.bcg-q.dog{background:rgba(15,15,13,.04);border-left:3px solid var(--m);}
+.bcg-h{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;display:flex;align-items:center;gap:5px;margin-bottom:4px;}
+.bcg-tag{font-size:.56rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#fff;}
+.bcg-act{font-size:.65rem;color:var(--m);font-style:italic;margin-bottom:8px;line-height:1.5;}
+.bcg-it{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--l);font-size:.73rem;}
+.bcg-it:last-child{border-bottom:none;}
+.bcg-it .bn{flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:6px;}
+.bcg-it .bo{font-family:'DM Mono',monospace;font-size:.66rem;color:var(--m);}
+/* Product card */
+.prod-card{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);padding:0;margin-bottom:12px;overflow:hidden;}
+.prod-head{background:#fff;padding:12px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--l);}
+.prod-icon{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.pi-main{background:rgba(200,57,43,.1);}
+.pi-side{background:rgba(200,160,69,.1);}
+.pi-drink{background:rgba(43,87,151,.08);}
+.pi-dessert{background:rgba(199,140,228,.1);}
+.pi-combo{background:rgba(45,106,79,.1);}
+.pi-addon{background:rgba(107,101,96,.08);}
+.pi-other{background:rgba(15,15,13,.05);}
+.prod-meta{flex:1;}
+.prod-name{font-family:'Playfair Display',serif;font-size:1rem;font-weight:900;line-height:1.2;margin-bottom:3px;}
+.prod-tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+.ptag-sm{font-size:.55rem;font-weight:700;padding:2px 7px;border-radius:100px;text-transform:uppercase;letter-spacing:1px;}
+.tag-star{background:rgba(200,57,43,.1);color:var(--r);}
+.tag-cow{background:rgba(200,160,69,.12);color:#6b4800;}
+.tag-q{background:rgba(43,87,151,.1);color:#2B5797;}
+.tag-dog{background:rgba(107,101,96,.1);color:var(--m);}
+.tag-elas-hi{background:rgba(200,57,43,.1);color:var(--r);}
+.tag-elas-md{background:rgba(200,160,69,.12);color:#6b4800;}
+.tag-elas-lo{background:rgba(45,106,79,.1);color:var(--gr);}
+.prod-volume{text-align:right;font-size:.7rem;color:var(--m);}
+.prod-volume strong{font-family:'Playfair Display',serif;font-size:1rem;color:var(--t);display:block;}
+.prod-body{display:grid;grid-template-columns:1fr 1.4fr 1.4fr;gap:0;}
+.prod-col{padding:12px 16px;border-right:1px solid var(--l);}
+.prod-col:last-child{border-right:none;}
+.prod-col-t{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--m);margin-bottom:7px;}
+.price-line{display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;font-size:.73rem;}
+.price-line .pl-l{color:var(--m);}
+.price-line .pl-v{font-family:'DM Mono',monospace;font-weight:600;}
+.price-line.highlight .pl-v{color:var(--r);font-weight:700;}
+.rec-item{padding:7px 0;border-bottom:1px solid var(--l);font-size:.72rem;line-height:1.5;}
+.rec-item:last-child{border-bottom:none;}
+.rec-item .r-t{font-weight:700;color:var(--r);}
+.rec-item .r-d{color:var(--m);font-size:.68rem;}
+.copy-btn{background:none;border:1px solid var(--l);font-family:'DM Mono',monospace;font-size:.62rem;color:var(--m);padding:2px 7px;border-radius:2px;cursor:pointer;margin-left:5px;}
+.copy-btn:hover{background:var(--w);color:var(--t);}
+.desc-block{background:#fff;padding:8px 10px;border-radius:var(--rad);border:1px dashed var(--l);font-size:.72rem;line-height:1.5;margin-bottom:5px;}
+.desc-block.current{border-color:rgba(107,101,96,.3);}
+.desc-block.suggested{border-color:rgba(45,106,79,.4);background:var(--grlit);}
+.desc-block .db-h{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--m);margin-bottom:3px;}
+.kw-chip{display:inline-block;background:#fff;border:1px solid var(--l);font-size:.66rem;padding:2px 7px;border-radius:100px;margin:2px 3px 2px 0;font-family:'DM Mono',monospace;}
+.no-photo-box{background:#fff;border:2px dashed rgba(200,57,43,.2);padding:14px;text-align:center;border-radius:var(--rad);}
+.no-photo-box .np-i{font-size:1.8rem;opacity:.4;margin-bottom:4px;}
+.no-photo-box .np-t{font-size:.72rem;font-weight:600;margin-bottom:3px;}
+.no-photo-box .np-d{font-size:.65rem;color:var(--m);line-height:1.5;}
+.menu-filter-bar{display:flex;gap:6px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.cat-chip{padding:5px 11px;border:1px solid var(--l);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:.66rem;font-weight:600;cursor:pointer;background:#fff;color:var(--m);}
+.cat-chip.active{background:var(--d);color:#fff;border-color:var(--d);}
+
+/* ── ETAPA 2: PATRONES + PRECIOS ── */
+.blk-matrix{display:grid;grid-template-columns:110px repeat(7,1fr);gap:3px;font-size:.62rem;margin-bottom:10px;}
+.blk-head{text-align:center;font-weight:700;color:var(--m);padding:3px 1px;font-size:.58rem;text-transform:uppercase;letter-spacing:1px;}
+.blk-lbl{display:flex;flex-direction:column;justify-content:center;padding-right:8px;text-align:right;}
+.blk-lbl b{font-size:.66rem;}
+.blk-lbl span{font-size:.56rem;color:var(--m);}
+.blk-cell{border-radius:2px;padding:6px 3px;text-align:center;min-height:42px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:default;line-height:1.25;}
+.blk-cell:hover{outline:2px solid var(--r);outline-offset:-1px;}
+.st-fire{background:rgba(200,57,43,.14);color:#7a1f15;}
+.st-ok{background:rgba(45,106,79,.10);color:#1d4a35;}
+.st-low{background:rgba(200,160,69,.16);color:#6b4800;}
+.st-dead{background:rgba(15,15,13,.05);color:var(--m);}
+.st-closed{background:repeating-linear-gradient(45deg,rgba(15,15,13,.03),rgba(15,15,13,.03) 4px,rgba(15,15,13,.07) 4px,rgba(15,15,13,.07) 8px);color:rgba(107,101,96,.55);}
+.blk-cell .bc-n{font-weight:700;font-size:.72rem;}
+.blk-cell .bc-s{font-size:.54rem;opacity:.85;}
+.legend-row{display:flex;gap:14px;flex-wrap:wrap;font-size:.66rem;color:var(--m);margin-bottom:14px;}
+.legend-row span{display:inline-flex;align-items:center;gap:5px;}
+.legend-dot{width:10px;height:10px;border-radius:2px;display:inline-block;}
+/* Action cards (Estado-Criterio-Accion-Impacto) */
+.eca-card{background:var(--c);border:1px solid var(--l);border-radius:var(--rad);padding:0;margin-bottom:12px;overflow:hidden;}
+.eca-head{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--l);}
+.eca-state{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;padding:3px 10px;border-radius:100px;}
+.eca-slot{font-weight:700;font-size:.84rem;}
+.eca-body{display:grid;grid-template-columns:1fr 1.4fr 1.4fr;gap:0;}
+.eca-col{padding:12px 16px;border-right:1px solid var(--l);}
+.eca-col:last-child{border-right:none;}
+.eca-col-t{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--m);margin-bottom:6px;}
+.eca-col-c{font-size:.74rem;line-height:1.65;}
+.kpi-impact{display:flex;align-items:baseline;gap:6px;padding:3px 0;font-size:.72rem;}
+.kpi-impact .ki-name{font-weight:700;min-width:108px;}
+.kpi-impact .ki-q{font-family:'DM Mono',monospace;font-weight:600;color:var(--gr);}
+.kpi-impact .ki-q.neg{color:var(--r);}
+.kpi-impact .ki-c{color:var(--m);font-size:.67rem;}
+/* Pricing matrix */
+.px-matrix{display:grid;grid-template-columns:110px repeat(7,1fr);gap:3px;font-size:.6rem;margin-bottom:8px;}
+.px-cell{border-radius:2px;padding:5px 2px;text-align:center;min-height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;cursor:default;}
+.px-cell:hover{outline:2px solid var(--d);outline-offset:-1px;}
+.px-cell .pxc-p{font-family:'DM Mono',monospace;font-weight:700;font-size:.7rem;}
+.px-cell .pxc-d{font-size:.53rem;opacity:.85;}
+.px-cell .pxc-i{font-size:.52rem;font-weight:700;}
+.sel-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.sel-bar label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--m);}
+.sel-inp{padding:6px 10px;border:1px solid var(--l);border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:.76rem;background:#fff;color:var(--t);}
+.proj-pos{color:var(--gr);font-weight:700;}
+.proj-neg{color:var(--r);font-weight:700;}
+
+/* Responsive */
+@media(max-width:860px){
+  .up-grid{grid-template-columns:1fr;}
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .chart-grid-2,.chart-grid-2e{grid-template-columns:1fr;}
+  .tab-bar{-webkit-overflow-scrolling:touch;}
+}
+@media print{.nav,.tab-bar,.export-bar,.up-wrap,.ld,.an-btn{display:none!important;}.panel{display:block!important;page-break-before:always;}}
+
+
 </style>
 </head>
 <body>
@@ -242,8 +637,286 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--t);font-s
   <div class="app-panel" id="appPanel">
     <div class="welcome-empty" id="welcomeEmpty">
       <h2>Bienvenido a Sazón Growth Engine</h2>
-      <p>Aquí analizarás el desempeño de tu marca en las plataformas de delivery. Este es el <strong>Sprint 1</strong> del rebuild SaaS — auth, tiers y persistencia ya funcionan. Los módulos del motor se integrarán en el Sprint 2.</p>
+      <p>Aquí analizarás el desempeño de tu marca en las plataformas de delivery. Los módulos se activan según tu tier — click en cualquier tab para empezar.</p>
       <p style="font-size:.72rem">Usuario: <strong id="wUser">—</strong><br>Marca: <strong id="wBrand">—</strong><br>Plan: <strong id="wPlan">—</strong><br>Estado: <strong id="wStatus">—</strong></p>
+      <p style="font-size:.68rem;color:var(--gr);margin-top:16px;padding:8px 12px;background:var(--grlit);border-radius:3px;display:inline-block">🚧 Sprint 2 A.2.1 en desarrollo · Paneles con estructura visual, motor aún no integrado</p>
+    </div>
+
+    <!-- ═══ PANELES DEL MOTOR (Sprint 2 A.2.1) ═══════════════════════════ -->
+    <!-- Estos paneles están en el DOM pero .panel:not(.active) los oculta -->
+    <div class="rpt on" id="rptWrap" style="display:block">
+      <div class="acc-bar"></div>
+
+      <!-- ── DASHBOARD ── -->
+      <div class="panel active" id="p-dashboard">
+
+    <div class="section-head">
+      <div class="section-ico">📊</div>
+      <div>
+        <div class="section-title">Dashboard ejecutivo</div>
+        <div class="section-sub" id="dashSubtitle">—</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <div class="plat-filter" id="platFilter" style="margin:0">
+          <button class="plat-chip active-all" onclick="setPlatFilter('all',this)">Todo</button>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div id="alertsBox"></div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- Charts row 1 -->
+    <div class="chart-grid-2">
+      <div class="chart-card">
+        <div class="chart-ttl">GMV diario (S/)</div>
+        <div class="chart-wrap" style="height:180px"><canvas id="cGMV"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-ttl">Órdenes por día de semana</div>
+        <div class="chart-wrap" style="height:180px"><canvas id="cDOW"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Charts row 2 -->
+    <div class="chart-grid-2e">
+      <div class="chart-card">
+        <div class="chart-ttl">Ticket promedio semanal (S/)</div>
+        <div class="chart-wrap" style="height:160px"><canvas id="cTicket"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-ttl">Distribución de ticket</div>
+        <div class="chart-wrap" style="height:160px"><canvas id="cTickDist"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Platform comparison -->
+    <div class="chart-card" id="platCompCard" style="margin-bottom:14px">
+      <div class="chart-ttl">Comparativa por plataforma</div>
+      <div id="platCompTable"></div>
+    </div>
+
+  </div>
+
+      <!-- ── PATRONES ── -->
+      <div class="panel" id="p-patrones">
+    <div class="section-head">
+      <div class="section-ico">⏰</div>
+      <div>
+        <div class="section-title">Patrones de demanda</div>
+        <div class="section-sub">Bloques horarios × día — Estado · Criterio · Acción · Impacto en KPI</div>
+      </div>
+      <div style="margin-left:auto" class="sel-bar">
+        <label>Sucursal</label>
+        <select id="patBranchSel" class="sel-inp" onchange="renderPatrones()"></select>
+      </div>
+    </div>
+    <div class="chart-card" style="margin-bottom:14px">
+      <div class="chart-ttl">Mapa de demanda — órdenes promedio por semana en cada bloque</div>
+      <div id="patMatrix"></div>
+      <div class="legend-row">
+        <span><span class="legend-dot" style="background:rgba(200,57,43,.45)"></span>🔥 Peak (≥70% del bloque líder)</span>
+        <span><span class="legend-dot" style="background:rgba(45,106,79,.35)"></span>Activo (30–70%)</span>
+        <span><span class="legend-dot" style="background:rgba(200,160,69,.5)"></span>⚡ Bajo (&lt;30%, con tráfico)</span>
+        <span><span class="legend-dot" style="background:rgba(15,15,13,.12)"></span>💤 Muerto (sin tráfico)</span>
+        <span><span class="legend-dot" style="background:repeating-linear-gradient(45deg,#ddd,#ddd 3px,#ccc 3px,#ccc 6px)"></span>🚫 Cerrado (fuera de horario)</span>
+      </div>
+    </div>
+    <div id="patNote"></div>
+    <div id="patCards"></div>
+  </div>
+
+      <!-- ── PRECIOS ── -->
+      <div class="panel" id="p-precios">
+    <div class="section-head">
+      <div class="section-ico">💡</div>
+      <div>
+        <div class="section-title">Motor de precios dinámico</div>
+        <div class="section-sub">El precio lista NO cambia — varía el % de descuento activo por bloque, día, local y plataforma</div>
+      </div>
+    </div>
+    <div class="sel-bar">
+      <label>Producto</label><select id="pxItemSel" class="sel-inp" onchange="renderPrecios()"></select>
+      <label>Plataforma</label><select id="pxPlatSel" class="sel-inp" onchange="renderPrecios()"></select>
+      <label>Sucursal</label><select id="pxBranchSel" class="sel-inp" onchange="renderPrecios()"></select>
+    </div>
+    <div id="pxInsight"></div>
+    <div class="chart-card" style="margin-bottom:14px">
+      <div class="chart-ttl" id="pxMatrixTitle">Precio final sugerido por bloque y día</div>
+      <div id="pxMatrix"></div>
+      <div class="legend-row" style="margin-top:8px">
+        <span><span class="legend-dot" style="background:rgba(45,106,79,.35)"></span>Dto. reducido (peak — demanda inelástica)</span>
+        <span><span class="legend-dot" style="background:rgba(15,15,13,.08)"></span>Dto. estándar</span>
+        <span><span class="legend-dot" style="background:rgba(200,160,69,.5)"></span>Dto. activación (+8pp)</span>
+        <span><span class="legend-dot" style="background:rgba(200,57,43,.25)"></span>Dto. rescate (+15pp) o cerrar</span>
+      </div>
+    </div>
+    <div class="chart-card" style="margin-bottom:14px">
+      <div class="chart-ttl">Proyección semanal por bloque — producto seleccionado</div>
+      <div id="pxProjection"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-ttl">Resumen multi-producto — precio final sugerido por bloque (día típico)</div>
+      <div id="pxSummary"></div>
+    </div>
+  </div>
+
+      <!-- ── MENU ── -->
+      <div class="panel" id="p-menu">
+    <div class="section-head">
+      <div class="section-ico">🍽️</div>
+      <div>
+        <div class="section-title">Menú & Pricing</div>
+        <div class="section-sub">Ficha completa por producto: clasificación BCG, elasticidad, precio sugerido, descripción y keywords</div>
+      </div>
+    </div>
+    <div id="menuInsight"></div>
+    <div class="menu-overview" id="menuOverview"></div>
+    <div class="chart-card" style="margin-bottom:14px">
+      <div class="chart-ttl">Matriz BCG — volumen × revenue</div>
+      <div class="bcg-grid" id="bcgGrid"></div>
+    </div>
+    <div class="menu-filter-bar" id="menuFilterBar"></div>
+    <div id="menuCards"></div>
+  </div>
+
+      <!-- ── COMBOS ── -->
+      <div class="panel" id="p-combos">
+    <div class="section-head">
+      <div class="section-ico">🎯</div>
+      <div>
+        <div class="section-title">Combos & Carta</div>
+        <div class="section-sub">A) Combos nuevos por co-ocurrencia · B) Optimización de opciones dentro de combos existentes</div>
+      </div>
+    </div>
+    <div id="combosInsight"></div>
+    <div class="combo-grid">
+      <div class="combo-section">
+        <div class="combo-section-h"><span style="color:var(--r)">🆕</span> A) Combos nuevos a crear</div>
+        <div style="font-size:.65rem;color:var(--m);margin-bottom:10px;line-height:1.55">Pares de ítems que aparecen juntos frecuentemente en pedidos pero NO están formalizados como combo. Crear el combo formal reduce fricción de decisión y sube el ticket.</div>
+        <div id="combosNew"></div>
+      </div>
+      <div class="combo-section">
+        <div class="combo-section-h"><span style="color:#6b4800">📦</span> B) Optimizar combos existentes</div>
+        <div style="font-size:.65rem;color:var(--m);margin-bottom:10px;line-height:1.55">Para cada combo activo, qué opciones eligen realmente los clientes dentro de cada combo. Configurar la más elegida como default y eliminar las que apenas se eligen.</div>
+        <div id="combosOptimize"></div>
+      </div>
+    </div>
+  </div>
+
+      <!-- ── PROMOS ── -->
+      <div class="panel" id="p-promos">
+    <div class="section-head">
+      <div class="section-ico">📣</div>
+      <div>
+        <div class="section-title">Estrategia de Promociones</div>
+        <div class="section-sub">3 capas no acumulables · Producto · Horario · Proyección de pedidos incrementales · Costo vs revenue</div>
+      </div>
+    </div>
+    <div id="promosInsight"></div>
+    <div id="promoLayer1"></div>
+    <div id="promoLayer2"></div>
+    <div id="promoLayer3"></div>
+  </div>
+
+      <!-- ── ADQ ── -->
+      <div class="panel" id="p-adq">
+    <div class="section-head">
+      <div class="section-ico">🚀</div>
+      <div>
+        <div class="section-title">Adquisición de usuarios</div>
+        <div class="section-sub">Optimización por producto: foto, descripción y keywords para mejorar visibilidad orgánica en plataformas</div>
+      </div>
+    </div>
+    <div id="adqInsight"></div>
+    <div class="adq-grid" id="adqProductList"></div>
+  </div>
+
+      <!-- ── TICKET ── -->
+      <div class="panel" id="p-ticket">
+    <div class="section-head">
+      <div class="section-ico">💰</div>
+      <div>
+        <div class="section-title">Desarrollo de ticket promedio</div>
+        <div class="section-sub">Palancas concretas con producto específico y proyección cuantitativa</div>
+      </div>
+    </div>
+    <div id="ticketSummary"></div>
+    <div id="ticketLevers"></div>
+  </div>
+
+      <!-- ── RETENCION ── -->
+      <div class="panel" id="p-retencion">
+    <div class="section-head">
+      <div class="section-ico">🔁</div>
+      <div>
+        <div class="section-title">Retención & Recompra</div>
+        <div class="section-sub">Estrategias para subir frecuencia, recompra y formar hábito de pedido</div>
+      </div>
+    </div>
+    <div id="retInsight"></div>
+    <div class="ret-kpi-grid" id="retKpis"></div>
+    <div id="retActions"></div>
+  </div>
+
+      <!-- ── FINANCIERO ── -->
+      <div class="panel" id="p-financiero">
+    <div class="section-head">
+      <div class="section-ico">💸</div>
+      <div>
+        <div class="section-title">Financiero compacto</div>
+        <div class="section-sub">6 números clave + tracker de KPIs (persistencia en localStorage)</div>
+      </div>
+      <div style="margin-left:auto" class="plat-filter" id="finPlatFilter"></div>
+    </div>
+    <div id="finNumbers" class="fin-numbers"></div>
+    <div id="finNote" style="margin-bottom:14px"></div>
+    <!-- KPI TRACKER -->
+    <div class="kpi-tracker">
+      <div class="kt-head">
+        <div class="section-ico">📈</div>
+        <div class="kt-title">Tracker de KPIs</div>
+        <div style="font-size:.65rem;color:var(--m)">Datos guardados en este navegador · <a href="#" onclick="exportKpiHistory();return false" style="color:var(--r)">exportar CSV</a></div>
+      </div>
+      <div style="font-size:.7rem;color:var(--m);margin-bottom:10px;line-height:1.55">Ingresa los KPIs reales mes a mes o semana a semana para construir el historial y calcular variaciones. Útil para calibrar el modelo de elasticidad con resultados reales.</div>
+      <div class="kt-form">
+        <div><label>Período (etiqueta)</label><input type="text" id="ktPeriod" placeholder="Sem 24 · 2026 o Jun 2026"></div>
+        <div><label>GMV (S/)</label><input type="number" id="ktGmv" placeholder="0" step="0.01"></div>
+        <div><label>Órdenes</label><input type="number" id="ktOrders" placeholder="0"></div>
+        <div><label>Ticket prom. (S/)</label><input type="number" id="ktTicket" placeholder="auto" step="0.01"></div>
+        <div><button onclick="saveKpiEntry()">Guardar</button></div>
+      </div>
+      <div class="kt-form" style="grid-template-columns:repeat(3,1fr) auto;margin-top:0">
+        <div><label>Nuevos usuarios (opc.)</label><input type="number" id="ktNewUsers" placeholder="0"></div>
+        <div><label>% Recompra (opc.)</label><input type="number" id="ktRepurchase" placeholder="0" step="0.1"></div>
+        <div><label>Plataforma (opc.)</label><select id="ktPlat"><option value="all">Todo delivery</option><option value="rappi">Rappi</option><option value="peya">PedidosYa</option><option value="other">Otra</option></select></div>
+        <div></div>
+      </div>
+      <div id="ktTable"></div>
+      <div class="kt-chart-wrap" id="ktChartWrap" style="display:none">
+        <div class="kt-chart-ttl">Evolución de KPIs guardados</div>
+        <div style="height:180px"><canvas id="ktChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+      <!-- ── ROADMAP ── -->
+      <div class="panel" id="p-roadmap">
+    <div class="section-head">
+      <div class="section-ico">📋</div>
+      <div>
+        <div class="section-title">Roadmap 90 días</div>
+        <div class="section-sub">Plan secuenciado en 3 fases, conectado con todos los módulos del análisis</div>
+      </div>
+    </div>
+    <div id="execSummary"></div>
+    <div class="roadmap-grid" id="roadmapGrid"></div>
+    <div id="narrativeBlock"></div>
+  </div>
     </div>
   </div>
 </div>
@@ -738,14 +1411,41 @@ function selectTab(tabId, el){
 }
 
 function renderTabContent(tabId){
-  const meta = TAB_META[tabId];
-  $('appPanel').innerHTML = `
-    <div class="stub-panel">
-      <h2>${meta.icon} ${meta.label}</h2>
-      <p>Este módulo estará disponible en el <strong>Sprint 2</strong> del rebuild SaaS. La lógica del motor ya está probada y validada en el v1 — solo se integrará con Supabase para persistir análisis por marca.</p>
-      <span class="stub-status">Sprint 1 completado — Auth + Tiers ✓</span>
-    </div>
-  `;
+  // Sprint 2 A.2.1: paneles del v1 están en el DOM. Solo mostramos el activo.
+  const welcome = $('welcomeEmpty');
+  const rptWrap = $('rptWrap');
+
+  // Ocultar welcome, mostrar el contenedor de paneles
+  if (welcome) welcome.style.display = 'none';
+  if (rptWrap) rptWrap.style.display = 'block';
+
+  // Desactivar todos los paneles
+  document.querySelectorAll('#rptWrap .panel').forEach(p => p.classList.remove('active'));
+
+  // Activar el panel del tab clickeado
+  const targetPanel = document.getElementById('p-' + tabId);
+  if (targetPanel) {
+    targetPanel.classList.add('active');
+    // Mostrar mensaje de "esperando motor" en el panel si no tiene contenido dinámico
+    if (!targetPanel.dataset.hasEngine) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'engine-placeholder';
+      placeholder.style.cssText = 'text-align:center;padding:24px;margin-top:20px;background:var(--w);border-radius:3px;font-size:.75rem;color:var(--m);border:1px dashed var(--l);';
+      placeholder.innerHTML = '<strong style="color:var(--gr);display:block;margin-bottom:5px">🚧 Estructura visual lista</strong> Motor de análisis se integra en Sprint 2 A.2.2. Este panel es solo layout por ahora.';
+      // Solo agregar si no existe ya
+      if (!targetPanel.querySelector('.engine-placeholder')) {
+        targetPanel.appendChild(placeholder);
+      }
+    }
+  } else {
+    // Si el panel no existe todavía, mostrar mensaje
+    $('appPanel').innerHTML = `
+      <div class="stub-panel">
+        <h2>${TAB_META[tabId].icon} ${TAB_META[tabId].label}</h2>
+        <p>Panel no encontrado — verificar A.2.1.</p>
+      </div>
+    `;
+  }
 }
 
 function showUpgradeModal(tabId){
