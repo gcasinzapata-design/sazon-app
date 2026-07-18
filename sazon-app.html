@@ -292,7 +292,11 @@ const APP = {
 // ─── Helpers UI ──────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 const show = (id, on = true) => { const el = $(id); if(el){ if(on) el.classList.add('on'); else el.classList.remove('on'); }};
-const setBoot = msg => { const el = $('bootStatus'); if(el) el.textContent = msg; };
+const setText = (id, txt) => { const el = $(id); if(el) el.textContent = txt; };
+const setHtml = (id, htm) => { const el = $(id); if(el) el.innerHTML = htm; };
+const setAttr = (id, attr, val) => { const el = $(id); if(el) el.setAttribute(attr, val); };
+const setStyle = (id, key, val) => { const el = $(id); if(el) el.style[key] = val; };
+const setBoot = msg => setText('bootStatus', msg);
 const authMsg = (targetId, msg, type) => {
   const el = $(targetId);
   if(!el) return;
@@ -354,6 +358,9 @@ async function boot(){
   // Listener para cambios de sesión (login, logout, refresh)
   APP.supabase.auth.onAuthStateChange((event, session) => {
     if(event === 'SIGNED_OUT') {
+      // Don't reload if we're already showing an auth screen (unauth, suspended)
+      const overlay = document.getElementById('authOverlay');
+      if(overlay && overlay.classList.contains('on')) return;
       location.reload();
     }
   });
@@ -506,12 +513,15 @@ async function loadUserProfile(){
 
     if(userErr || !userData) {
       // Usuario en auth pero no en tabla users → no autorizado (whitelist real)
-      await APP.supabase.auth.signOut();
-      const waMsg = encodeURIComponent(`Hola, quiero contratar el servicio de Sazón Growth Partner. Mi correo es ${APP.session.user.email}.`);
-      $('waContactBtn').href = `https://wa.me/${CFG.contact.whatsapp.replace(/[^0-9]/g,'')}?text=${waMsg}`;
+      const email = APP.session?.user?.email || '';
+      const waMsg = encodeURIComponent(`Hola, quiero contratar el servicio de Sazón Growth Partner. Mi correo es ${email}.`);
+      const waUrl = `https://wa.me/${CFG.contact.whatsapp.replace(/[^0-9]/g,'')}?text=${waMsg}`;
+      setAttr('waContactBtn', 'href', waUrl);
+      setStyle('bootScreen', 'display', 'none');
       show('authOverlay', true);
       showAuthStep('unauth');
-      $('bootScreen').style.display = 'none';
+      // Sign out AFTER showing the modal (evita race condition con onAuthStateChange)
+      setTimeout(() => APP.supabase.auth.signOut(), 100);
       return;
     }
 
@@ -579,31 +589,30 @@ async function loadUserProfile(){
 }
 
 async function renderAdminMode(){
-  $('bootScreen').style.display = 'none';
+  setStyle('bootScreen', 'display', 'none');
   show('appContent', true);
-  $('navUser').textContent = APP.user.email;
-  $('navBrand').textContent = '🛠 Modo Admin';
-  $('navPlan').textContent = 'SAZÓN';
-  $('navPlan').style.background = 'rgba(45,106,79,.15)';
-  $('navPlan').style.color = 'var(--gr)';
-
-  $('welcomeEmpty').innerHTML = `
+  setText('navUser', APP.user.email);
+  setText('navBrand', '🛠 Modo Admin');
+  setText('navPlan', 'SAZÓN');
+  setStyle('navPlan', 'background', 'rgba(45,106,79,.15)');
+  setStyle('navPlan', 'color', 'var(--gr)');
+  setHtml('welcomeEmpty', `
     <h2>Modo Administrador Sazón</h2>
     <p>Estás autenticado como admin. En el Sprint 2 tendrás el panel de gestión de marcas, usuarios y suscripciones aquí.</p>
     <p style="font-size:.72rem">Por ahora puedes verificar el estado del sistema y las marcas desde el <a href="https://supabase.com/dashboard/project/qetiugzeqyhicgwxxxvv" target="_blank" style="color:var(--r)">dashboard de Supabase</a>.</p>
-  `;
-  $('tabBar').innerHTML = '';
+  `);
+  setHtml('tabBar', '');
 }
 
 function showLoginError(msg){
-  $('bootScreen').style.display = 'none';
+  setStyle('bootScreen', 'display', 'none');
   show('authOverlay', true);
   showAuthStep('email');
   authMsg('authMsgEmail', msg, 'err');
 }
 
 function showSuspended(status){
-  $('bootScreen').style.display = 'none';
+  setStyle('bootScreen', 'display', 'none');
   show('authOverlay', true);
   showAuthStep('suspended');
   const messages = {
@@ -621,13 +630,20 @@ function showSuspended(status){
 // ═══════════════════════════════════════════════════════════════════════
 
 function renderApp(){
-  $('bootScreen').style.display = 'none';
+  setStyle('bootScreen', 'display', 'none');
   show('appContent', true);
 
+  // Reset welcome section (in case admin mode overwrote it)
+  setHtml('welcomeEmpty', `
+    <h2>Bienvenido a Sazón Growth Engine</h2>
+    <p>Aquí analizarás el desempeño de tu marca en las plataformas de delivery. Este es el <strong>Sprint 1</strong> del rebuild SaaS — auth, tiers y persistencia ya funcionan. Los módulos del motor se integrarán en el Sprint 2.</p>
+    <p style="font-size:.72rem">Usuario: <strong id="wUser">—</strong><br>Marca: <strong id="wBrand">—</strong><br>Plan: <strong id="wPlan">—</strong><br>Estado: <strong id="wStatus">—</strong></p>
+  `);
+
   // Nav
-  $('navUser').textContent = APP.user.email;
-  $('navBrand').textContent = APP.brand.name;
-  $('navPlan').textContent = APP.tier.label;
+  setText('navUser', APP.user.email);
+  setText('navBrand', APP.brand.name);
+  setText('navPlan', APP.tier.label);
 
   // Subscription banner según estado
   renderSubBanner();
@@ -636,10 +652,10 @@ function renderApp(){
   renderTabBar();
 
   // Welcome
-  $('wUser').textContent = APP.user.email;
-  $('wBrand').textContent = APP.brand.name;
-  $('wPlan').textContent = APP.tier.label + ' — $' + APP.tier.priceUsd + ' USD/mes';
-  $('wStatus').textContent = APP.subscription.status;
+  setText('wUser', APP.user.email);
+  setText('wBrand', APP.brand.name);
+  setText('wPlan', APP.tier.label + ' — $' + APP.tier.priceUsd + ' USD/mes');
+  setText('wStatus', APP.subscription.status);
 }
 
 function renderSubBanner(){
