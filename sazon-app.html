@@ -644,11 +644,11 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--t);font-s
 
     <!-- ═══ PANELES DEL MOTOR (Sprint 2 A.2.1) ═══════════════════════════ -->
     <!-- Estos paneles están en el DOM pero .panel:not(.active) los oculta -->
-    <div class="rpt on" id="rptWrap" style="display:block">
+    <div class="rpt" id="rptWrap" style="display:none">
       <div class="acc-bar"></div>
 
       <!-- ── DASHBOARD ── -->
-      <div class="panel active" id="p-dashboard">
+      <div class="panel" id="p-dashboard">
 
     <div class="section-head">
       <div class="section-ico">📊</div>
@@ -1275,6 +1275,9 @@ async function renderAdminMode(){
     <p style="font-size:.72rem">Por ahora puedes verificar el estado del sistema y las marcas desde el <a href="https://supabase.com/dashboard/project/qetiugzeqyhicgwxxxvv" target="_blank" style="color:var(--r)">dashboard de Supabase</a>.</p>
   `);
   setHtml('tabBar', '');
+  // Ocultar los paneles del motor en modo admin
+  setStyle('rptWrap', 'display', 'none');
+  setStyle('welcomeEmpty', 'display', 'block');
 }
 
 function showLoginError(msg){
@@ -1499,6 +1502,3292 @@ function showUpgradeModal(tabId){
 // ═══════════════════════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════════════════════
+
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 2 A.2.2.a — MOTOR DE ANÁLISIS v1 INTEGRADO
+//  ═══════════════════════════════════════════════════════════════════════
+//  - const APP → Object.assign(APP, ...) para fusionar con estado SaaS
+//  - funcion show() renombrada a showPanel() (evita colision con SaaS show)
+//  - initEngine() agregado al final para orquestacion desde el SaaS
+//  - LocalStorage mantiene compatibilidad; migra a Supabase en A.2.3
+// ═══════════════════════════════════════════════════════════════════════
+
+// ─── Fusión con APP del SaaS (Sprint 2 A.2.2.a) ────────────────────────
+Object.assign(APP, {
+  config:   { brand:'', feeRappi:0, feePeya:0, branches:[] },  // hidratado en A.2.2.c desde APP.brand
+  menu:     [],                                                  // hidratado en A.2.3 desde Supabase
+  kpiHist:  [],                                                  // hidratado en A.2.3 desde Supabase
+  files:    [],           // raw File objects (session only)
+  allOrders:[],           // parsed orders (session only)
+  D:        null,         // analysis result
+  charts:   {},
+  platFilter:'all',
+  isDemo: false,
+});
+
+// ════════════════════════════════════════════════════════
+//  CONSTANTS (must be before init IIFE)
+// ════════════════════════════════════════════════════════
+const DAYS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+let branchCount = 0;
+
+// Supported platforms — add more here as needed
+const PLATFORMS = {
+  rappi:    { name:'Rappi',       color:'#FF6900', tag:'pt-rappi',  label:'🟠 Rappi' },
+  peya:     { name:'PedidosYa',   color:'#0064C8', tag:'pt-peya',   label:'🔵 PedidosYa' },
+  didi:     { name:'Didi Food',   color:'#FF8C00', tag:'pt-didi',   label:'🟡 Didi Food' },
+  glovo:    { name:'Glovo',       color:'#FFC244', tag:'pt-glovo',  label:'🟡 Glovo' },
+  ubereats: { name:'Uber Eats',   color:'#06C167', tag:'pt-uber',   label:'🟢 Uber Eats' },
+  ifood:    { name:'iFood',       color:'#EA1D2C', tag:'pt-ifood',  label:'🔴 iFood' },
+  other:    { name:'Plataforma',  color:'#6B6560', tag:'pt-unk',    label:'⚫ Otra' },
+};
+
+function detectPlat(name){
+  const n = name.toLowerCase();
+  if(/rappi/.test(n))            return 'rappi';
+  if(/pedidosya|peya|orderdetail|earnings/.test(n)) return 'peya';
+  if(/didi/.test(n))             return 'didi';
+  if(/glovo/.test(n))            return 'glovo';
+  if(/uber|ubereats/.test(n))    return 'ubereats';
+  if(/ifood/.test(n))            return 'ifood';
+  return 'other';
+}
+
+function getPlatInfo(plat){
+  return PLATFORMS[plat] || PLATFORMS.other;
+}
+
+
+// ════════════════════════════════════════════════════════
+//  LOCALSTORAGE HELPERS
+// ════════════════════════════════════════════════════════
+function loadLS(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } }
+function saveLS(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+
+// ════════════════════════════════════════════════════════
+//  INIT — restore saved config
+// ════════════════════════════════════════════════════════
+(function init(){
+  const c = APP.config;
+  if(c.brand) document.getElementById('cfgBrand').value = c.brand;
+  if(c.feeRappi) document.getElementById('cfgFeeRappi').value = c.feeRappi;
+  if(c.feePeya) document.getElementById('cfgFeePeya').value = c.feePeya;
+  if(c.branches && c.branches.length > 0){
+    c.branches.forEach(b => addBranch(b));
+  } else {
+    addBranch({ name:'Principal', hours: defaultHours() });
+  }
+  if(APP.menu.length > 0){
+    document.getElementById('menuStatus').innerHTML =
+      `<div class="menu-status"><div class="dot"></div>${APP.menu.length} productos en menú guardado. <a href="#" onclick="clearMenu();return false" style="color:var(--r);margin-left:6px">Cambiar</a></div>`;
+  }
+  // Drag and drop for orders
+  const dz = document.getElementById('ordersDrop');
+  dz.addEventListener('dragover',  e=>{e.preventDefault();dz.classList.add('on');});
+  dz.addEventListener('dragleave', ()=>dz.classList.remove('on'));
+  dz.addEventListener('drop', e=>{e.preventDefault();dz.classList.remove('on');addOrderFiles([...e.dataTransfer.files]);});
+})();
+
+// ════════════════════════════════════════════════════════
+//  BRANCH CONFIG UI
+// ════════════════════════════════════════════════════════
+// DAYS and branchCount moved to top
+
+function defaultHours(){
+  return DAYS.map(d=>({ day:d, open:d==='Sáb'||d==='Dom'?'12:00':'12:00', close:d==='Sáb'||d==='Dom'?'23:00':'22:00', active:true }));
+}
+
+function addBranch(data){
+  branchCount++;
+  const id = 'branch-'+branchCount;
+  const hours = data?.hours || defaultHours();
+  const name  = data?.name  || '';
+  const div   = document.createElement('div');
+  div.className = 'branch-block';
+  div.id = id;
+  div.innerHTML = `
+    <div class="branch-name-row">
+      <input type="text" value="${name}" placeholder="Nombre del local" class="field-inp" style="flex:1;margin-right:8px"
+             oninput="saveConfig()">
+      ${branchCount>1?`<button onclick="removeBranch('${id}')" class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:.6rem">✕</button>`:''}
+    </div>
+    <div class="hours-grid">
+      ${DAYS.map((d,i)=>`
+        <label class="day-check">
+          <input type="checkbox" ${hours[i]?.active!==false?'checked':''} onchange="saveConfig()"> ${d}
+        </label>
+        <input type="time" value="${hours[i]?.open||'12:00'}" class="time-inp" oninput="saveConfig()" title="Apertura">
+        <input type="time" value="${hours[i]?.close||'22:00'}" class="time-inp" oninput="saveConfig()" title="Cierre">
+      `).join('')}
+    </div>`;
+  document.getElementById('branchList').appendChild(div);
+}
+
+function removeBranch(id){
+  document.getElementById(id)?.remove();
+  saveConfig();
+}
+
+function saveConfig(){
+  const branches = [];
+  document.querySelectorAll('.branch-block').forEach(block=>{
+    const name  = block.querySelector('input[type=text]').value.trim();
+    const checks= [...block.querySelectorAll('input[type=checkbox]')];
+    const times = [...block.querySelectorAll('input[type=time]')];
+    const hours = DAYS.map((d,i)=>({
+      day:d, active:checks[i]?.checked!==false,
+      open:times[i*2]?.value||'12:00', close:times[i*2+1]?.value||'22:00'
+    }));
+    branches.push({ name, hours });
+  });
+  APP.config = {
+    brand:    document.getElementById('cfgBrand').value.trim(),
+    feeRappi: parseFloat(document.getElementById('cfgFeeRappi').value)||0,
+    feePeya:  parseFloat(document.getElementById('cfgFeePeya').value)||0,
+    branches
+  };
+  saveLS('sazon_config', APP.config);
+}
+
+// ════════════════════════════════════════════════════════
+//  MENU CSV HANDLING
+// ════════════════════════════════════════════════════════
+function handleMenuFile(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try{
+      let menu = [];
+      if(file.name.endsWith('.csv')){
+        // Parse CSV
+        const lines = ev.target.result.split('\n').filter(l=>l.trim());
+        const header = lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/['"]/g,''));
+        lines.slice(1).forEach(line=>{
+          const vals = parseCSVLine(line);
+          const obj  = {};
+          header.forEach((h,i)=>obj[h]=vals[i]||'');
+          if(obj.nombre||obj.name) menu.push(normalizeMenuItem(obj));
+        });
+      } else {
+        // XLSX
+        const wb = XLSX.read(ev.target.result,{type:'binary'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows= XLSX.utils.sheet_to_json(ws,{raw:false,defval:''});
+        rows.forEach(row=>{
+          const obj={};
+          Object.keys(row).forEach(k=>obj[k.toLowerCase().trim()]=row[k]);
+          if(obj.nombre||obj.name) menu.push(normalizeMenuItem(obj));
+        });
+      }
+      if(menu.length===0) throw new Error('No se encontraron productos en el archivo.');
+      APP.menu = menu;
+      saveLS('sazon_menu', menu);
+      document.getElementById('menuStatus').innerHTML =
+        `<div class="menu-status"><div class="dot"></div><strong>${menu.length} productos cargados</strong> de "${file.name}"</div>`;
+    } catch(err){
+      alert('Error al leer menú: '+err.message);
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function parseCSVLine(line){
+  const result=[]; let cur=''; let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){ inQ=!inQ; }
+    else if(c===','&&!inQ){ result.push(cur.trim()); cur=''; }
+    else cur+=c;
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+function normalizeMenuItem(obj){
+  const n=(k)=>obj[k]||obj[k.replace('_',' ')]||'';
+  return {
+    nombre:     n('nombre')||n('name'),
+    descripcion:n('descripcion')||n('description')||n('desc'),
+    tipo:       (n('tipo')||n('type')||'other').toLowerCase(),
+    precioRappi:parseFloat(n('precio_rappi')||n('precio rappi')||n('rappi')||0)||0,
+    precioPeya: parseFloat(n('precio_peya') ||n('precio peya') ||n('peya') ||0)||0,
+    precioDidi: parseFloat(n('precio_didi') ||n('precio didi') ||n('didi') ||0)||0,
+    categoria:  n('categoria')||n('category')||'',
+  };
+}
+
+function clearMenu(){
+  APP.menu = [];
+  localStorage.removeItem('sazon_menu');
+  document.getElementById('menuStatus').innerHTML = '';
+  document.getElementById('menuFile').value = '';
+}
+
+function downloadMenuTemplate(){
+  const csv = [
+    'nombre,descripcion,tipo,precio_rappi,precio_peya,precio_didi,categoria',
+    '"Cheddar Bacon Burger","Smash burger 100g con cheddar fundido, bacon crispy, lechuga, tomate y salsa especial",main,45,43,0,Burgers',
+    '"Oklahoma Burger","Smash burger 100g con queso americano, cebolla caramelizada y mostaza",main,40,38,0,Burgers',
+    '"Seasoned Fries","Papas fritas con sazón especial de la casa",side,18,17,0,Acompañamientos',
+    '"Oreo Milkshake","Milkshake cremoso con galletas Oreo",dessert,22,20,0,Postres',
+    '"Coca Cola 500ml","Bebida gaseosa 500ml",drink,8,7,0,Bebidas',
+    '"Combo Mr. Smash","Burger a elección + Seasoned Fries + bebida a elección",combo,52,49,0,Combos',
+  ].join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sazon_menu_template.csv';
+  a.click();
+}
+
+// ════════════════════════════════════════════════════════
+//  ORDER FILES HANDLING
+// ════════════════════════════════════════════════════════
+function handleOrderFiles(e){
+  addOrderFiles([...e.target.files]);
+}
+
+function addOrderFiles(list){
+  list.forEach(f=>{
+    if(!APP.files.find(x=>x.name===f.name)) APP.files.push(f);
+  });
+  renderOrderFileList();
+  document.getElementById('anBtn').disabled = APP.files.length===0;
+}
+
+function removeOrderFile(i){
+  APP.files.splice(i,1);
+  renderOrderFileList();
+  document.getElementById('anBtn').disabled = APP.files.length===0;
+}
+
+// PLATFORMS moved to top
+// detectPlat and getPlatInfo moved to top
+
+function renderOrderFileList(){
+  const el = document.getElementById('orderFileList');
+  if(!APP.files.length){ el.innerHTML=''; return; }
+  el.innerHTML = APP.files.map((f,i)=>{
+    const p = getPlatInfo(detectPlat(f.name));
+    return `<div class="fitem">
+      <span>📄</span>
+      <span class="fitem-name">${f.name}</span>
+      <span class="ptag" style="background:${p.color}22;color:${p.color}">${p.label}</span>
+      <span style="font-size:.65rem;color:var(--m)">${(f.size/1024).toFixed(0)}KB</span>
+      <span class="fx" onclick="removeOrderFile(${i})">✕</span>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════
+//  PARSERS
+// ════════════════════════════════════════════════════════
+async function readBinary(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>res(e.target.result);
+    r.onerror=rej;
+    r.readAsBinaryString(file);
+  });
+}
+
+function sheetToRows(wb){
+  const rows=[];
+  wb.SheetNames.forEach(sn=>{
+    const ws=wb.Sheets[sn];
+    rows.push(...XLSX.utils.sheet_to_json(ws,{raw:false,defval:'',header:1}));
+  });
+  return rows;
+}
+
+function toFloat(v){ return parseFloat(String(v||'').replace(/[^0-9.\-]/g,''))||0; }
+
+function parseDate(s){
+  if(!s) return null;
+  const str=s.trim();
+  // ISO / standard
+  let d=new Date(str);
+  if(!isNaN(d)&&d.getFullYear()>2000) return d;
+  // DD/MM/YYYY HH:MM
+  const m=str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
+  if(m){ d=new Date(`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}T${m[4]||'00'}:${m[5]||'00'}:00`); if(!isNaN(d)) return d; }
+  // Rappi: "sáb. 09 may. 2026, 2:45:54 p. m."
+  const MONTHS={ene:1,feb:2,mar:3,abr:4,may:5,jun:6,jul:7,ago:8,sep:9,oct:10,nov:11,dic:12};
+  const rm=str.match(/(\d{1,2})\s+(\w{3})[\.\s]+(\d{4}),?\s*(\d{1,2}):(\d{2})/);
+  if(rm){
+    const mo=MONTHS[rm[2].toLowerCase().slice(0,3)];
+    if(mo){
+      let h=parseInt(rm[4]);
+      if(/p[\.\s]*m/i.test(str)&&h<12) h+=12;
+      else if(/a[\.\s]*m/i.test(str)&&h===12) h=0;
+      d=new Date(parseInt(rm[3]),mo-1,parseInt(rm[1]),h,parseInt(rm[5]));
+      if(!isNaN(d)) return d;
+    }
+  }
+  return null;
+}
+
+function detectFormat(rows){
+  // Flatten first 6 rows for detection
+  const flat = rows.slice(0,6).flat().map(v => String(v||'').toLowerCase().trim());
+  const joined = flat.join(' ');
+
+  // PedidosYa orders: has "nro de pedido" or "total parcial"
+  if(flat.some(v => /nro de pedido|total parcial/.test(v))) return 'peya_orders';
+
+  // PedidosYa summary: has period + orders count fields
+  if(flat.some(v => /per.odo abarcado/.test(v))) return 'peya_summary';
+  if(flat.some(v => /ventas netas/.test(v)) && flat.some(v => /cantidad de/.test(v))) return 'peya_summary';
+
+  // Rappi financial: has "venta bruta" AND financial columns
+  if(flat.some(v => /venta bruta/.test(v)) &&
+    (joined.includes('uso y alquiler') || joined.includes('estado de la') || joined.includes('ventas base'))) {
+    return 'rappi_financial';
+  }
+
+  // Rappi orders export: has "orden" column + fecha
+  if(flat.some(v => /^orden$/.test(v)) && flat.some(v => /fecha/.test(v))) return 'rappi_orders';
+
+  // Generic: try to find date + total columns
+  const hasDate  = flat.some(v => /fecha|date|created/.test(v));
+  const hasTotal = flat.some(v => /total|monto|amount|gmv/.test(v));
+  if(hasDate && hasTotal) return 'generic';
+
+  return 'unknown';
+}
+
+// ── RAPPI ORDERS (simple export) ─────────────────────────────────────────
+function parseRappiOrders(rows, platOverride){
+  const hi=rows.findIndex(r=>r.some(v=>/^orden$/i.test(String(v||''))));
+  if(hi<0) return [];
+  const h=rows[hi].map(v=>String(v||'').toLowerCase().trim());
+  const ci={
+    orden:    h.findIndex(v=>/^orden$/.test(v)),
+    fecha:    h.findIndex(v=>/fecha|date/.test(v)),
+    total:    h.findIndex(v=>/^total$|^monto$/.test(v)),
+    estado:   h.findIndex(v=>/estado|status/.test(v)),
+    sucursal: h.findIndex(v=>/sucursal|branch|local|tienda/.test(v)),
+    metodo:   h.findIndex(v=>/m.todo|pago|payment/.test(v)),
+  };
+  return rows.slice(hi+1).filter(r=>r.some(v=>v)).map(row=>{
+    const g=(k)=>ci[k]>=0?row[ci[k]]:'';
+    return {
+      id:       String(g('orden')||''),
+      date:     parseDate(String(g('fecha')||'')),
+      total:    toFloat(g('total')),
+      cancelled:/cancel|rechaz/i.test(String(g('estado')||'')),
+      sucursal: String(g('sucursal')||'Principal'),
+      metodo:   String(g('metodo')||'Online'),
+      platform: platOverride||'rappi',
+      estado:   String(g('estado')||''),
+      items:'', comision:0, ingreso:0, basePrice:0,
+      _fmt:'rappi_orders',
+    };
+  }).filter(o=>o.total>0||o.cancelled);
+}
+
+// ── RAPPI FINANCIAL (Detalle sheet) ─────────────────────────────────────
+function parseRappiFinancial(rows, platOverride){
+  const hi=rows.findIndex(r=>r.some(v=>/^venta bruta$/i.test(String(v||''))));
+  if(hi<0) return [];
+  const h=rows[hi].map(v=>String(v||'').toLowerCase().trim());
+  const fi=(kw)=>h.findIndex(v=>kw.test(v));
+  const ci={
+    fecha:   fi(/fecha de creaci.n/),
+    orden:   fi(/^id de la .rden$/),
+    tienda:  fi(/nombre de la tienda/),
+    metodo:  fi(/m.todo de pago/),
+    estado:  fi(/estado de la .rden/),
+    ventaB:  fi(/^venta bruta$/),
+    base:    fi(/ventas base por uso/),
+    comPlat: fi(/uso y alquiler de plataforma rappi$/),
+    descAli: fi(/descuento de producto asumido por el ali/),
+    prime:   fi(/^prime$/),
+  };
+  const g=(row,k)=>ci[k]>=0&&row[ci[k]]!=null?row[ci[k]]:'';
+  return rows.slice(hi+1).filter(r=>r.some(v=>v)).map(row=>{
+    const estado=String(g(row,'estado')||'').toLowerCase();
+    const cancelled=/canceled|cancelad/.test(estado);
+    const ventaB = toFloat(g(row,'ventaB'));
+    const base   = toFloat(g(row,'base'));
+    const comPlat= Math.abs(toFloat(g(row,'comPlat')));
+    const descAli= Math.abs(toFloat(g(row,'descAli')));
+    // Precio pagado por cliente = ventaB (es el precio cobrado al cliente)
+    // Precio base real = ventaB + descAli (precio antes del descuento del aliado)
+    const basePrice = ventaB + descAli;
+    const discPct   = basePrice > 0 ? descAli/basePrice : 0;
+    return {
+      id:       String(g(row,'orden')||''),
+      date:     parseDate(String(g(row,'fecha')||'')),
+      total:    ventaB,          // lo que pagó el cliente
+      basePrice,                  // precio lista (antes del descuento)
+      discAmt:  descAli,          // descuento asumido por el restaurante
+      discPct,
+      cancelled,
+      sucursal: String(g(row,'tienda')||'Principal'),
+      metodo:   String(g(row,'metodo')||'Online'),
+      platform: platOverride||'rappi',
+      estado:   String(g(row,'estado')||''),
+      comision: comPlat,
+      ingreso:  base - comPlat,  // net al restaurante
+      items:'',
+      isPrime:  /true/i.test(String(g(row,'prime')||'')),
+      _fmt:'rappi_financial',
+    };
+  }).filter(o=>o.total>0||o.cancelled);
+}
+
+// ── PEDIDOSYA ORDERS (orderDetails) ─────────────────────────────────────
+function parsePeyaOrders(rows, platOverride){
+  const hi=rows.findIndex(r=>r.some(v=>/nro de pedido/i.test(String(v||''))));
+  if(hi<0) return [];
+  const h=rows[hi].map(v=>String(v||'').toLowerCase().trim());
+  const fi=(kw)=>h.findIndex(v=>kw.test(v));
+  const ci={
+    sucursal: fi(/nombre del local/),
+    orden:    fi(/nro de pedido/),
+    metodo:   fi(/forma de pago/),
+    estado:   fi(/estado del pedido/),
+    fecha:    fi(/fecha del pedido/),
+    total:    fi(/total parcial/),
+    comision: fi(/^comisi.n$/),
+    ingreso:  fi(/ingreso estimado/),
+    items:    fi(/art.culos/),
+    reclamo:  fi(/tiene reclamos/),
+    motivo:   fi(/motivo del reclamo/),
+    descAli:  fi(/descuento financiado por ust/),
+    descPeya: fi(/descuento financiado por ped/),
+  };
+  const g=(row,k)=>ci[k]>=0&&row[ci[k]]!=null?row[ci[k]]:'';
+  return rows.slice(hi+1).filter(r=>r.some(v=>v)).map(row=>{
+    const total   = toFloat(g(row,'total'));
+    const descAli = toFloat(g(row,'descAli'));
+    const basePrice = total + descAli;  // precio lista = lo pagado + descuento del aliado
+    return {
+      id:       String(g(row,'orden')||''),
+      date:     parseDate(String(g(row,'fecha')||'')),
+      total,
+      basePrice,
+      discAmt:  descAli,
+      discPct:  basePrice>0?descAli/basePrice:0,
+      cancelled:/cancel|rechaz/i.test(String(g(row,'estado')||'')),
+      sucursal: String(g(row,'sucursal')||'Principal'),
+      metodo:   String(g(row,'metodo')||'Online'),
+      platform: platOverride||'peya',
+      estado:   String(g(row,'estado')||''),
+      comision: Math.abs(toFloat(g(row,'comision'))),
+      ingreso:  toFloat(g(row,'ingreso')),
+      items:    String(g(row,'items')||''),
+      reclamo:  String(g(row,'reclamo')||''),
+      motivoReclamo: String(g(row,'motivo')||''),
+      _fmt:'peya_orders',
+    };
+  }).filter(o=>o.total>0||o.cancelled);
+}
+
+// ── PEDIDOSYA SUMMARY (earnings-summary) ────────────────────────────────
+function parsePeyaSummary(rows){
+  const hi=rows.findIndex(r=>r.some(v=>/período abarcado/i.test(String(v||''))));
+  if(hi<0) return null;
+  const h=rows[hi].map(v=>String(v||'').toLowerCase().trim());
+  const data=rows[hi+1];
+  if(!data) return null;
+  const gv=(kw)=>{ const i=h.findIndex(v=>kw.test(v)); return i>=0?toFloat(data[i]):0; };
+  const gs=(kw)=>{ const i=h.findIndex(v=>kw.test(v)); return i>=0?String(data[i]||''):''  ; };
+  return {
+    _type:      'peya_summary',
+    period:     gs(/período abarcado/),
+    orders:     Math.round(gv(/cantidad de .rdenes/)),
+    payTotal:   gv(/pago total/),
+    ventasNetas:gv(/ventas netas/),
+    commission: Math.abs(gv(/servicio por ventas/)),
+    adSpend:    Math.abs(gv(/publicidad/)),
+    credit:     Math.abs(gv(/crédito/)),
+    descPeya:   gv(/descuento.*ped/),
+  };
+}
+
+// ── MAIN FILE PARSER ────────────────────────────────────────────────────
+// ── GENERIC PARSER — works for any platform with date+total columns ────────
+function parseGeneric(rows, platGuess){
+  // Find header row (first row with 3+ non-empty cells)
+  let hi = rows.findIndex(r => r.filter(v=>v&&String(v).trim()).length >= 3);
+  if(hi < 0) return [];
+  const h = rows[hi].map(v => String(v||'').toLowerCase().trim());
+
+  const find = patterns => h.findIndex(v => patterns.some(p => p.test(v)));
+  const ci = {
+    id:       find([/^id$|^orden$|^order|^num/]),
+    fecha:    find([/fecha|date|created|hora/]),
+    total:    find([/^total$|^monto$|^amount$|^gmv$|^valor$/]),
+    estado:   find([/estado|status/]),
+    sucursal: find([/sucursal|branch|local|tienda|store|restaurant/]),
+    metodo:   find([/m.todo|pago|payment|forma/]),
+  };
+
+  const g = (row, k) => ci[k] >= 0 && row[ci[k]] != null ? row[ci[k]] : '';
+
+  return rows.slice(hi+1).filter(r => r.some(v=>v)).map(row => {
+    const total = toFloat(g(row,'total'));
+    const estadoStr = String(g(row,'estado')||'').toLowerCase();
+    const cancelled = /cancel|rechaz|fallid/i.test(estadoStr);
+    return {
+      id:       String(g(row,'id')||Math.random().toString(36).slice(2)),
+      date:     parseDate(String(g(row,'fecha')||'')),
+      total,
+      basePrice: total,   // no discount info available
+      discAmt:  0, discPct: 0,
+      cancelled,
+      sucursal: String(g(row,'sucursal')||'Principal'),
+      metodo:   String(g(row,'metodo')||'Online'),
+      platform: platGuess || 'other',
+      estado:   String(g(row,'estado')||'Desconocido'),
+      comision: 0, ingreso: 0,
+      items: '', reclamo: '', motivoReclamo: '',
+      _fmt: 'generic',
+    };
+  }).filter(o => o.total > 0 || o.cancelled);
+}
+
+// ── Parse all files with detailed error reporting ────────────────────────────
+// Each SHEET is detected and parsed independently (Rappi reports have 5 sheets)
+function parseSheet(rows, pl, logEntry){
+  const fmt = detectFormat(rows);
+  if(fmt === 'peya_summary'){
+    return { summary: parsePeyaSummary(rows), orders: [], fmt };
+  }
+  let parsed = [];
+  if(fmt === 'rappi_financial')      parsed = parseRappiFinancial(rows, pl||'rappi');
+  else if(fmt === 'peya_orders')     parsed = parsePeyaOrders(rows, pl||'peya');
+  else if(fmt === 'rappi_orders')    parsed = parseRappiOrders(rows, pl||'rappi');
+  else if(fmt === 'generic')         parsed = parseGeneric(rows, pl||'other');
+  else {
+    // Last resort: try all parsers, keep the best
+    const attempts = [
+      parseRappiFinancial(rows, pl||'rappi'),
+      parseRappiOrders(rows, pl||'rappi'),
+      parsePeyaOrders(rows, pl||'peya'),
+      parseGeneric(rows, pl||'other'),
+    ];
+    parsed = attempts.reduce((best,a) => a.length > best.length ? a : best, []);
+  }
+  return { summary: null, orders: parsed, fmt };
+}
+
+async function parseAllFiles(files){
+  const orders = [];
+  orders._peyaSummary = null;
+  orders._parseLog    = [];
+
+  for(const file of files){
+    const logEntry = { name: file.name, fmt: 'unknown', rows: 0, orders: 0, error: null, sheets: [] };
+    try{
+      const bin = await readBinary(file);
+      let wb;
+      try{
+        wb = XLSX.read(bin, { type:'binary', cellDates:true, WTF:false, bookVBA:false });
+      } catch(e1){
+        try{
+          const u8 = new Uint8Array(bin.length);
+          for(let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+          wb = XLSX.read(u8, { type:'array', cellDates:true, WTF:false });
+        } catch(e2){
+          logEntry.error = 'No se pudo leer el archivo: ' + e2.message;
+          orders._parseLog.push(logEntry);
+          continue;
+        }
+      }
+
+      const pl = detectPlat(file.name);
+      let fileOrders = 0;
+
+      // Process EACH SHEET independently
+      for(const sn of wb.SheetNames){
+        const ws = wb.Sheets[sn];
+        const rows = XLSX.utils.sheet_to_json(ws, { raw:false, defval:'', header:1 });
+        if(!rows || rows.length < 2) continue;
+        logEntry.rows += rows.length;
+
+        const res = parseSheet(rows, pl, logEntry);
+        logEntry.sheets.push({ name: sn, fmt: res.fmt, orders: res.orders.length });
+
+        if(res.summary && !orders._peyaSummary){
+          orders._peyaSummary = res.summary;
+          fileOrders += 1;
+        }
+        if(res.orders.length > 0){
+          orders.push(...res.orders);
+          fileOrders += res.orders.length;
+          if(logEntry.fmt === 'unknown') logEntry.fmt = res.fmt;
+        }
+      }
+
+      logEntry.orders = fileOrders;
+      if(fileOrders === 0){
+        logEntry.error = 'Archivo leído ('+wb.SheetNames.length+' hojas) pero sin órdenes reconocibles.';
+      }
+    } catch(err){
+      logEntry.error = err.message;
+      console.error(file.name, err);
+    }
+    orders._parseLog.push(logEntry);
+  }
+  return orders;
+}
+
+// ════════════════════════════════════════════════════════
+//  ANALYSIS ENGINE
+// ════════════════════════════════════════════════════════
+function analyze(allOrders){
+  const done  = allOrders.filter(o=>!o.cancelled&&o.total>0);
+  const canc  = allOrders.filter(o=>o.cancelled);
+  const total_n = allOrders.length;
+  const done_n  = done.length;
+  const canc_n  = canc.length;
+  const canc_pct= total_n>0?canc_n/total_n*100:0;
+
+  // GMV: sum of total (what customer paid)
+  const gmv = done.reduce((s,o)=>s+o.total,0);
+  // Avg ticket
+  const avgTicket = done_n>0 ? gmv/done_n : 0;
+  // Base price GMV (where available)
+  const baseGMV   = done.filter(o=>o.basePrice>0).reduce((s,o)=>s+o.basePrice,0);
+  // Avg discount
+  const ordersWithDisc = done.filter(o=>o.discPct>0);
+  const avgDiscPct = ordersWithDisc.length>0
+    ? ordersWithDisc.reduce((s,o)=>s+o.discPct,0)/ordersWithDisc.length : 0;
+
+  // Financials
+  const totalComision = done.reduce((s,o)=>s+(o.comision||0),0);
+  const totalIngreso  = done.reduce((s,o)=>s+(o.ingreso||0),0);
+  const feeRappi = APP.config.feeRappi||0;
+  const feePeya  = APP.config.feePeya||0;
+
+  // Dates
+  const withDate = done.filter(o=>o.date);
+  withDate.sort((a,b)=>a.date-b.date);
+  const earliest = withDate[0]?.date;
+  const latest   = withDate[withDate.length-1]?.date;
+
+  // Daily GMV
+  const byDay={};
+  withDate.forEach(o=>{
+    const d=o.date.toISOString().split('T')[0];
+    if(!byDay[d])byDay[d]={orders:0,gmv:0};
+    byDay[d].orders++; byDay[d].gmv+=o.total;
+  });
+  const days=Object.keys(byDay).sort();
+
+  // Weekly (for ticket trend)
+  const byWeek={};
+  withDate.forEach(o=>{
+    const wd=new Date(o.date); wd.setDate(wd.getDate()-wd.getDay());
+    const wk=wd.toISOString().split('T')[0];
+    if(!byWeek[wk])byWeek[wk]={orders:0,gmv:0};
+    byWeek[wk].orders++; byWeek[wk].gmv+=o.total;
+  });
+  const weeks=Object.keys(byWeek).sort();
+
+  // DOW
+  const dowO=new Array(7).fill(0), dowGMV=new Array(7).fill(0);
+  withDate.forEach(o=>{ dowO[o.date.getDay()]++; dowGMV[o.date.getDay()]+=o.total; });
+  const bestDow  = dowO.indexOf(Math.max(...dowO));
+  const worstDow = dowO.indexOf(Math.min(...dowO.filter(v=>v>0)));
+
+  // Hour heatmap
+  const hm=Array.from({length:24},()=>new Array(7).fill(0));
+  withDate.forEach(o=>hm[o.date.getHours()][o.date.getDay()]++);
+  const hourTotals=Array.from({length:24},(_,h)=>hm[h].reduce((a,b)=>a+b,0));
+  const peakHour=hourTotals.indexOf(Math.max(...hourTotals));
+
+  // Ticket distribution
+  const BANDS=[{lo:0,hi:30,lbl:'<30'},{lo:30,hi:50,lbl:'30–50'},{lo:50,hi:80,lbl:'50–80'},{lo:80,hi:120,lbl:'80–120'},{lo:120,hi:9999,lbl:'120+'}];
+  const ticketDist=BANDS.map(b=>({...b,count:done.filter(o=>o.total>=b.lo&&o.total<b.hi).length}));
+
+  // By platform
+  const byPlat={};
+  allOrders.forEach(o=>{
+    const p=o.platform||'unknown';
+    if(!byPlat[p])byPlat[p]={orders:0,done:0,gmv:0,comision:0,ingreso:0,canc:0};
+    byPlat[p].orders++;
+    if(!o.cancelled&&o.total>0){ byPlat[p].done++; byPlat[p].gmv+=o.total; byPlat[p].comision+=(o.comision||0); byPlat[p].ingreso+=(o.ingreso||0); }
+    if(o.cancelled) byPlat[p].canc++;
+  });
+
+  // By sucursal
+  const bySucursal={};
+  done.forEach(o=>{
+    const s=o.sucursal||'Principal';
+    if(!bySucursal[s])bySucursal[s]={orders:0,gmv:0};
+    bySucursal[s].orders++; bySucursal[s].gmv+=o.total;
+  });
+
+  // Trend (first half vs second half)
+  const dailyGMVs=days.map(d=>byDay[d].gmv);
+  const half=Math.floor(dailyGMVs.length/2);
+  const avg1=half>0?dailyGMVs.slice(0,half).reduce((a,b)=>a+b,0)/half:0;
+  const avg2=dailyGMVs.slice(half).length>0?dailyGMVs.slice(half).reduce((a,b)=>a+b,0)/dailyGMVs.slice(half).length:0;
+  const trendPct=avg1>0?(avg2-avg1)/avg1*100:0;
+
+  // Avg daily orders
+  const avgDailyOrders=done_n/Math.max(days.length,1);
+
+  // Status breakdown
+  const byStatus={};
+  allOrders.forEach(o=>{ const s=o.estado||'Desconocido'; byStatus[s]=(byStatus[s]||0)+1; });
+
+  return {
+    done_n, total_n, canc_n, canc_pct, gmv, avgTicket,
+    baseGMV, avgDiscPct,
+    totalComision, totalIngreso,
+    earliest, latest, days, dailyGMVs,
+    byWeek, weeks, dowO, dowGMV, bestDow, worstDow,
+    hm, hourTotals, peakHour,
+    ticketDist, byPlat, bySucursal, byStatus,
+    trendPct, avg1, avg2,
+    totalDays: days.length,
+    avgDailyOrders,
+    peyaSummary: allOrders._peyaSummary || null,
+  };
+}
+
+// ════════════════════════════════════════════════════════
+//  RENDER DASHBOARD
+// ════════════════════════════════════════════════════════
+const fp  = n => 'S/ '+(n||0).toLocaleString('es-PE',{minimumFractionDigits:0,maximumFractionDigits:0});
+const fpd = n => (n||0).toLocaleString('es-PE',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
+const fmtD= d => d?d.toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'}):'—';
+const DOW_NAMES=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+// Color helpers
+const C={r:'rgba(200,57,43',g:'rgba(200,160,69',d:'rgba(15,15,13',gr:'rgba(45,106,79',b:'rgba(43,87,151'};
+const cc=(c,a)=>`${c},${a})`;
+
+function renderDashboard(D, filteredOrders){
+  const platNames=Object.fromEntries(Object.entries(PLATFORMS).map(([k,v])=>[k,v.label]));
+  const platStr = Object.keys(D.byPlat).map(p=>platNames[p]||p).join(' · ');
+
+  // Subtitle
+  document.getElementById('dashSubtitle').textContent =
+    `${fmtD(D.earliest)} — ${fmtD(D.latest)} · ${D.totalDays} días · ${platStr}`;
+
+  // Platform chips visibility
+  const plats=Object.keys(D.byPlat);
+  // Dynamic platform chips
+  const filterDiv = document.getElementById('platFilter');
+  // Keep "Todo" chip, rebuild platform chips
+  const existingChips = filterDiv.querySelectorAll('.plat-chip:not(:first-child)');
+  existingChips.forEach(c=>c.remove());
+  plats.forEach(p => {
+    const info = getPlatInfo(p);
+    const chip = document.createElement('button');
+    chip.className = 'plat-chip';
+    chip.textContent = info.label;
+    chip.onclick = () => setPlatFilter(p, chip);
+    filterDiv.appendChild(chip);
+  });
+
+  // Alerts
+  const alerts=[];
+  if(D.canc_pct>10) alerts.push({type:'err',ico:'⚠️',msg:`<strong>Cancelaciones al ${D.canc_pct.toFixed(1)}%</strong> — el benchmark saludable es <5%. Cada cancelación penaliza el ranking en el algoritmo de las plataformas.`});
+  if(D.trendPct<-15) alerts.push({type:'err',ico:'📉',msg:`<strong>GMV cayó ${Math.abs(D.trendPct).toFixed(0)}% en la segunda mitad del período</strong> — requiere acción urgente. Activar campaña de reactivación.`});
+  if(D.avgDiscPct>0.30) alerts.push({type:'warn',ico:'💸',msg:`<strong>Descuento promedio del ${(D.avgDiscPct*100).toFixed(0)}%</strong> — el restaurante absorbe una parte importante del GMV. Evaluar reducir descuento en horarios peak.`});
+  if(D.peyaSummary&&D.peyaSummary.adSpend>D.peyaSummary.ventasNetas*0.20) alerts.push({type:'warn',ico:'📣',msg:`<strong>Ads PedidosYa: ${fp(D.peyaSummary.adSpend)}</strong> representa el ${(D.peyaSummary.adSpend/D.peyaSummary.ventasNetas*100).toFixed(0)}% del GMV. Target recomendado: <15%.`});
+  if(D.trendPct>15) alerts.push({type:'ok',ico:'🚀',msg:`<strong>GMV creció ${D.trendPct.toFixed(0)}% en la segunda mitad del período</strong> — momento óptimo para escalar campañas y explorar una segunda plataforma.`});
+  document.getElementById('alertsBox').innerHTML = alerts.map(a=>
+    `<div class="alert ${a.type}"><span class="alert-ico">${a.ico}</span><span class="alert-body">${a.msg}</span></div>`
+  ).join('');
+
+  // KPIs
+  const trendClass= D.trendPct>=0?'up':'dn';
+  const trendSign = D.trendPct>=0?'↑':'↓';
+  const cancClass = D.canc_pct<5?'up':D.canc_pct<10?'flat':'dn';
+  const kpis=[
+    {cls:'primary', lbl:'GMV Total',    val:fp(D.gmv),
+     sub:`${D.done_n.toLocaleString()} órdenes completadas`,
+     delta:`${trendSign} ${Math.abs(D.trendPct).toFixed(1)}% vs primera mitad`, dClass:trendClass},
+    {cls:'primary', lbl:'Ticket Promedio', val:fp(D.avgTicket),
+     sub:`Meta sugerida: ${fp(Math.round(D.avgTicket*1.25/5)*5)}`,
+     delta:D.avgDiscPct>0?`${(D.avgDiscPct*100).toFixed(0)}% dto. promedio aplicado`:'Sin datos de descuento', dClass:'flat'},
+    {cls:'positive', lbl:'Órdenes / Día', val:D.avgDailyOrders.toFixed(1),
+     sub:`${D.done_n} en ${D.totalDays} días`,
+     delta:`Mejor día: ${DOW_NAMES[D.bestDow]} (${D.dowO[D.bestDow]} órdenes)`, dClass:'up'},
+    {cls:'warning', lbl:'Cancelaciones', val:fpd(D.canc_pct),
+     sub:`${D.canc_n} de ${D.total_n} registros`,
+     delta:D.canc_pct<5?'✓ En rango saludable':D.canc_pct<10?'⚠ Sobre benchmark':'✗ Crítico — actuar', dClass:cancClass},
+    {cls:'positive', lbl:'GMV/Semana',  val:fp(D.gmv/Math.max(D.weeks.length,1)),
+     sub:`${D.weeks.length} semanas analizadas`,
+     delta:`Máx semana: ${fp(Math.max(...D.weeks.map(w=>D.byWeek[w].gmv)))}`, dClass:'up'},
+    {cls:'warning', lbl:'Plataformas', val:Object.keys(D.byPlat).length.toString(),
+     sub:Object.keys(D.byPlat).map(p=>platNames[p]||p).join(' · '),
+     delta:Object.keys(D.byPlat).length<2?'⚡ Oportunidad: activar 2da plataforma':'✓ Multi-plataforma', dClass:Object.keys(D.byPlat).length<2?'dn':'up'},
+  ];
+  document.getElementById('kpiGrid').innerHTML=kpis.map(k=>`
+    <div class="kpi-card ${k.cls}">
+      <div class="kpi-lbl">${k.lbl}</div>
+      <div class="kpi-val">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+      <div class="kpi-delta ${k.dClass}">${k.delta}</div>
+    </div>`).join('');
+
+  // Platform comparison table
+  const platEntries=Object.entries(D.byPlat).filter(([,v])=>v.done>0)
+    .sort((a,b)=>b[1].gmv-a[1].gmv);
+  if(platEntries.length>0){
+    const rows=platEntries.map(([p,v])=>{
+      const ticket=v.done>0?v.gmv/v.done:0;
+      const cancPct=v.orders>0?v.canc/v.orders*100:0;
+      const feeRaw  = p==='rappi'?APP.config.feeRappi:p==='peya'?APP.config.feePeya:0;
+      const feeAmt  = feeRaw>0?v.gmv*feeRaw/100:v.comision;
+      const netAmt  = v.ingreso>0?v.ingreso:(feeAmt>0?v.gmv-feeAmt:0);
+      const netPct  = v.gmv>0&&netAmt>0?netAmt/v.gmv*100:0;
+      return `<tr>
+        <td><strong>${platNames[p]||p}</strong></td>
+        <td style="font-family:'DM Mono',monospace">${v.done.toLocaleString()}</td>
+        <td style="font-family:'DM Mono',monospace">${fp(v.gmv)}</td>
+        <td style="font-family:'DM Mono',monospace">${fp(ticket)}</td>
+        <td style="font-family:'DM Mono',monospace;color:${cancPct>10?'var(--r)':'var(--gr)'}">${cancPct.toFixed(1)}%</td>
+        <td style="font-family:'DM Mono',monospace;color:var(--m)">${feeAmt>0?fp(feeAmt)+'  ('+((feeAmt/v.gmv)*100).toFixed(0)+'%)':'—'}</td>
+        <td style="font-family:'DM Mono',monospace;color:var(--gr)">${netAmt>0?fp(netAmt)+'  ('+netPct.toFixed(0)+'%)':'—'}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('platCompTable').innerHTML=`
+      <table class="plat-table">
+        <thead><tr>
+          <th>Plataforma</th><th>Órdenes</th><th>GMV</th><th>Ticket prom.</th>
+          <th>Cancelac.</th><th>Fee/Comisión</th><th>Ingreso neto est.</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  } else {
+    document.getElementById('platCompCard').style.display='none';
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  RENDER CHARTS
+// ════════════════════════════════════════════════════════
+function renderCharts(D){
+  Object.values(APP.charts).forEach(c=>{try{c.destroy();}catch(e){}});
+  APP.charts={};
+
+  // GMV Diario
+  APP.charts.gmv=new Chart(document.getElementById('cGMV'),{
+    type:'line',
+    data:{
+      labels:D.days.map(d=>d.slice(5)),
+      datasets:[{data:D.dailyGMVs,borderColor:cc(C.r,'1'),backgroundColor:cc(C.r,'.07'),borderWidth:2,tension:.4,fill:true,pointRadius:D.days.length>30?0:3}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>'S/'+v.toLocaleString('es-PE'),font:{size:10}},grid:{color:cc(C.d,'.06')}},
+              x:{ticks:{font:{size:9}},grid:{display:false}}}}
+  });
+
+  // DOW
+  APP.charts.dow=new Chart(document.getElementById('cDOW'),{
+    type:'bar',
+    data:{
+      labels:DOW_NAMES,
+      datasets:[{data:D.dowO,backgroundColor:D.dowO.map((_,i)=>i===D.bestDow?cc(C.r,'.8'):cc(C.d,'.18')),borderRadius:2,borderSkipped:false}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{font:{size:10}},grid:{color:cc(C.d,'.06')}},x:{grid:{display:false}}}}
+  });
+
+  // Ticket semanal
+  const wkTickets=D.weeks.map(w=>D.byWeek[w].orders>0?D.byWeek[w].gmv/D.byWeek[w].orders:0);
+  APP.charts.ticket=new Chart(document.getElementById('cTicket'),{
+    type:'line',
+    data:{
+      labels:D.weeks.map((_,i)=>`S${i+1}`),
+      datasets:[{data:wkTickets,borderColor:cc(C.g,'1'),backgroundColor:cc(C.g,'.07'),borderWidth:2,tension:.3,fill:true,pointRadius:3}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>'S/'+v.toFixed(0),font:{size:10}},grid:{color:cc(C.d,'.06')}},x:{grid:{display:false}}}}
+  });
+
+  // Ticket distribution
+  APP.charts.tickDist=new Chart(document.getElementById('cTickDist'),{
+    type:'bar',
+    data:{
+      labels:D.ticketDist.map(b=>b.lbl),
+      datasets:[{
+        data:D.ticketDist.map(b=>b.count),
+        backgroundColor:D.ticketDist.map(b=>b.lo<30?cc(C.r,'.7'):b.lo<60?cc(C.g,'.7'):cc(C.gr,'.7')),
+        borderRadius:2,borderSkipped:false
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{font:{size:10}},grid:{color:cc(C.d,'.06')}},x:{grid:{display:false}}}}
+  });
+}
+
+// ════════════════════════════════════════════════════════
+//  PLATFORM FILTER
+// ════════════════════════════════════════════════════════
+function setPlatFilter(plat, el){
+  APP.platFilter = plat;
+  document.querySelectorAll('.plat-chip').forEach(c => {
+    c.className = 'plat-chip';
+  });
+  if(el){
+    el.className = 'plat-chip';
+    el.style.background = plat==='all' ? 'var(--d)' : (getPlatInfo(plat).color);
+    el.style.color = '#fff';
+    el.style.borderColor = plat==='all' ? 'var(--d)' : getPlatInfo(plat).color;
+  }
+  // Re-filter orders and re-render dashboard
+  const filtered = plat==='all' ? APP.allOrders : APP.allOrders.filter(o=>o.platform===plat);
+  const D2 = analyze(filtered);
+  D2.peyaSummary = APP.D.peyaSummary; // keep summary
+  renderDashboard(D2, filtered);
+  renderCharts(D2);
+}
+
+// ════════════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════════════
+function showPanel(id, el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  const panel=document.getElementById('p-'+id);
+  if(panel) panel.classList.add('active');
+  if(el&&!el.classList.contains('tab-coming')) el.classList.add('active');
+  if(el) el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+
+// ════════════════════════════════════════════════════════
+//  MAIN FLOW
+// ════════════════════════════════════════════════════════
+async function runAnalysis(){
+  if(!APP.files.length) return;
+  saveConfig();
+  showPanel('ldWrap');
+  hide('upWrap');
+  const ld=t=>document.getElementById('ldTxt').textContent=t;
+  try{
+    ld('Leyendo archivos...'); await sleep(200);
+    APP.allOrders = await parseAllFiles(APP.files);
+    // Dedupe by id+platform (multi-sheet files can repeat orders)
+    {
+      const seen = new Set();
+      const deduped = [];
+      for(const o of APP.allOrders){
+        const key = o.platform + '|' + o.id;
+        if(o.id && seen.has(key)) continue;
+        if(o.id) seen.add(key);
+        deduped.push(o);
+      }
+      deduped._peyaSummary = APP.allOrders._peyaSummary;
+      deduped._parseLog    = APP.allOrders._parseLog;
+      APP.allOrders = deduped;
+    }
+    // Show parse log
+    const log = APP.allOrders._parseLog || [];
+    const errFiles = log.filter(l => l.error || l.orders === 0);
+    if(errFiles.length > 0){
+      const msg = errFiles.map(l =>
+        `• ${l.name}: ${l.error || 'Sin órdenes (formato: '+l.fmt+')'}`
+      ).join('\n');
+      console.warn('Parse warnings:', msg);
+    }
+    if(!APP.allOrders.length){
+      const details = log.map(l =>
+        `• ${l.name}: ${l.fmt} — ${l.orders} órdenes${l.error?' ⚠ '+l.error:''}`
+      ).join('\n');
+      alert('No se encontraron órdenes.\n\nDetalle por archivo:\n'+details+
+            '\n\nVerifica que sean exports de Rappi, PedidosYa u otra plataforma de delivery.');
+      showPanel('upWrap'); hide('ldWrap'); return;
+    }
+    ld(`Analizando ${APP.allOrders.length} registros...`); await sleep(300);
+    APP.D = analyze(APP.allOrders);
+    ld('Generando Dashboard...'); await sleep(200);
+    showReport();
+    renderDashboard(APP.D, APP.allOrders);
+    renderStage2();
+    setTimeout(()=>renderCharts(APP.D), 80);
+  }catch(err){
+    console.error(err);
+    alert('Error: '+err.message);
+    showPanel('upWrap'); hide('ldWrap');
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  DEMO MODE
+// ════════════════════════════════════════════════════════
+function generateDemoOrders(){
+  const ITEMS=[
+    {n:'Cheddar Bacon Burger',t:'main',p:32},{n:'Oklahoma Burger',t:'main',p:28},
+    {n:'American Style',t:'main',p:26},{n:'Seasoned Fries',t:'side',p:14},
+    {n:'Coca Cola 500ml',t:'drink',p:7},{n:'Oreo Milkshake',t:'dessert',p:18},
+    {n:'Combo Mr. Smash',t:'combo',p:45},{n:'Combo Para 2',t:'combo',p:78},
+  ];
+  const PLATS=['rappi','peya'];
+  const SUCURSALES=['Mr. Smash - El Refugio','Mr. Smash - Miraflores'];
+  const now=new Date();
+  const orders=[];
+  for(let d=90;d>=0;d--){
+    const date=new Date(now-d*86400000);
+    const dow=date.getDay();
+    const base=[1,1,1,1,2,3,2][dow];
+    const n=Math.max(0,base+Math.floor(Math.random()*3)-1);
+    for(let i=0;i<n;i++){
+      const h=[12,13,13,19,20,20,21][Math.floor(Math.random()*7)];
+      const od=new Date(date.getFullYear(),date.getMonth(),date.getDate(),h,Math.floor(Math.random()*59));
+      const plat=PLATS[Math.random()<0.45?0:1];
+      const cancelled=Math.random()<0.07;
+      const nItems=Math.random()<0.5?1:Math.random()<0.6?2:3;
+      let total=0; const iNames=[];
+      for(let j=0;j<nItems;j++){
+        const it=ITEMS[Math.floor(Math.random()*ITEMS.length)];
+        total+=it.p; iNames.push('1 '+it.n);
+      }
+      const discPct=0.22+Math.random()*0.12;
+      const baseP=total/(1-discPct);
+      orders.push({
+        id:'D'+Math.random().toString(36).slice(2,8).toUpperCase(),
+        date:od, total:cancelled?0:Math.round(total), basePrice:Math.round(baseP),
+        discAmt:Math.round(baseP-total), discPct,
+        cancelled, sucursal:SUCURSALES[Math.random()<0.7?0:1],
+        metodo:Math.random()<0.8?'Online':'Efectivo',
+        platform:plat, estado:cancelled?'Cancelado':'Entregado',
+        comision:cancelled?0:Math.round(total*(plat==='rappi'?0.20:0.19)),
+        ingreso:cancelled?0:Math.round(total*0.47),
+        items:iNames.join(', '), reclamo:'', motivoReclamo:'',
+        isPrime:Math.random()<0.45, _fmt:'demo',
+      });
+    }
+  }
+  orders._peyaSummary={
+    _type:'peya_summary',period:'Dic 2025 – Jun 2026 (demo)',
+    orders:490,payTotal:6207,ventasNetas:18424,
+    commission:3534,adSpend:5089,credit:359,descPeya:309,
+  };
+  return orders;
+}
+
+async function runDemo(){
+  APP.isDemo = true;
+  showPanel('ldWrap'); hide('upWrap');
+  document.getElementById('ldTxt').textContent='Generando datos de ejemplo...';
+  await sleep(500);
+  APP.allOrders = generateDemoOrders();
+  APP.D = analyze(APP.allOrders);
+  document.getElementById('ldTxt').textContent='Renderizando Dashboard...';
+  await sleep(300);
+  // Force demo brand name
+  if(!APP.config.brand) APP.config.brand = 'Demo — Mr. Smash Burger';
+  showReport(true);
+  renderDashboard(APP.D, APP.allOrders);
+  renderStage2();
+  setTimeout(()=>renderCharts(APP.D), 80);
+}
+
+function showReport(isDemo=false){
+  hide('ldWrap'); hide('upWrap');
+  showPanel('rptWrap');
+  document.getElementById('tabBar').style.display='flex';
+  // Nav
+  const nb=document.getElementById('navBrand');
+  nb.textContent = (isDemo?'👁 DEMO — ':'')+APP.config.brand;
+  nb.style.display='inline-block';
+  if(isDemo) nb.style.background='rgba(200,160,69,.15)';
+  document.getElementById('btnReset').style.display='inline-block';
+  document.getElementById('btnExport').style.display='inline-block';
+  document.getElementById('btnConfig').style.display='inline-block';
+  // Demo banner
+  const existing=document.getElementById('demoBanner');
+  if(existing) existing.remove();
+  if(isDemo){
+    const banner=document.createElement('div');
+    banner.id='demoBanner';
+    banner.style.cssText='background:rgba(200,160,69,.1);border-bottom:1px solid rgba(200,160,69,.25);padding:7px 24px;font-size:.71rem;color:#8a6000;text-align:center';
+    banner.innerHTML='👁 <strong>MODO DEMO</strong> — Datos de ejemplo. Sube tus archivos reales para el análisis de tu marca.';
+    document.getElementById('rptWrap').prepend(banner);
+  }
+}
+
+function resetAll(){
+  // Destroy charts
+  Object.values(APP.charts).forEach(c=>{try{c.destroy();}catch(e){}});
+  APP.charts={};
+  APP.files=[]; APP.allOrders=[]; APP.D=null; APP.isDemo=false; APP.platFilter='all';
+  // Reset UI
+  document.getElementById('orderFileList').innerHTML='';
+  document.getElementById('ordersFile').value='';
+  document.getElementById('anBtn').disabled=true;
+  document.getElementById('tabBar').style.display='none';
+  hide('rptWrap'); hide('ldWrap'); showPanel('upWrap');
+  // Nav
+  document.getElementById('navBrand').style.display='none';
+  document.getElementById('btnReset').style.display='none';
+  document.getElementById('btnExport').style.display='none';
+  document.getElementById('btnConfig').style.display='none';
+  // Reset tab
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('active',i===0));
+  document.getElementById('demoBanner')?.remove();
+  // Reset plat filter
+  document.querySelectorAll('.plat-chip').forEach(c=>c.className='plat-chip');
+  document.querySelector('.plat-chip').classList.add('active-all');
+}
+
+function showConfig(){
+  window.scrollTo({top:0,behavior:'smooth'});
+  hide('rptWrap');
+  document.getElementById('tabBar').style.display='none';
+  showPanel('upWrap');
+}
+
+
+// ════════════════════════════════════════════════════════
+//  ETAPA 2 — BLOQUES HORARIOS
+// ════════════════════════════════════════════════════════
+const BLOCKS = [
+  { id:'B1', label:'Mañana',        sub:'Apertura–12h', hours:[6,7,8,9,10,11] },
+  { id:'B2', label:'Peak almuerzo', sub:'12–15h',       hours:[12,13,14] },
+  { id:'B3', label:'Valle tarde',   sub:'15–18h',       hours:[15,16,17] },
+  { id:'B4', label:'Peak nocturno', sub:'18–21h',       hours:[18,19,20] },
+  { id:'B5', label:'Noche',         sub:'21h–Cierre',   hours:[21,22,23,0,1] },
+];
+const HOUR_TO_BLOCK = {};
+BLOCKS.forEach((b,bi)=>b.hours.forEach(h=>HOUR_TO_BLOCK[h]=bi));
+
+// Modelo de elasticidad inicial (se calibra con el tracker de KPIs):
+// cada ±1pp de descuento ≈ ±X% de órdenes según la demanda del slot
+const ELAS_PER_PP = { fire:0.005, ok:0.020, low:0.040, dead:0.060 };
+const ELAS_TYPE   = { main:1.2, combo:1.1, side:0.7, drink:0.5, dessert:0.6, addon:0.5, other:0.8 };
+
+function cfgDayIdx(jsDay){ return (jsDay+6)%7; }  // JS: 0=Dom → config: 0=Lun
+
+function findBranchCfg(sucursalName){
+  const branches = APP.config.branches||[];
+  if(!sucursalName) return branches[0]||null;
+  const sl = sucursalName.toLowerCase();
+  return branches.find(b => b.name && (sl.includes(b.name.toLowerCase()) || b.name.toLowerCase().includes(sl)))
+      || branches[0] || null;
+}
+
+function blockIsOpen(blockIdx, jsDay, branchCfg){
+  if(!branchCfg || !branchCfg.hours) return true; // sin config → asumir abierto
+  const dh = branchCfg.hours[cfgDayIdx(jsDay)];
+  if(!dh || dh.active===false) return false;
+  let oH = parseInt((dh.open||'12:00').split(':')[0]);
+  let cH = parseInt((dh.close||'23:00').split(':')[0]);
+  if(cH <= oH) cH += 24; // horario que cruza medianoche
+  return BLOCKS[blockIdx].hours.some(h => (h>=oH && h<cH) || (h+24>=oH && h+24<cH));
+}
+
+// ── Matriz de demanda: bloques × días ──────────────────────────
+function computePatterns(orders, branchFilter){
+  const done = orders.filter(o=>!o.cancelled && o.total>0 && o.date &&
+    (!branchFilter || branchFilter==='__all__' || o.sucursal===branchFilter));
+  // semanas distintas
+  const wkSet = new Set();
+  done.forEach(o=>{ const wd=new Date(o.date); wd.setDate(wd.getDate()-wd.getDay()); wkSet.add(wd.toISOString().split('T')[0]); });
+  const weeks = Math.max(wkSet.size, 1);
+
+  const cells = Array.from({length:BLOCKS.length}, ()=>Array.from({length:7},()=>({orders:0,gmv:0})));
+  done.forEach(o=>{
+    const bi = HOUR_TO_BLOCK[o.date.getHours()];
+    if(bi===undefined) return;
+    const c = cells[bi][o.date.getDay()];
+    c.orders++; c.gmv += o.total;
+  });
+
+  const branchCfg = branchFilter && branchFilter!=='__all__' ? findBranchCfg(branchFilter) : (APP.config.branches||[])[0]||null;
+  let peak = 0;
+  for(let bi=0;bi<BLOCKS.length;bi++) for(let d=0;d<7;d++){
+    if(blockIsOpen(bi,d,branchCfg) && cells[bi][d].orders>peak) peak=cells[bi][d].orders;
+  }
+  const states = cells.map((row,bi)=>row.map((c,d)=>{
+    if(!blockIsOpen(bi,d,branchCfg)) return 'closed';
+    if(peak===0) return 'dead';
+    const idx = c.orders/peak;
+    if(idx>=0.70) return 'fire';
+    if(idx>=0.30) return 'ok';
+    return c.orders>0 ? 'low' : 'dead';
+  }));
+  return { cells, states, weeks, peak, branchCfg, doneCount: done.length };
+}
+
+// ════════════════════════════════════════════════════════
+//  ETAPA 2 — CATÁLOGO DE ÍTEMS (menú CSV + órdenes)
+// ════════════════════════════════════════════════════════
+function normalizeItemName(raw){
+  return String(raw||'').replace(/\[.*?\]/g,'').replace(/[\[\]]/g,'').replace(/\s+/g,' ').trim();
+}
+function classifyItem(name){
+  const n = String(name||'').toLowerCase();
+  if(/combo|pack|duo|trio|para 2|para 3|meal/.test(n)) return 'combo';
+  if(/burger|hamburguesa|sandwich|smash|wrap|hot ?dog|pollo|chicken|salchipapa/.test(n)) return 'main';
+  if(/fries|papas|chips|onion|aros|ensalada|salad|nuggets/.test(n)) return 'side';
+  if(/cola|inca|inka|bebida|drink|agua|jugo|limonada|gaseosa|sprite|fanta|chicha/.test(n)) return 'drink';
+  if(/shake|malteada|helado|brownie|postre|dessert|churro|pie|cheesecake/.test(n)) return 'dessert';
+  if(/salsa|sauce|mayo|ketchup|mostaza|extra|adicional|topping|cremas/.test(n)) return 'addon';
+  return 'other';
+}
+// Más robusto: lowercase, sin acentos, sin caracteres especiales, eliminando typos comunes
+function itemKey(name){
+  let s = normalizeItemName(name).toLowerCase();
+  s = s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); // quitar acentos
+  s = s.replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  // Normalizar typos comunes en menús de restaurantes
+  s = s.replace(/\bseasond\b/g,'seasoned'); // "Seasond fries" → "Seasoned Fries"
+  s = s.replace(/\bok burger\b/g,'oklahoma burger');
+  s = s.replace(/\bmilkshake\b/g,'shake');
+  return s;
+}
+
+function parseOrderItems(orders){
+  const map = {};       // ítems standalone y combos (sin opciones internas)
+  const comboOpts = {}; // opciones elegidas DENTRO de cada combo: comboKey -> {opcionKey: count}
+  orders.filter(o=>!o.cancelled && o.total>0 && o.items).forEach(o=>{
+    // Las opciones internas vienen como [N Item], necesitamos preservar la estructura
+    // Reemplazamos comas dentro de [...] por '||' para no romper el split
+    let raw = o.items.replace(/\[([^\]]*)\]/g, (m,inner)=>'['+inner.replace(/,/g,'||')+']');
+    const parts = raw.split(',').map(s=>s.trim()).filter(Boolean);
+    const totalQty = parts.reduce((s,p)=>{const m=p.match(/^(\d+)/);return s+(m?+m[1]:1);},0)||1;
+    parts.forEach(part=>{
+      const m = part.match(/^(\d+)\s+(.+)$/);
+      if(!m) return;
+      const qty = +m[1];
+      const fullText = m[2];
+      // Separar nombre principal de opciones [...]
+      const cleanName = normalizeItemName(fullText);  // sin []
+      // Re-extraer opciones internas
+      const optMatches = [...fullText.matchAll(/\[([^\]]*)\]/g)].map(x=>x[1].replace(/\|\|/g,','));
+      // El nombre del ítem es solo el texto ANTES del primer [
+      const nameOnly = (fullText.split('[')[0]||'').trim();
+      const itemName = normalizeItemName(nameOnly) || cleanName;
+      if(!itemName || itemName.length<2 || itemName.length>60) return;
+      const k = itemKey(itemName);
+      if(!map[k]) map[k] = { name: itemName, type:classifyItem(itemName), orders:0, qty:0, revenue:0, plats:{} };
+      map[k].orders++; map[k].qty += qty;
+      map[k].revenue += o.total * (qty/totalQty);
+      map[k].plats[o.platform] = (map[k].plats[o.platform]||0)+1;
+
+      // Si tiene opciones internas, guardar para análisis posterior
+      if(optMatches.length > 0){
+        if(!comboOpts[k]) comboOpts[k] = {};
+        // Cada [opcion] puede contener varios items separados por ',' (que ahora son '||')
+        optMatches.forEach(opt=>{
+          opt.split(',').map(s=>s.trim()).filter(Boolean).forEach(o2=>{
+            const om = o2.match(/^(\d+)\s+(.+)$/);
+            if(!om) return;
+            const optName = normalizeItemName(om[2]);
+            const optKey  = itemKey(optName);
+            if(!comboOpts[k][optKey]) comboOpts[k][optKey] = { name: optName, count: 0 };
+            comboOpts[k][optKey].count += +om[1];
+          });
+        });
+      }
+    });
+  });
+  map._comboOptions = comboOpts;
+  return map;
+}
+
+// Descuento promedio observado por plataforma (de órdenes con basePrice>total)
+function platformDiscounts(orders){
+  const acc = {};
+  orders.filter(o=>!o.cancelled && o.total>0 && o.discPct>0).forEach(o=>{
+    if(!acc[o.platform]) acc[o.platform]={s:0,n:0};
+    acc[o.platform].s += o.discPct; acc[o.platform].n++;
+  });
+  const out = {};
+  Object.keys(acc).forEach(p=>out[p]=acc[p].s/acc[p].n);
+  return out;
+}
+
+// Catálogo final: menú CSV (precios base reales) + ítems de órdenes (precio pagado inferido)
+function buildCatalog(orders){
+  const fromOrders = parseOrderItems(orders);
+  const comboOpts  = fromOrders._comboOptions || {};
+  delete fromOrders._comboOptions;
+  const platDisc   = platformDiscounts(orders);
+  const dDefault   = p => platDisc[p]!==undefined ? platDisc[p] : 0.25;
+  const catalog = {};
+
+  // 1) Ítems del menú CSV → fuente de verdad para precio base
+  (APP.menu||[]).forEach(mi=>{
+    const k = itemKey(mi.nombre);
+    if(!k) return;
+    catalog[k] = {
+      name: mi.nombre,
+      desc: mi.descripcion||'',
+      type: (mi.tipo && mi.tipo!=='other') ? mi.tipo : classifyItem(mi.nombre),
+      categoria: mi.categoria||'',
+      base: { rappi: mi.precioRappi||0, peya: mi.precioPeya||0, didi: mi.precioDidi||0 },
+      baseSource: 'menu',
+      orders: 0, revenue: 0, paidEst: 0,
+    };
+  });
+
+  // 2) Ítems detectados en órdenes → demanda real + precio pagado estimado
+  // ACUMULA órdenes/revenue cuando el mismo ítem aparece con typos distintos (Seasoned/Seasond)
+  Object.keys(fromOrders).forEach(k=>{
+    const it = fromOrders[k];
+    const paidEst = it.orders>0 ? it.revenue/it.orders : 0;
+    if(catalog[k]){
+      // Si el menú ya tenía este ítem, acumular demanda
+      catalog[k].orders += it.orders;
+      catalog[k].revenue += it.revenue;
+      catalog[k].paidEst = catalog[k].orders>0 ? catalog[k].revenue/catalog[k].orders : 0;
+      catalog[k].plats = it.plats;
+    } else {
+      const domPlat = Object.entries(it.plats||{}).sort((a,b)=>b[1]-a[1])[0]?.[0]||'peya';
+      const d = dDefault(domPlat);
+      const baseInf = paidEst>0 ? Math.round(paidEst/(1-d)*2)/2 : 0;
+      catalog[k] = {
+        name: it.name, desc:'', type: it.type, categoria:'',
+        base: { rappi: baseInf, peya: baseInf, didi: baseInf },
+        baseSource: 'inferido',
+        orders: it.orders, revenue: it.revenue, paidEst, plats: it.plats,
+      };
+    }
+  });
+
+  return { catalog: Object.values(catalog).sort((a,b)=>b.orders-a.orders), platDisc, comboOpts };
+}
+
+// ════════════════════════════════════════════════════════
+//  ETAPA 2 — MOTOR DE PRECIOS DINÁMICO
+// ════════════════════════════════════════════════════════
+function discountForState(state, dBase){
+  if(state==='fire') return { d: Math.max(0.05, dBase-0.08), tier:'Dto. reducido (peak)' };
+  if(state==='ok')   return { d: dBase,                       tier:'Dto. estándar' };
+  if(state==='low')  return { d: Math.min(0.40, dBase+0.08),  tier:'Dto. activación' };
+  return               { d: Math.min(0.45, dBase+0.15),       tier:'Dto. rescate' };
+}
+function projectedOrderDelta(state, dNew, dBase, type){
+  const pp = (dNew - dBase) * 100; // puntos porcentuales de cambio en descuento
+  const k  = (ELAS_PER_PP[state]||0.02) * (ELAS_TYPE[type]||0.8);
+  return pp * k; // fracción: 0.32 = +32% órdenes
+}
+function basePriceFor(item, plat){
+  const b = item.base||{};
+  if(b[plat] > 0) return b[plat];
+  // fallback: cualquier base disponible, o inferir de pagado
+  const any = b.rappi||b.peya||b.didi||0;
+  if(any>0) return any;
+  return item.paidEst>0 ? Math.round(item.paidEst/(1-0.25)*2)/2 : 0;
+}
+const round05 = v => Math.round(v*2)/2;
+
+// ════════════════════════════════════════════════════════
+//  ETAPA 2 — RENDER: PATRONES
+// ════════════════════════════════════════════════════════
+const ST_LABEL = { fire:'🔥 Peak', ok:'Activo', low:'⚡ Bajo', dead:'💤 Muerto', closed:'🚫 Cerrado' };
+const ST_BADGE = {
+  fire:'background:rgba(200,57,43,.12);color:var(--r)',
+  ok:'background:rgba(45,106,79,.1);color:var(--gr)',
+  low:'background:rgba(200,160,69,.15);color:#6b4800',
+  dead:'background:rgba(15,15,13,.06);color:var(--m)',
+};
+
+function populatePatBranchSel(){
+  const sel = document.getElementById('patBranchSel');
+  if(!sel || !APP.D) return;
+  const branches = Object.keys(APP.D.bySucursal||{});
+  sel.innerHTML = '<option value="__all__">Todas</option>' +
+    branches.map(b=>`<option value="${b.replace(/"/g,'&quot;')}">${b}</option>`).join('');
+}
+
+function renderPatrones(){
+  if(!APP.D) return;
+  const branch = document.getElementById('patBranchSel')?.value || '__all__';
+  const P = computePatterns(APP.allOrders, branch);
+  APP.P = P;
+
+  // ── Matriz ──
+  let m = '<div class="blk-matrix"><div></div>' + DAYS.map(d=>`<div class="blk-head">${d}</div>`).join('');
+  // columnas en orden Lun..Dom → jsDay: Lun=1..Sáb=6, Dom=0
+  const dayOrder = [1,2,3,4,5,6,0];
+  BLOCKS.forEach((b,bi)=>{
+    m += `<div class="blk-lbl"><b>${b.label}</b><span>${b.sub}</span></div>`;
+    dayOrder.forEach(jd=>{
+      const c  = P.cells[bi][jd];
+      const st = P.states[bi][jd];
+      const perWk = (c.orders/P.weeks).toFixed(1);
+      const tip = `${b.label} ${DAYS[cfgDayIdx(jd)]}: ${c.orders} órdenes (${perWk}/sem) · GMV ${fp(c.gmv)} · ${ST_LABEL[st]}`;
+      m += `<div class="blk-cell st-${st}" title="${tip}">` +
+           (st==='closed' ? '<span class="bc-s">cerrado</span>'
+            : `<span class="bc-n">${perWk}</span><span class="bc-s">órd/sem</span>`) +
+           `</div>`;
+    });
+  });
+  m += '</div>';
+  document.getElementById('patMatrix').innerHTML = m;
+
+  document.getElementById('patNote').innerHTML = `<div class="alert warn"><span class="alert-ico">📐</span><span class="alert-body">
+    <strong>Modelo de elasticidad inicial</strong> (se calibra con resultados reales del tracker):
+    ±1pp de descuento ≈ +2% de órdenes en bloques activos, +4% en bloques bajos, +6% en bloques muertos, −0.5% en peak (demanda inelástica).
+    Bloque líder: ${(P.peak/P.weeks).toFixed(1)} órdenes/sem.</span></div>`;
+
+  // ── Cards Estado-Criterio-Acción-Impacto ──
+  renderPatternCards(P, branch);
+}
+
+function renderPatternCards(P, branch){
+  const { catalog, platDisc } = APP.catalogData || buildCatalog(APP.allOrders);
+  const mains = catalog.filter(i=>i.type==='main'||i.type==='combo');
+  const topItem = mains[0] || catalog[0];
+  const lowItem = mains.length>1 ? mains[mains.length-1] : topItem;
+  const plats = Object.keys(APP.D.byPlat);
+  const domPlat = plats.sort((a,b)=>(APP.D.byPlat[b]?.gmv||0)-(APP.D.byPlat[a]?.gmv||0))[0]||'peya';
+  const dBase = platDisc[domPlat]!==undefined ? platDisc[domPlat] : (APP.D.avgDiscPct||0.25);
+  const dayOrder=[1,2,3,4,5,6,0];
+
+  // Recolectar celdas abiertas con datos
+  const open = [];
+  BLOCKS.forEach((b,bi)=>dayOrder.forEach(jd=>{
+    const st = P.states[bi][jd];
+    if(st==='closed') return;
+    open.push({ bi, jd, st, c:P.cells[bi][jd], idx:P.peak>0?P.cells[bi][jd].orders/P.peak:0 });
+  }));
+
+  const cards = [];
+  const slotName = s => `${BLOCKS[s.bi].label} (${BLOCKS[s.bi].sub}) — ${DAYS[cfgDayIdx(s.jd)]}`;
+
+  // 1) Peaks (top 2): reducir descuento
+  open.filter(s=>s.st==='fire').sort((a,b)=>b.c.orders-a.c.orders).slice(0,2).forEach(s=>{
+    const ordWk = s.c.orders/P.weeks;
+    const slotTicket = s.c.orders>0 ? s.c.gmv/s.c.orders : APP.D.avgTicket;
+    const dNew = Math.max(0.05, dBase-0.08);
+    const dPaid = slotTicket * (dBase-dNew)/(1-dBase);   // ↑ precio pagado por orden
+    const ordLoss = projectedOrderDelta('fire', dNew, dBase, topItem?.type||'main'); // negativo
+    const gmvWk = dPaid*ordWk*(1+ordLoss) + slotTicket*ordWk*ordLoss;
+    cards.push({ st:'fire', slot:slotName(s),
+      crit:`${ordWk.toFixed(1)} órdenes/sem (${(s.idx*100).toFixed(0)}% del bloque líder) · ticket del slot ${fp(slotTicket)}`,
+      action:`Reducir el descuento activo de ${(dBase*100).toFixed(0)}% a ${(dNew*100).toFixed(0)}% en este bloque. Producto sugerido: <strong>${topItem?.name||'ítem principal'}</strong> (el precio lista no cambia — solo baja el % de descuento visible).`,
+      impacts:[
+        {k:'Ticket promedio', q:`+${fp(dPaid)}/orden`, c:'el cliente en peak compra igual con menos dto.'},
+        {k:'GMV',             q:`${gmvWk>=0?'+':''}${fp(gmvWk)}/sem`, c:'neto tras pérdida marginal de órdenes'},
+        {k:'Volumen órdenes', q:`${(ordLoss*100).toFixed(1)}%`, neg:ordLoss<0, c:'demanda inelástica en hora pico'},
+      ]});
+  });
+
+  // 2) Bloques bajos con tráfico (top 3 por menor índice): subir descuento
+  open.filter(s=>s.st==='low'||s.st==='ok').sort((a,b)=>a.idx-b.idx).slice(0,3).forEach(s=>{
+    const ordWk = s.c.orders/P.weeks;
+    if(ordWk<=0) return;
+    const slotTicket = s.c.orders>0 ? s.c.gmv/s.c.orders : APP.D.avgTicket;
+    const dNew = Math.min(0.40, dBase+0.08);
+    const inc  = projectedOrderDelta(s.st, dNew, dBase, lowItem?.type||'main');
+    const newPaid = slotTicket * (1 - (dNew-dBase)/(1-dBase));
+    const newOrd  = ordWk*(1+inc);
+    const gmvWk   = newOrd*newPaid - ordWk*slotTicket;
+    cards.push({ st:s.st, slot:slotName(s),
+      crit:`${ordWk.toFixed(1)} órdenes/sem (${(s.idx*100).toFixed(0)}% del bloque líder)`,
+      action:`Subir el descuento activo de ${(dBase*100).toFixed(0)}% a ${(dNew*100).toFixed(0)}% solo en este bloque. Producto sugerido: <strong>${lowItem?.name||'ítem de menor rotación'}</strong>. Si en 2 semanas el volumen no responde, revertir.`,
+      impacts:[
+        {k:'Volumen órdenes', q:`+${(inc*100).toFixed(0)}% (≈ +${(ordWk*inc).toFixed(1)}/sem)`, c:'elasticidad estimada en franja de baja demanda'},
+        {k:'GMV',             q:`${gmvWk>=0?'+':''}${fp(gmvWk)}/sem`, neg:gmvWk<0, c:'neto: órdenes nuevas − costo del dto. extra'},
+        {k:'Retención/hábito',q:'cualitativo', c:'franja consistente crea hábito de pedido en ese horario'},
+      ]});
+  });
+
+  // 3) Bloques muertos (0 órdenes, abiertos)
+  const deadOpen = open.filter(s=>s.st==='dead');
+  if(deadOpen.length>0){
+    const names = deadOpen.slice(0,4).map(slotName).join(' · ');
+    cards.push({ st:'dead', slot:`${deadOpen.length} bloques abiertos sin órdenes`,
+      crit:`Sin tráfico en: ${names}${deadOpen.length>4?' …':''}`,
+      action:`Decisión táctica con prueba de 2 semanas: (a) activar dto. rescate del ${Math.min(45,(dBase+0.15)*100).toFixed(0)}% en 1 producto, o (b) cerrar la tienda en esos bloques para proteger el ratio de aceptación del algoritmo.`,
+      impacts:[
+        {k:'Volumen órdenes', q:'meta: 1–2/sem por bloque', c:'si la promo rescate funciona'},
+        {k:'Ranking algoritmo', q:'cualitativo', c:'cerrar bloques muertos evita cancelaciones por tienda inactiva'},
+      ]});
+  }
+
+  document.getElementById('patCards').innerHTML = cards.map(c=>`
+    <div class="eca-card">
+      <div class="eca-head">
+        <span class="eca-state" style="${ST_BADGE[c.st]||ST_BADGE.dead}">${ST_LABEL[c.st]||c.st}</span>
+        <span class="eca-slot">${c.slot}</span>
+      </div>
+      <div class="eca-body">
+        <div class="eca-col"><div class="eca-col-t">Criterio</div><div class="eca-col-c">${c.crit}</div></div>
+        <div class="eca-col"><div class="eca-col-t">Acción</div><div class="eca-col-c">${c.action}</div></div>
+        <div class="eca-col"><div class="eca-col-t">Impacto en KPI</div><div class="eca-col-c">
+          ${c.impacts.map(i=>`<div class="kpi-impact"><span class="ki-name">${i.k}</span><span class="ki-q ${i.neg?'neg':''}">${i.q}</span><span class="ki-c">${i.c}</span></div>`).join('')}
+        </div></div>
+      </div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════════════════
+//  ETAPA 2 — RENDER: MOTOR DE PRECIOS
+// ════════════════════════════════════════════════════════
+function populatePxSelectors(){
+  const { catalog } = APP.catalogData;
+  const itemSel = document.getElementById('pxItemSel');
+  const platSel = document.getElementById('pxPlatSel');
+  const brSel   = document.getElementById('pxBranchSel');
+  if(!itemSel) return;
+  const itemsWithPrice = catalog.filter(i=>basePriceFor(i, 'peya')>0 || basePriceFor(i,'rappi')>0);
+  itemSel.innerHTML = itemsWithPrice.slice(0,30).map(i=>
+    `<option value="${itemKey(i.name)}">${i.name}${i.orders>0?' ('+i.orders+' órd.)':''}</option>`).join('');
+  const plats = Object.keys(APP.D.byPlat).filter(p=>p!=='unknown');
+  platSel.innerHTML = plats.map(p=>`<option value="${p}">${getPlatInfo(p).label}</option>`).join('') ||
+                      '<option value="peya">PedidosYa</option>';
+  const branches = Object.keys(APP.D.bySucursal||{});
+  brSel.innerHTML = '<option value="__all__">Todas</option>' +
+    branches.map(b=>`<option value="${b.replace(/"/g,'&quot;')}">${b}</option>`).join('');
+}
+
+function renderPrecios(){
+  if(!APP.D || !APP.catalogData) return;
+  const { catalog, platDisc } = APP.catalogData;
+  const key    = document.getElementById('pxItemSel')?.value;
+  const plat   = document.getElementById('pxPlatSel')?.value || 'peya';
+  const branch = document.getElementById('pxBranchSel')?.value || '__all__';
+  const item   = catalog.find(i=>itemKey(i.name)===key) || catalog[0];
+  if(!item){ document.getElementById('pxInsight').innerHTML='<div class="alert warn"><span class="alert-ico">⚠️</span><span class="alert-body">Sin ítems detectados. Carga el menú CSV o un reporte de PedidosYa con la columna de artículos.</span></div>'; return; }
+
+  const base  = basePriceFor(item, plat);
+  const dBase = platDisc[plat]!==undefined ? platDisc[plat] : (APP.D.avgDiscPct||0.25);
+  const paidNow = round05(base*(1-dBase));
+  const P = computePatterns(APP.allOrders, branch);
+
+  document.getElementById('pxInsight').innerHTML = `<div class="alert ok"><span class="alert-ico">💡</span><span class="alert-body">
+    <strong>${item.name}</strong> · precio lista ${fp(base)} <em>(${item.baseSource==='menu'?'del menú cargado':'inferido de órdenes — carga el menú CSV para usar el precio publicado real'})</em>
+    · dto. actual ${getPlatInfo(plat).name}: ${(dBase*100).toFixed(0)}% → precio pagado hoy ≈ ${fp(paidNow)}.
+    El motor mantiene el precio lista fijo y mueve el % de descuento según la demanda de cada bloque.</span></div>`;
+
+  document.getElementById('pxMatrixTitle').textContent =
+    `${item.name} — precio final sugerido por bloque y día (${getPlatInfo(plat).name}${branch!=='__all__'?' · '+branch:''})`;
+
+  // ── Matriz de precios ──
+  const dayOrder=[1,2,3,4,5,6,0];
+  const stBG = { fire:'background:rgba(45,106,79,.16);color:#1d4a35', ok:'background:rgba(15,15,13,.06);color:var(--t)',
+                 low:'background:rgba(200,160,69,.2);color:#6b4800', dead:'background:rgba(200,57,43,.12);color:#7a1f15',
+                 closed:'background:repeating-linear-gradient(45deg,rgba(15,15,13,.03),rgba(15,15,13,.03) 4px,rgba(15,15,13,.07) 4px,rgba(15,15,13,.07) 8px);color:rgba(107,101,96,.5)' };
+  let m = '<div class="px-matrix"><div></div>' + DAYS.map(d=>`<div class="blk-head">${d}</div>`).join('');
+  BLOCKS.forEach((b,bi)=>{
+    m += `<div class="blk-lbl"><b>${b.label}</b><span>${b.sub}</span></div>`;
+    dayOrder.forEach(jd=>{
+      const st = P.states[bi][jd];
+      if(st==='closed'){ m += `<div class="px-cell" style="${stBG.closed}"><span class="pxc-d">cerrado</span></div>`; return; }
+      const c = P.cells[bi][jd];
+      if(st==='dead' && c.orders===0){
+        m += `<div class="px-cell" style="${stBG.dead}" title="Sin órdenes — dto. rescate o cerrar"><span class="pxc-p">${fp(round05(base*(1-Math.min(0.45,dBase+0.15))))}</span><span class="pxc-d">${(Math.min(0.45,dBase+0.15)*100).toFixed(0)}% off · rescate</span></div>`;
+        return;
+      }
+      const { d } = discountForState(st, dBase);
+      const price = round05(base*(1-d));
+      const inc = projectedOrderDelta(st, d, dBase, item.type);
+      const ordWk = c.orders/P.weeks;
+      const tip = `${b.label} ${DAYS[cfgDayIdx(jd)]}: lista ${fp(base)} · dto ${(d*100).toFixed(0)}% · ${ordWk.toFixed(1)} órd/sem actuales → proyectado ${(ordWk*(1+inc)).toFixed(1)}/sem (${inc>=0?'+':''}${(inc*100).toFixed(0)}%)`;
+      m += `<div class="px-cell" style="${stBG[st]}" title="${tip}">
+        <span class="pxc-p">${fp(price)}</span>
+        <span class="pxc-d">${(d*100).toFixed(0)}% off</span>
+        <span class="pxc-i" style="color:${inc>=0?'var(--gr)':'var(--r)'}">${inc!==0?(inc>0?'+':'')+(inc*100).toFixed(0)+'% órd':'='}</span>
+      </div>`;
+    });
+  });
+  m += '</div>';
+  document.getElementById('pxMatrix').innerHTML = m;
+
+  // ── Proyección semanal por bloque ──
+  let projRows = ''; let tOrd=0,tNew=0,tGmvNow=0,tGmvNew=0;
+  BLOCKS.forEach((b,bi)=>{
+    let ord=0, gmv=0; const stCount={};
+    dayOrder.forEach(jd=>{
+      if(P.states[bi][jd]==='closed') return;
+      ord += P.cells[bi][jd].orders; gmv += P.cells[bi][jd].gmv;
+      stCount[P.states[bi][jd]]=(stCount[P.states[bi][jd]]||0)+1;
+    });
+    const ordWk = ord/P.weeks;
+    if(ordWk===0 && !Object.keys(stCount).length) return;
+    const domSt = Object.entries(stCount).sort((a,b)=>b[1]-a[1])[0]?.[0]||'dead';
+    const { d, tier } = discountForState(domSt, dBase);
+    const inc = projectedOrderDelta(domSt, d, dBase, item.type);
+    const slotTicket = ord>0 ? gmv/ord : paidNow;
+    const newPaid = slotTicket*(1-(d-dBase)/(1-dBase));
+    const newOrdWk = ordWk*(1+inc);
+    const gmvNowWk = ordWk*slotTicket, gmvNewWk = newOrdWk*newPaid;
+    tOrd+=ordWk; tNew+=newOrdWk; tGmvNow+=gmvNowWk; tGmvNew+=gmvNewWk;
+    const delta = gmvNewWk-gmvNowWk;
+    projRows += `<tr>
+      <td><strong>${b.label}</strong> <span style="color:var(--m);font-size:.66rem">${b.sub}</span></td>
+      <td>${tier} (${(d*100).toFixed(0)}%)</td>
+      <td style="font-family:'DM Mono',monospace;text-align:right">${ordWk.toFixed(1)}</td>
+      <td style="font-family:'DM Mono',monospace;text-align:right">${newOrdWk.toFixed(1)} <span style="font-size:.64rem" class="${inc>=0?'proj-pos':'proj-neg'}">(${inc>=0?'+':''}${(inc*100).toFixed(0)}%)</span></td>
+      <td style="font-family:'DM Mono',monospace;text-align:right">${fp(gmvNowWk)}</td>
+      <td style="font-family:'DM Mono',monospace;text-align:right">${fp(gmvNewWk)}</td>
+      <td style="font-family:'DM Mono',monospace;text-align:right" class="${delta>=0?'proj-pos':'proj-neg'}">${delta>=0?'+':''}${fp(delta)}</td>
+    </tr>`;
+  });
+  const tDelta = tGmvNew-tGmvNow;
+  document.getElementById('pxProjection').innerHTML = `
+    <table class="plat-table">
+      <thead><tr><th>Bloque</th><th>Estrategia dto.</th><th style="text-align:right">Órd/sem hoy</th><th style="text-align:right">Órd/sem proy.</th><th style="text-align:right">GMV/sem hoy</th><th style="text-align:right">GMV/sem proy.</th><th style="text-align:right">Δ GMV</th></tr></thead>
+      <tbody>${projRows}
+        <tr style="background:var(--w);font-weight:700">
+          <td colspan="2">TOTAL SEMANAL</td>
+          <td style="font-family:'DM Mono',monospace;text-align:right">${tOrd.toFixed(1)}</td>
+          <td style="font-family:'DM Mono',monospace;text-align:right">${tNew.toFixed(1)}</td>
+          <td style="font-family:'DM Mono',monospace;text-align:right">${fp(tGmvNow)}</td>
+          <td style="font-family:'DM Mono',monospace;text-align:right">${fp(tGmvNew)}</td>
+          <td style="font-family:'DM Mono',monospace;text-align:right" class="${tDelta>=0?'proj-pos':'proj-neg'}">${tDelta>=0?'+':''}${fp(tDelta)}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="font-size:.68rem;color:var(--m);margin-top:8px">Proyección semanal del patrón de demanda del bloque (todas las franjas abiertas del bloque, ${P.weeks} semanas de historia). Validar con test A/B de 2 semanas antes de fijar.</div>`;
+
+  // ── Resumen multi-producto ──
+  const blockState = BLOCKS.map((b,bi)=>{
+    let ord=0, openCells=0; const idxs=[];
+    dayOrder.forEach(jd=>{ if(P.states[bi][jd]!=='closed'){ openCells++; ord+=P.cells[bi][jd].orders; } });
+    if(openCells===0) return 'closed';
+    const idx = P.peak>0 ? (ord/openCells)/(P.peak) : 0;
+    return idx>=0.45?'fire': idx>=0.18?'ok': ord>0?'low':'dead';
+  });
+  const topItems = catalog.filter(i=>basePriceFor(i,plat)>0).slice(0,8);
+  let sumRows = topItems.map(it=>{
+    const b0 = basePriceFor(it, plat);
+    const cells = BLOCKS.map((b,bi)=>{
+      if(blockState[bi]==='closed') return '<td style="text-align:center;color:var(--m)">—</td>';
+      const { d } = discountForState(blockState[bi], dBase);
+      return `<td style="text-align:center;font-family:'DM Mono',monospace">${fp(round05(b0*(1-d)))} <span style="font-size:.6rem;color:var(--m)">${(d*100).toFixed(0)}%</span></td>`;
+    }).join('');
+    return `<tr><td><strong>${it.name}</strong> <span style="font-size:.62rem;color:var(--m)">${it.baseSource==='menu'?'menú':'inferido'}</span></td>
+      <td style="text-align:center;font-family:'DM Mono',monospace;color:var(--r);font-weight:700">${fp(b0)}</td>${cells}</tr>`;
+  }).join('');
+  document.getElementById('pxSummary').innerHTML = `
+    <table class="plat-table">
+      <thead><tr><th>Producto</th><th style="text-align:center">Lista</th>${BLOCKS.map(b=>`<th style="text-align:center">${b.label}</th>`).join('')}</tr></thead>
+      <tbody>${sumRows}</tbody>
+    </table>
+    <div style="font-size:.68rem;color:var(--m);margin-top:8px">Precio final sugerido por bloque para un día típico. Selecciona un producto arriba para ver el detalle día×bloque y la proyección.</div>`;
+}
+
+// Orquestador Etapa 2
+function renderStage2(){
+  APP.catalogData = buildCatalog(APP.allOrders);
+  populatePatBranchSel();
+  populatePxSelectors();
+  renderPatrones();
+  renderPrecios();
+  // Etapa 3
+  renderMenu();
+  // Etapa 4
+  renderCombos();
+  renderPromos();
+  // Etapa 5
+  renderAdq();
+  renderTicket();
+  renderRet();
+  // Etapa 6
+  renderFinancial();
+  // Etapa 7
+  renderRoadmap();
+}
+
+
+// ════════════════════════════════════════════════════════
+//  ETAPA 3 — MENÚ & PRICING
+// ════════════════════════════════════════════════════════
+
+// BCG: clasificar ítems por volumen relativo y revenue relativo
+function bcgClassify(catalog){
+  const active = catalog.filter(i=>i.orders>0);
+  if(active.length===0) return {};
+  const items = active.map(i=>({
+    key: itemKey(i.name),
+    orders: i.orders,
+    ticket: i.revenue/i.orders,
+  }));
+  // Percentil 50 de órdenes (umbral volumen) y percentil 50 de ticket (umbral revenue/orden)
+  // Pero si hay muchos empates en la mediana, usar el promedio para desempatar
+  const percentile = (arr, p) => {
+    if(arr.length===0) return 0;
+    const sorted = [...arr].sort((a,b)=>a-b);
+    const idx = Math.floor((sorted.length-1)*p);
+    return sorted[idx];
+  };
+  const ordVals  = items.map(i=>i.orders);
+  const tickVals = items.map(i=>i.ticket);
+  const ordThr  = percentile(ordVals, 0.5);
+  const tickThr = percentile(tickVals, 0.5);
+  // Promedio para desempatar
+  const ordAvg  = ordVals.reduce((s,v)=>s+v,0)/ordVals.length;
+  const tickAvg = tickVals.reduce((s,v)=>s+v,0)/tickVals.length;
+  const result = {};
+  items.forEach(it=>{
+    // Desempate: si está en el umbral exacto, usar promedio para decidir
+    const hiVol  = it.orders > ordThr  || (it.orders === ordThr  && it.orders >= ordAvg);
+    const hiTick = it.ticket > tickThr || (it.ticket === tickThr && it.ticket >= tickAvg);
+    result[it.key] =
+      hiVol && hiTick   ? 'star'  :
+      hiVol && !hiTick  ? 'cow'   :
+      !hiVol && hiTick  ? 'q'     :
+                          'dog';
+  });
+  return result;
+}
+
+// Elasticidad por ítem: alta si aparece en órdenes de 1 ítem y es popular
+function estimateElasticity(catalog, orders){
+  const singleItemOrders = new Set();
+  orders.filter(o=>!o.cancelled && o.items).forEach(o=>{
+    const parts = o.items.split(',').map(s=>s.trim()).filter(Boolean);
+    if(parts.length === 1){
+      const m = parts[0].match(/^\d+\s+(.+)$/);
+      if(m) singleItemOrders.add(itemKey(normalizeItemName(m[1])));
+    }
+  });
+  const totalOrd = catalog.reduce((s,i)=>s+i.orders,0)||1;
+  const avgShare = catalog.length>0 ? 1/catalog.length : 0;
+  const result = {};
+  catalog.forEach(it=>{
+    const share = it.orders/totalOrd;
+    const inSingle = singleItemOrders.has(itemKey(it.name));
+    let elas;
+    // Reglas de elasticidad:
+    // - main popular en órdenes solas → alta (cliente compara precios)
+    // - side/drink/dessert → baja (ya capturado, add-on)
+    // - main muy popular en combos → media
+    // - addons → muy baja
+    if(it.type === 'addon') elas = 'low';
+    else if(it.type === 'side' || it.type === 'drink' || it.type === 'dessert') elas = 'low';
+    else if(it.type === 'main' && inSingle && share >= avgShare) elas = 'high';
+    else if(it.type === 'main' && share >= avgShare*1.5) elas = 'medium';
+    else if(it.type === 'main') elas = 'medium';
+    else if(it.type === 'combo') elas = 'medium';
+    else elas = 'medium';
+    result[itemKey(it.name)] = { class: elas, inSingleOrders: inSingle, share };
+  });
+  return result;
+}
+
+// Precio mágico: convierte S/35 → S/34.90; S/40 → S/39.90
+// Convierte un precio a precio mágico (terminado en .90)
+// S/35 → S/34.90 · S/40 → S/39.90 · S/33.40 → S/32.90 · S/19.90 → S/19.90 (ya es mágico)
+function magicPrice(price){
+  if(price <= 1) return price;
+  const dec = price - Math.floor(price);
+  // Si ya termina en .90 → ya es mágico
+  if(Math.abs(dec - 0.90) < 0.011) return Math.floor(price) + 0.9;
+  // Resto: ir al entero inferior - 0.10 = entero-1 + 0.90
+  // Ej: 35.00 → 34.90 (entero 35, baja a 34.90)
+  //     33.40 → 32.90 (entero 33, baja a 32.90)
+  return Math.floor(price) - 0.10;
+}
+
+// Keywords desde nombre + descripción
+const STOP_WORDS = new Set([
+  'de','la','el','los','las','con','y','o','a','en','un','una','del','al','por','para','que','se','su','sus','lo',
+  'es','son','muy','mas','más','sin','pero','si','no','ya','hay','este','esta','esto','sabor','rico','delicioso',
+  'and','the','of','with','to','for','our','your','a','an','in','on','from','this','that','very'
+]);
+function extractKeywords(name, desc){
+  const text = ((name||'')+' '+(desc||'')).toLowerCase();
+  // tokenizar
+  const tokens = text.match(/[a-záéíóúñü0-9]+/gi) || [];
+  const counts = {};
+  tokens.forEach(t=>{
+    if(t.length < 3) return;
+    if(STOP_WORDS.has(t)) return;
+    if(/^\d+$/.test(t)) return;
+    counts[t] = (counts[t]||0) + 1;
+  });
+  // Bigramas (palabras compuestas)
+  const bigrams = {};
+  for(let i=0; i<tokens.length-1; i++){
+    const a=tokens[i], b=tokens[i+1];
+    if(STOP_WORDS.has(a) || STOP_WORDS.has(b)) continue;
+    if(a.length<3 || b.length<3) continue;
+    const bg = a+' '+b;
+    bigrams[bg] = (bigrams[bg]||0) + 1;
+  }
+  const single = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>e[0]);
+  const bi     = Object.entries(bigrams).sort((a,b)=>b[1]-a[1]).slice(0,2).map(e=>e[0]);
+  return [...bi, ...single].slice(0,7);
+}
+
+// Generar descripción optimizada desde nombre + descripción base
+function suggestDescription(item){
+  const name = item.name || '';
+  const cur  = (item.desc || '').trim();
+  const type = item.type;
+  // Componentes que ya están en la descripción
+  const known = cur.toLowerCase();
+  // Frases por tipo para enriquecer
+  const richenByType = {
+    main:    'artesanal · ingredientes premium · porción generosa',
+    combo:   'rinde para una comida completa · ahorras respecto a comprar por separado',
+    side:    'crujiente · sazón de la casa · acompañamiento ideal',
+    drink:   'bien frío · presentación 500ml',
+    dessert: 'cremoso · postre clásico para cerrar la comida',
+    addon:   'opcional · realza el sabor del ítem principal',
+  };
+  // Construir sugerencia
+  const enhancer = richenByType[type] || '';
+  // Si ya hay descripción, usarla; sino construir desde el nombre
+  let base;
+  if(cur && cur.length > 12){
+    base = cur;
+  } else {
+    // Generar base desde el nombre
+    if(type === 'main')    base = `${name} preparado al momento, con ingredientes frescos seleccionados.`;
+    else if(type === 'combo') base = `${name} — tu comida completa lista para disfrutar.`;
+    else if(type === 'side')  base = `${name}, acompañamiento crujiente preparado al momento.`;
+    else if(type === 'drink') base = `${name}, bebida bien fría para acompañar tu pedido.`;
+    else if(type === 'dessert') base = `${name}, postre cremoso para cerrar tu comida.`;
+    else base = `${name}.`;
+  }
+  // Limitar largo
+  if(base.length > 280) base = base.slice(0, 277) + '...';
+  return { base, enhancer };
+}
+
+// Recomendación de precio
+function priceRecommendation(item, plats, elas){
+  const recs = [];
+  const e = elas[itemKey(item.name)];
+  // Estrategia según elasticidad
+  if(!e) return recs;
+
+  Object.keys(plats).forEach(plat=>{
+    const base = basePriceFor(item, plat);
+    if(base <= 0) return;
+    const dBase = plats[plat];
+    const paidNow = round05(base*(1-dBase));
+    const isMagicAlready = Math.abs((paidNow*10) - Math.round(paidNow*10)) < 0.001 &&
+                           (Math.abs(paidNow - Math.floor(paidNow) - 0.90) < 0.01 ||
+                            Math.abs(paidNow - Math.floor(paidNow) - 0.50) < 0.01);
+
+    // Estrategia 1: precio mágico (psicológico, terminando en .90)
+    if(!isMagicAlready && Math.floor(paidNow) >= 1){
+      const magic = magicPrice(paidNow);
+      if(magic > 0 && magic !== paidNow){
+        // Recalculamos lista para que el descuento actual dé exactamente el precio mágico al cliente
+        // No usamos round05 porque queremos preservar el .90/.50
+        const newBase = Math.round((magic / (1-dBase))*10)/10;
+        const fpExact = v => 'S/ '+(v||0).toFixed(2).replace(/\.00$/,'').replace(/(\d)0$/,'$1');
+        const savingDisplay = paidNow - magic;
+        recs.push({
+          type: 'magic',
+          plat,
+          title: `Precio mágico en ${getPlatInfo(plat).name}`,
+          desc: `Ajustar precio lista a ${fpExact(newBase)} manteniendo dto. ${(dBase*100).toFixed(0)}% → cliente paga ${fpExact(magic)} en vez de ${fp(paidNow)}. ${savingDisplay>0?'Le ahorras '+fp(savingDisplay)+' por orden':'Mismo precio efectivo'}, pero el .90 final activa la heurística de "menos de S/${Math.ceil(magic)}". Esperado: +5-8% en conversión.`
+        });
+      }
+    }
+
+    // Estrategia 2: según elasticidad
+    if(e.class === 'low'){
+      // Inelástico → puede subir
+      const newPaid = round05(paidNow * 1.08);
+      const newBase = round05(newPaid / (1-dBase));
+      recs.push({
+        type: 'up',
+        plat,
+        title: `Subir precio en ${getPlatInfo(plat).name} (+8%)`,
+        desc: `Demanda inelástica (ítem ${item.type === 'side'?'de acompañamiento':item.type === 'drink'?'de bebida':item.type === 'dessert'?'de postre':'add-on'}, no se compra solo). Subir lista a ${fp(newBase)} → cliente paga ${fp(newPaid)} en vez de ${fp(paidNow)}. Impacto esperado: +${fp(newPaid-paidNow)}/orden, sin caída significativa de volumen.`
+      });
+    } else if(e.class === 'high'){
+      // Elástico → cuidado, sólo testear gradual
+      const newPaid = round05(paidNow + 1);
+      const newBase = round05(newPaid / (1-dBase));
+      recs.push({
+        type: 'test',
+        plat,
+        title: `Testear +S/1 en ${getPlatInfo(plat).name}`,
+        desc: `Demanda elástica (${e.inSingleOrders?'aparece en órdenes de un solo ítem — los compradores comparan precios':'ítem principal popular'}). Subir gradualmente lista a ${fp(newBase)} → cliente paga ${fp(newPaid)}. Medir volumen 2 semanas. Si órdenes caen <5%, mantener. Si caen más, revertir.`
+      });
+    } else {
+      // Medio → ajuste estándar
+      const newPaid = round05(paidNow * 1.04);
+      const newBase = round05(newPaid / (1-dBase));
+      recs.push({
+        type: 'med',
+        plat,
+        title: `Ajustar precio en ${getPlatInfo(plat).name} (+4%)`,
+        desc: `Elasticidad media. Subir lista a ${fp(newBase)} → cliente paga ${fp(newPaid)} en vez de ${fp(paidNow)}. Cambio percibido bajo, +${fp(newPaid-paidNow)}/orden.`
+      });
+    }
+  });
+
+  return recs;
+}
+
+// ════════════════════════════════════════════════════════
+//  RENDER ETAPA 3
+// ════════════════════════════════════════════════════════
+function renderMenu(){
+  if(!APP.catalogData || !APP.D) return;
+  const { catalog, platDisc } = APP.catalogData;
+  const bcg  = bcgClassify(catalog);
+  const elas = estimateElasticity(catalog, APP.allOrders);
+  APP.menuData = { catalog, platDisc, bcg, elas };
+
+  // ── Insight ──
+  const stars = catalog.filter(i=>bcg[itemKey(i.name)]==='star');
+  const dogs  = catalog.filter(i=>bcg[itemKey(i.name)]==='dog');
+  const hasMenu = (APP.menu||[]).length > 0;
+  const totalActive = catalog.filter(i=>i.orders>0).length;
+  document.getElementById('menuInsight').innerHTML = `<div class="alert ${hasMenu?'ok':'warn'}"><span class="alert-ico">${hasMenu?'✓':'⚠️'}</span><span class="alert-body">
+    ${hasMenu?
+      `<strong>${(APP.menu||[]).length} productos en menú cargado</strong> · ${totalActive} con demanda real en el período. Precios base = precios publicados antes de descuento. Descuento promedio observado: Rappi ${((platDisc.rappi||0)*100).toFixed(0)}%, PedidosYa ${((platDisc.peya||0)*100).toFixed(0)}%.`
+      :
+      `<strong>Sin menú cargado</strong> — los precios lista están <em>inferidos</em> del precio pagado ÷ descuento promedio observado por plataforma. Para mayor precisión, carga el CSV del menú (botón <strong>⚙ Config</strong>). ${totalActive} ítems con demanda real.`
+    }</span></div>`;
+
+  // ── Overview cards ──
+  const totalOrd = catalog.reduce((s,i)=>s+i.orders,0);
+  const totalRev = catalog.reduce((s,i)=>s+i.revenue,0);
+  const overview = [
+    {lbl:'Productos en menú',val:catalog.length,sub:hasMenu?`del CSV + órdenes`:'detectados en órdenes'},
+    {lbl:'Con demanda real',val:totalActive,sub:`${((totalActive/Math.max(catalog.length,1))*100).toFixed(0)}% del catálogo`},
+    {lbl:'⭐ Estrellas',val:stars.length,sub:'alto volumen + alto revenue'},
+    {lbl:'🐾 Perros',val:dogs.length,sub:'candidatos a revisar o eliminar'},
+  ];
+  document.getElementById('menuOverview').innerHTML = overview.map(o=>`
+    <div class="mo-card">
+      <div class="mo-lbl">${o.lbl}</div>
+      <div class="mo-val">${o.val}</div>
+      <div class="mo-sub">${o.sub}</div>
+    </div>`).join('');
+
+  // ── BCG matrix ──
+  const quadDefs = [
+    {key:'star', icon:'⭐', name:'Estrellas', tag:'tag-star',  action:'Priorizar en carta. Fotos premium. Subir lista con descuento — el precio percibido no cambia pero el tachado es más atractivo.'},
+    {key:'cow',  icon:'💰', name:'Vacas lecheras', tag:'tag-cow',  action:'Alto volumen, ticket bajo. Sumar add-ons o subir a combo con un main para elevar el ticket.'},
+    {key:'q',    icon:'❓', name:'Interrogantes', tag:'tag-q',    action:'Buena revenue por orden, baja frecuencia. Más visibilidad: subir orden en carta, mejor foto, descripción más rica.'},
+    {key:'dog',  icon:'🐾', name:'Perros',     tag:'tag-dog',  action:'Bajo en ambos ejes. Evaluar eliminar o convertir en modificador/opción de otro ítem para reducir fricción del menú.'},
+  ];
+  document.getElementById('bcgGrid').innerHTML = quadDefs.map(q=>{
+    const items = catalog.filter(i=>bcg[itemKey(i.name)]===q.key).slice(0,5);
+    return `<div class="bcg-q ${q.key==='q'?'q':q.key}">
+      <div class="bcg-h" style="color:${q.key==='star'?'var(--r)':q.key==='cow'?'#6b4800':q.key==='q'?'#2B5797':'var(--m)'}">
+        ${q.icon} ${q.name}
+        <span class="bcg-tag">${catalog.filter(i=>bcg[itemKey(i.name)]===q.key).length}</span>
+      </div>
+      <div class="bcg-act">${q.action}</div>
+      ${items.length>0 ? items.map(it=>`<div class="bcg-it">
+        <span class="bn">${it.name}</span>
+        <span class="bo">${it.orders} órd · ${fp(it.revenue)}</span>
+      </div>`).join('') : '<div style="font-size:.7rem;color:var(--m);padding:8px 0;font-style:italic">Sin ítems en este cuadrante</div>'}
+    </div>`;
+  }).join('');
+
+  // ── Filtro por categoría ──
+  const cats = [...new Set(catalog.map(i=>i.categoria).filter(Boolean))];
+  const types = [...new Set(catalog.map(i=>i.type))];
+  const filterEl = document.getElementById('menuFilterBar');
+  filterEl.innerHTML =
+    `<span style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--m);margin-right:4px">Filtrar:</span>` +
+    `<button class="cat-chip active" onclick="filterMenu('all',this)">Todos (${catalog.length})</button>` +
+    types.map(t=>`<button class="cat-chip" onclick="filterMenu('type:${t}',this)">${getTypeLabel(t)} (${catalog.filter(i=>i.type===t).length})</button>`).join('') +
+    cats.map(c=>`<button class="cat-chip" onclick="filterMenu('cat:${c.replace(/"/g,'&quot;')}',this)">${c} (${catalog.filter(i=>i.categoria===c).length})</button>`).join('');
+
+  renderMenuCards('all');
+}
+
+function getTypeLabel(t){
+  return { main:'🍔 Principales', side:'🍟 Acompañ.', drink:'🥤 Bebidas',
+           dessert:'🍦 Postres', combo:'📦 Combos', addon:'➕ Add-ons', other:'• Otros' }[t] || t;
+}
+
+function filterMenu(filter, btnEl){
+  document.querySelectorAll('.cat-chip').forEach(c=>c.classList.remove('active'));
+  if(btnEl) btnEl.classList.add('active');
+  renderMenuCards(filter);
+}
+
+function renderMenuCards(filter){
+  if(!APP.menuData) return;
+  const { catalog, platDisc, bcg, elas } = APP.menuData;
+  let items = catalog;
+  if(filter.startsWith('type:')) items = items.filter(i=>i.type===filter.slice(5));
+  else if(filter.startsWith('cat:')) items = items.filter(i=>i.categoria===filter.slice(4));
+
+  const elasLabels = { high:{l:'Alta',cls:'tag-elas-hi'}, medium:{l:'Media',cls:'tag-elas-md'}, low:{l:'Baja',cls:'tag-elas-lo'} };
+  const bcgLabels  = { star:{l:'⭐ Estrella',cls:'tag-star'}, cow:{l:'💰 Vaca',cls:'tag-cow'}, q:{l:'❓ Interrogante',cls:'tag-q'}, dog:{l:'🐾 Perro',cls:'tag-dog'} };
+  const typeIcons  = { main:'🍔', side:'🍟', drink:'🥤', dessert:'🍦', combo:'📦', addon:'➕', other:'•' };
+
+  document.getElementById('menuCards').innerHTML = items.map(it=>{
+    const k = itemKey(it.name);
+    const bcgC = bcg[k];
+    const elasC = elas[k];
+    const recs = priceRecommendation(it, platDisc, elas);
+    const { base: descBase, enhancer } = suggestDescription(it);
+    const kws = extractKeywords(it.name, it.desc);
+
+    // Price block per platform
+    const platLines = [];
+    Object.keys(platDisc).forEach(p=>{
+      const base = basePriceFor(it, p);
+      if(base <= 0) return;
+      const d = platDisc[p];
+      const paid = round05(base*(1-d));
+      platLines.push(`<div class="price-line"><span class="pl-l">${getPlatInfo(p).label} — lista</span><span class="pl-v">${fp(base)}</span></div>
+        <div class="price-line highlight"><span class="pl-l">${getPlatInfo(p).label} — pagado</span><span class="pl-v">${fp(paid)} <span style="font-size:.62rem;color:var(--m);font-weight:400">(${(d*100).toFixed(0)}% off)</span></span></div>`);
+    });
+    // Volume from orders
+    const ordersPerWeek = APP.D?.weeks?.length>0 ? (it.orders/APP.D.weeks.length).toFixed(1) : '0';
+
+    return `<div class="prod-card">
+      <div class="prod-head">
+        <div class="prod-icon pi-${it.type}">${typeIcons[it.type]||'•'}</div>
+        <div class="prod-meta">
+          <div class="prod-name">${it.name}</div>
+          <div class="prod-tags">
+            ${bcgC ? `<span class="ptag-sm ${bcgLabels[bcgC].cls}">${bcgLabels[bcgC].l}</span>` : ''}
+            ${elasC ? `<span class="ptag-sm ${elasLabels[elasC.class].cls}">Elasticidad ${elasLabels[elasC.class].l}</span>` : ''}
+            ${it.categoria ? `<span class="ptag-sm" style="background:#fff;color:var(--m)">${it.categoria}</span>` : ''}
+            <span class="ptag-sm" style="background:#fff;color:var(--m)">${it.baseSource==='menu'?'precio del menú':'precio inferido'}</span>
+          </div>
+        </div>
+        <div class="prod-volume">
+          <strong>${it.orders}</strong>
+          órdenes · ${ordersPerWeek}/sem
+          ${it.orders>0 ? '<br>Revenue '+fp(it.revenue) : ''}
+        </div>
+      </div>
+      <div class="prod-body">
+        <div class="prod-col">
+          <div class="prod-col-t">💵 Precios</div>
+          ${platLines.length>0 ? platLines.join('') : '<div style="font-size:.7rem;color:var(--m);font-style:italic">Sin precio configurado</div>'}
+        </div>
+        <div class="prod-col">
+          <div class="prod-col-t">📈 Recomendaciones</div>
+          ${recs.length>0 ? recs.map(r=>`<div class="rec-item">
+            <div class="r-t">${r.title}</div>
+            <div class="r-d">${r.desc}</div>
+          </div>`).join('') : '<div style="font-size:.7rem;color:var(--m);font-style:italic">Sin recomendaciones (sin precio)</div>'}
+        </div>
+        <div class="prod-col">
+          <div class="prod-col-t">📝 Descripción y keywords</div>
+          ${it.desc ? `<div class="desc-block current"><div class="db-h">Actual</div>${it.desc}</div>` : ''}
+          <div class="desc-block suggested">
+            <div class="db-h">Sugerida <button class="copy-btn" onclick="copyText(\`${descBase.replace(/`/g,'\\`')}\`,this)">copiar</button></div>
+            ${descBase}
+            ${enhancer ? `<div style="font-size:.62rem;color:var(--m);margin-top:4px;font-style:italic">+ atributos sugeridos: ${enhancer}</div>` : ''}
+          </div>
+          ${kws.length>0 ? `<div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--m);margin-top:6px;margin-bottom:3px">Keywords para búsqueda</div>
+            ${kws.map(k=>`<span class="kw-chip">${k}</span>`).join('')}` : ''}
+          <div class="no-photo-box" style="margin-top:8px">
+            <div class="np-i">📸</div>
+            <div class="np-t">Checklist de foto para ${it.name}</div>
+            <div class="np-d">Ángulo 45° · iluminación natural · fondo neutro · 16:9 portada Rappi · 1:1 PedidosYa</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function copyText(text, btn){
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig = btn.textContent;
+    btn.textContent = '✓ copiado';
+    setTimeout(()=>btn.textContent = orig, 1500);
+  });
+}
+
+
+// ════════════════════════════════════════════════════════
+//  ETAPA 4 — COMBOS (A: nuevos por co-ocurrencia, B: optimizar existentes)
+// ════════════════════════════════════════════════════════
+
+// Co-ocurrencia: ítems STANDALONE (no dentro de combos) que aparecen en la misma orden
+function buildCoOccurrence(orders){
+  const matrix = {};   // key: "a||b" (sorted), value: {a, b, count, ordersWithBoth}
+  orders.filter(o=>!o.cancelled && o.total>0 && o.items).forEach(o=>{
+    // Quitar opciones internas [...] para no mezclarlas como ítems separados
+    let raw = o.items;
+    // Las opciones internas pertenecen al combo padre, no son ítems independientes
+    raw = raw.replace(/\[[^\]]*\]/g,'');
+    const parts = raw.split(',').map(s=>s.trim()).filter(Boolean);
+    // Construir nombres limpios del nivel superior
+    const names = [];
+    parts.forEach(p=>{
+      const m = p.match(/^(\d+)\s+(.+)$/);
+      if(!m) return;
+      const name = normalizeItemName(m[2]);
+      if(name && name.length>=2 && classifyItem(name)!=='addon') names.push({key: itemKey(name), name});
+    });
+    // Pares
+    for(let i=0;i<names.length;i++){
+      for(let j=i+1;j<names.length;j++){
+        if(names[i].key === names[j].key) continue; // mismo ítem
+        const [a,b] = [names[i], names[j]].sort((x,y)=>x.key.localeCompare(y.key));
+        const k = a.key+'||'+b.key;
+        if(!matrix[k]) matrix[k] = {a:a.name, b:b.name, aKey:a.key, bKey:b.key, count:0};
+        matrix[k].count++;
+      }
+    }
+  });
+  return Object.values(matrix).sort((x,y)=>y.count-x.count);
+}
+
+// Generar combos nuevos: requieren al menos 1 main + otro ítem
+function genNewCombos(catalog, coOcc, doneOrders){
+  // Set de combos existentes (no proponer combos que ya existen)
+  const existingCombos = new Set(
+    catalog.filter(i=>i.type==='combo').map(i=>itemKey(i.name))
+  );
+  // Items elegidos DENTRO de combos existentes ya no son "standalone" para sugerencias
+  // pero pueden seguir apareciendo como ítems individuales
+  const cmap = {};
+  catalog.forEach(i=>cmap[itemKey(i.name)]=i);
+
+  const recs = [];
+  const seen = new Set();
+
+  for(const pair of coOcc){
+    if(pair.count < 2) break; // necesitamos al menos 2 órdenes con ambos juntos
+
+    const a = cmap[pair.aKey], b = cmap[pair.bKey];
+    if(!a || !b) continue;
+
+    // Regla: al menos uno tiene que ser main (no proponer "side + drink" como combo)
+    if(a.type !== 'main' && b.type !== 'main') continue;
+    // No duplicar combos ya existentes
+    const comboKey = [a.name, b.name].sort().join(' + ');
+    if(seen.has(comboKey)) continue;
+    seen.add(comboKey);
+
+    // Precios (usar el promedio entre plataformas activas)
+    const plats = ['peya','rappi','didi'];
+    const avgBase = (item) => {
+      const valid = plats.map(p=>basePriceFor(item,p)).filter(v=>v>0);
+      return valid.length>0 ? valid.reduce((s,v)=>s+v,0)/valid.length : 0;
+    };
+    const baseA = avgBase(a), baseB = avgBase(b);
+    if(baseA<=0 || baseB<=0) continue;
+    const sumBase = baseA + baseB;
+    // Combo descuento: 8% si 2 ítems, 12% si 3+
+    const discCombo = 0.08;
+    const comboBase = round05(sumBase * (1-discCombo));
+
+    // Conversion estimada: de cuántos pedidos solo-A o solo-B se convertirían a combo
+    const aSoloEst = Math.max(0, a.orders - pair.count);
+    const bSoloEst = Math.max(0, b.orders - pair.count);
+    const convertibles = aSoloEst + bSoloEst;
+    // 25% de los solos podrían convertirse al ver el combo formal
+    const convRate = 0.25;
+    const newComboOrders = Math.round(convertibles * convRate);
+    const baselineTicketA = baseA, baselineTicketB = baseB;
+    // Si compraban solo A o solo B, el ticket sube de baseSolo → comboBase
+    // Asumir conversión 50/50 desde solo-A y solo-B
+    const avgSoloTicket = (baseA + baseB) / 2;
+    const ticketDelta = comboBase - avgSoloTicket;
+    const weeksOfData = APP.D?.weeks?.length || 1;
+    const incrementalGmvWk = (newComboOrders * ticketDelta) / weeksOfData;
+
+    recs.push({
+      name: `${a.name.split(' ').slice(0,2).join(' ')} + ${b.name.split(' ').slice(0,2).join(' ')}`,
+      items: [a.name, b.name],
+      coCount: pair.count,
+      sumBase, comboBase, savingForCustomer: sumBase - comboBase,
+      newComboOrders, ticketDelta, incrementalGmvWk,
+      why: `Aparecen juntos en ${pair.count} pedidos. ${aSoloEst+bSoloEst} pedidos del período compran solo uno → potencial de capturar ${newComboOrders} como combo formal en el mismo período (${(convRate*100).toFixed(0)}% de conversión estimada).`,
+    });
+
+    if(recs.length >= 5) break;
+  }
+  return recs;
+}
+
+// ════════════════════════════════════════════════════════
+//  ETAPA 4 — PROMOCIONES (3 capas con reglas)
+// ════════════════════════════════════════════════════════
+
+// Para cada bloque×día decidir qué promo táctica encaja
+// Inputs: D, catalog, coOcc, platDisc, comboOpts
+
+function genPromoLayers(){
+  const D = APP.D; if(!D) return { l1:[], l2:[], l3:[] };
+  const { catalog, platDisc } = APP.catalogData;
+  const { bcg, elas } = APP.menuData || {};
+  const P = computePatterns(APP.allOrders, '__all__');
+  const dayOrder=[1,2,3,4,5,6,0];
+
+  // Top items
+  const topMain  = catalog.find(i=>i.type==='main' && i.orders>0) || catalog[0];
+  const topCombo = catalog.find(i=>i.type==='combo' && i.orders>0) || topMain;
+  const lowMain  = catalog.filter(i=>i.type==='main' && i.orders>0).sort((a,b)=>a.orders-b.orders)[0] || topMain;
+
+  // Plataformas activas
+  const plats = Object.keys(D.byPlat).filter(p=>p!=='unknown' && D.byPlat[p]?.done>0);
+  const platLabel = plats.map(p=>getPlatInfo(p).label).join(' y ');
+
+  // Helpers
+  const ordPerWk = (slot)=>slot.orders/Math.max(P.weeks,1);
+  const fpExact = v => 'S/ '+(v||0).toFixed(2).replace(/\.00$/,'').replace(/(\d)0$/,'$1');
+  const slotName = (bi,jd) => `${BLOCKS[bi].label} ${DAYS[cfgDayIdx(jd)]}`;
+
+  // ─── CAPA 1: Always-on para nuevos usuarios ─────────────────
+  const l1 = [];
+  if(topMain && topMain.orders>0){
+    const platDom = plats[0] || 'peya';
+    const base = basePriceFor(topMain, platDom);
+    const dBase = platDisc[platDom] || 0.22;
+    const paidNow = round05(base*(1-dBase));
+    const newDto = 0.30; // 30% para nuevos
+    const newPrice = round05(base*(1-newDto));
+    // Estimación: si el resto de la categoría gana 8-15% de usuarios nuevos por mes con este tipo de promo
+    const monthlyOrders = D.done_n * (30/Math.max(D.totalDays,1));
+    const newUsersWeek = Math.round(monthlyOrders * 0.10 / 4.3);
+    const costWk = newUsersWeek * (paidNow - newPrice);
+    const ltvProjection = newUsersWeek * paidNow * 2; // si vuelve 2 veces más al precio normal
+    l1.push({
+      name: `Bienvenida ${(newDto*100).toFixed(0)}% al primer pedido`,
+      when: 'Siempre activa',
+      product: `Aplica a toda la carta. Visible como banner en ${platLabel}.`,
+      mechanics: {dto:`${(newDto*100).toFixed(0)}%`, target:'Usuarios nuevos en la plataforma', conditions:'Sin mínimo de compra'},
+      impact: `Captura estimada: <strong>${newUsersWeek} usuarios nuevos/semana</strong>. Costo del descuento (sobre el precio actual): <strong>${fp(costWk)}/sem</strong>. Si la mitad regresa 2 veces más al precio estándar: revenue futuro ${fp(ltvProjection)}/cohorte semanal. ROI positivo desde el segundo pedido del nuevo usuario.`,
+      rules:`No se acumula con Capa 2 ni Capa 3. Solo para usuarios sin historial previo de pedido en la plataforma.`
+    });
+  }
+  // Umbral de ticket
+  if(D.avgTicket > 0){
+    const target = Math.round(D.avgTicket*1.3/5)*5;
+    const lowTicketCount = (D.ticketDist||[]).filter(b=>b.lo<target).reduce((s,b)=>s+b.count,0);
+    const candidates = Math.round(lowTicketCount * 0.20);
+    const weeksLocal = Math.max(D.weeks?.length||1, 1);
+    l1.push({
+      name: `Beneficio por orden ≥ ${fp(target)}`,
+      when: 'Siempre activa',
+      product: `Bebida regular gratis o envío gratis al alcanzar ${fp(target)}. Comunicar visualmente en cada producto: "+${fp(target-D.avgTicket)} para beneficio".`,
+      mechanics: {dto:'Item gratis', target:`Pedidos ≥ ${fp(target)}`, conditions:'Cualquier usuario'},
+      impact: `Hoy ${(lowTicketCount/Math.max(D.done_n,1)*100).toFixed(0)}% de pedidos están por debajo del umbral. Estimamos <strong>${candidates} pedidos/${weeksLocal>1?'período':''} que agregarán un ítem extra</strong> para alcanzarlo. Ticket promedio sube de ${fp(D.avgTicket)} hacia ${fp(target)} en esos casos.`,
+      rules:'No se acumula con Capa 2 ni 3. Costo del beneficio solo se activa cuando el pedido alcanza el umbral.'
+    });
+  }
+
+  // ─── CAPA 2: Programada (día + bloque específico) ─────────────
+  const l2 = [];
+  // Identificar bloques que SON activos pero NO son peak: candidatos a promo programada
+  // (los peak no necesitan más descuento, los muertos van a Capa 3)
+  const candidateSlots = [];
+  BLOCKS.forEach((b,bi)=>dayOrder.forEach(jd=>{
+    const st = P.states[bi][jd];
+    if(st==='low' || (st==='ok' && P.cells[bi][jd].orders/P.peak < 0.55)){
+      candidateSlots.push({ bi, jd, st, c: P.cells[bi][jd], idx: P.peak>0?P.cells[bi][jd].orders/P.peak:0 });
+    }
+  }));
+  candidateSlots.sort((a,b)=>a.idx-b.idx);
+
+  // Promo para el peor día completo (ordenes/sem total más bajas)
+  const dayTotals = dayOrder.map(jd=>({jd, total: BLOCKS.reduce((s,_,bi)=>s+P.cells[bi][jd].orders,0)}));
+  const dayTotalsOpen = dayTotals.filter(d=>d.total>0).sort((a,b)=>a.total-b.total);
+  if(dayTotalsOpen.length>0){
+    const worst = dayTotalsOpen[0];
+    const worstDayName = DAYS[cfgDayIdx(worst.jd)];
+    const worstWk = worst.total/Math.max(P.weeks,1);
+    const platDom = plats[0] || 'peya';
+    const baseLow = basePriceFor(lowMain, platDom);
+    const dBase = platDisc[platDom] || 0.22;
+    const promoDto = Math.min(0.40, dBase + 0.10);
+    const finalPaid = round05(baseLow*(1-promoDto));
+    const inc = projectedOrderDelta('low', promoDto, dBase, lowMain.type);
+    const newOrdersWk = worstWk * inc;
+    const gmvDelta = newOrdersWk * finalPaid - worstWk * (inc * (baseLow*(1-dBase)*0)); // simplificado
+    const incRev = newOrdersWk * finalPaid;
+    const discCostExisting = worstWk * (baseLow*(dBase - 0) * 0); // simplificado
+    // Mejor cálculo: GMV neto = órdenes nuevas * precio nuevo
+    // Costo: el descuento extra aplicado a TODAS las órdenes del día (existentes + nuevas)
+    const extraDiscCost = (worstWk + newOrdersWk) * baseLow * (promoDto - dBase);
+    const netGmv = newOrdersWk * finalPaid - extraDiscCost;
+    l2.push({
+      name: `Promo ${worstDayName} — día más débil`,
+      when: `Todos los ${worstDayName} (todo el día)`,
+      product: `<strong>${lowMain.name}</strong> a ${fp(finalPaid)} (precio lista ${fp(baseLow)})`,
+      mechanics: {dto:`${(promoDto*100).toFixed(0)}%`, target:`Cualquier usuario, solo los ${worstDayName}`, conditions:'Limitado al producto indicado'},
+      impact: `Hoy los ${worstDayName} tienen <strong>${worstWk.toFixed(1)} órdenes/sem</strong>, ${((worstWk/Math.max(P.peak,1))*100).toFixed(0)}% del bloque líder. Proyección: <strong>+${newOrdersWk.toFixed(1)} órdenes incrementales/sem</strong> (${(inc*100).toFixed(0)}% sobre el baseline del día). Revenue incremental ${fp(incRev)}/sem; costo del dto. extra sobre todas las órdenes del día ${fp(extraDiscCost)}/sem; <strong>GMV neto ${(netGmv>=0?'+':'')}${fp(netGmv)}/sem</strong>.`,
+      rules:`No se acumula con Capa 1 ni 3. Nombre fijo y consistente cada semana para crear hábito de los clientes recurrentes.`
+    });
+  }
+
+  // Promo para el slot más débil dentro de un día activo
+  if(candidateSlots.length>0){
+    const worst = candidateSlots[0];
+    const ordersWk = worst.c.orders/Math.max(P.weeks,1);
+    const platDom = plats[0] || 'peya';
+    const baseLow = basePriceFor(lowMain, platDom);
+    const dBase = platDisc[platDom] || 0.22;
+    const promoDto = Math.min(0.40, dBase + 0.10);
+    const finalPaid = round05(baseLow*(1-promoDto));
+    const inc = projectedOrderDelta(worst.st, promoDto, dBase, lowMain.type);
+    const newOrdersWk = ordersWk * inc;
+    const extraDiscCost = (ordersWk + newOrdersWk) * baseLow * (promoDto - dBase);
+    const netGmv = newOrdersWk * finalPaid - extraDiscCost;
+    l2.push({
+      name: `Happy slot — ${slotName(worst.bi, worst.jd)}`,
+      when: `${DAYS[cfgDayIdx(worst.jd)]} ${BLOCKS[worst.bi].sub}`,
+      product: `<strong>${lowMain.name}</strong> a ${fp(finalPaid)} (precio lista ${fp(baseLow)})`,
+      mechanics: {dto:`${(promoDto*100).toFixed(0)}%`, target:`Solo en ese slot horario`, conditions:'Producto específico'},
+      impact: `Hoy ${ordersWk.toFixed(1)} órdenes/sem en este slot. Proyección: <strong>+${newOrdersWk.toFixed(1)} órdenes/sem</strong>. GMV neto ${(netGmv>=0?'+':'')}${fp(netGmv)}/sem.`,
+      rules:`No se acumula con Capa 1 ni 3. Si en 2 semanas el volumen no crece al menos 30%, revertir.`
+    });
+  }
+
+  // ─── CAPA 3: Táctica de rescate ──────────────────────────────
+  const l3 = [];
+  // Trigger: semanas débiles (volumen < 60% del promedio)
+  const weeks = D.weeks || [];
+  const weeklyVol = weeks.map(w=>D.byWeek[w].orders);
+  const avgWeek = weeklyVol.reduce((s,v)=>s+v,0)/Math.max(weeklyVol.length,1);
+  const weakWeeks = weeklyVol.filter(v=>v < avgWeek*0.6).length;
+  const platDom = plats[0] || 'peya';
+  const baseTop = basePriceFor(topMain, platDom);
+  const dBase = platDisc[platDom] || 0.22;
+  const rescueDto = 0.35;
+  const rescuePaid = round05(baseTop*(1-rescueDto));
+  const rescueInc = projectedOrderDelta('low', rescueDto, dBase, topMain.type);
+  l3.push({
+    name: `Rescate — pico de ${(rescueDto*100).toFixed(0)}% por 48h`,
+    when: `Cuando una semana cae <60% del promedio (${weakWeeks} semanas detectadas en el período)`,
+    product: `<strong>${topMain.name}</strong> a ${fp(rescuePaid)} (precio lista ${fp(baseTop)}, ahorra ${fp(baseTop-rescuePaid)})`,
+    mechanics: {dto:`${(rescueDto*100).toFixed(0)}%`, target:'Cualquier usuario · 48 horas', conditions:'Activar manualmente cuando se detecte caída'},
+    impact: `Si se activa frente a una caída, esperamos recuperar el volumen del día siguiente con un boost de <strong>${(rescueInc*100).toFixed(0)}%</strong> en las 48h. Costo del dto. extra sobre baseline esperado de día débil: ~${fp(D.avgTicket*0.13*5)}.`,
+    rules:`Solo se activa manualmente. NO se acumula con Capa 1 ni 2 — si está activa la promo del día débil, pausarla durante las 48h del rescate.`
+  });
+
+  // Promo estacional / lanzamiento
+  l3.push({
+    name: `Lanzamiento de novedad`,
+    when: `Cada vez que se agrega un nuevo ítem al menú (2 semanas)`,
+    product: `Nuevo ítem agregado · ${(0.25*100).toFixed(0)}% durante 14 días desde el lanzamiento`,
+    mechanics: {dto:'25%', target:'Cualquier usuario · primeras 2 semanas', conditions:'Solo para el ítem nuevo'},
+    impact: `El algoritmo de Rappi/PedidosYa da visibilidad extra a tiendas que actualizan menú. El descuento de lanzamiento captura las primeras decenas de órdenes que generan rating y volumen → el ítem entra al ranking orgánico.`,
+    rules:`No se acumula con otras. Activar SOLO sobre el ítem recién lanzado, durante los primeros 14 días.`
+  });
+
+  return { l1, l2, l3 };
+}
+
+// ════════════════════════════════════════════════════════
+//  RENDER ETAPA 4
+// ════════════════════════════════════════════════════════
+function renderCombos(){
+  if(!APP.catalogData || !APP.D) return;
+  const { catalog, comboOpts } = APP.catalogData;
+  const coOcc = buildCoOccurrence(APP.allOrders);
+  const newCombos = genNewCombos(catalog, coOcc, APP.allOrders);
+
+  // Insight
+  const existingCombos = catalog.filter(i=>i.type==='combo');
+  document.getElementById('combosInsight').innerHTML = `<div class="alert ok"><span class="alert-ico">🎯</span><span class="alert-body">
+    <strong>${existingCombos.length} combo(s) activo(s)</strong> en el menú · <strong>${coOcc.filter(c=>c.count>=2).length} co-ocurrencias</strong> de ítems (≥2 pedidos juntos) detectadas. Cada co-ocurrencia con al menos un ítem main es candidata a convertirse en combo formal.</span></div>`;
+
+  // A) Combos nuevos
+  if(newCombos.length === 0){
+    document.getElementById('combosNew').innerHTML = '<div style="font-size:.7rem;color:var(--m);font-style:italic;padding:14px 0;text-align:center">No se detectaron co-ocurrencias significativas para proponer combos nuevos en este período.</div>';
+  } else {
+    document.getElementById('combosNew').innerHTML = newCombos.map(c=>`
+      <div class="combo-card new">
+        <span class="combo-tag-sm combo-tag-new">Nuevo</span>
+        <div class="combo-name">${c.name}</div>
+        <div class="combo-items">🛒 ${c.items.join('  +  ')}</div>
+        <div class="combo-prices">
+          <div class="cp-block"><div class="cp-lbl">Suma por separado</div><div class="cp-val list">${fp(c.sumBase)}</div></div>
+          <div class="cp-block"><div class="cp-lbl">Precio combo</div><div class="cp-val paid">${fp(c.comboBase)}</div></div>
+          <div class="cp-block"><div class="cp-lbl">Ahorro cliente</div><div class="cp-val save">${fp(c.savingForCustomer)}</div></div>
+        </div>
+        <div class="combo-why"><strong>Por qué:</strong> ${c.why}</div>
+        <div class="combo-impact">
+          <span class="ci-pill">+${c.newComboOrders} pedidos combo proyectados</span>
+          <span class="ci-pill">Ticket +${fp(c.ticketDelta)}/orden</span>
+          <span class="ci-pill">GMV +${fp(c.incrementalGmvWk)}/sem</span>
+        </div>
+      </div>`).join('');
+  }
+
+  // B) Opciones dentro de combos existentes
+  if(!comboOpts || Object.keys(comboOpts).length === 0){
+    document.getElementById('combosOptimize').innerHTML = '<div style="font-size:.7rem;color:var(--m);font-style:italic;padding:14px 0;text-align:center">No se detectaron opciones internas de combos (este análisis requiere reporte de PedidosYa con artículos detallados).</div>';
+  } else {
+    const html_opts = Object.keys(comboOpts).map(comboKey=>{
+      const combo = catalog.find(i=>itemKey(i.name)===comboKey);
+      if(!combo) return '';
+      const opts = Object.values(comboOpts[comboKey]).sort((a,b)=>b.count-a.count);
+      const totalOpts = opts.reduce((s,o)=>s+o.count, 0);
+      // Agrupar por tipo (burgers, bebidas, etc.)
+      const byType = {};
+      opts.forEach(o=>{
+        const t = classifyItem(o.name);
+        if(!byType[t]) byType[t] = [];
+        byType[t].push(o);
+      });
+      // Para cada tipo, identificar default y candidatos a eliminar
+      let bodyHtml = '';
+      Object.keys(byType).forEach(t=>{
+        const opts_t = byType[t];
+        const total_t = opts_t.reduce((s,o)=>s+o.count,0);
+        const tLabel = {main:'🍔 Burger',side:'🍟 Acompañ.',drink:'🥤 Bebida',dessert:'🍦 Postre',other:'• Otros'}[t]||t;
+        bodyHtml += `<div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--m);margin-top:8px;margin-bottom:3px">${tLabel}</div>`;
+        opts_t.forEach((opt,idx)=>{
+          const pct = total_t>0 ? opt.count/total_t*100 : 0;
+          const isDefault = idx===0;
+          const isWeak = pct < 10;
+          const barColor = isDefault ? '' : (isWeak ? 'weak' : 'med');
+          bodyHtml += `<div class="opt-row">
+            <div class="opt-name ${isDefault?'default':''}">
+              ${opt.name}
+              ${isDefault ? '<span class="default-badge">Default sugerido</span>' : ''}
+              ${isWeak && !isDefault ? '<span class="eliminate-badge">Eliminar</span>' : ''}
+            </div>
+            <div class="opt-bar"><div class="opt-bar-fill ${barColor}" style="width:${pct}%"></div></div>
+            <div class="opt-count">${opt.count}×</div>
+            <div class="opt-pct">${pct.toFixed(0)}%</div>
+          </div>`;
+        });
+      });
+      // Recomendación accionable
+      const defaultsByType = Object.keys(byType).map(t=>{
+        const top = byType[t][0];
+        return `<strong>${({main:'Burger',side:'Acompañ.',drink:'Bebida',dessert:'Postre'}[t]||t)}:</strong> ${top.name}`;
+      }).join(' · ');
+      const toEliminate = opts.filter((o,idx)=>{
+        const tList = byType[classifyItem(o.name)];
+        const total_t = tList.reduce((s,oo)=>s+oo.count,0);
+        return (o.count/total_t*100) < 10 && tList.indexOf(o)!==0;
+      });
+      return `<div class="combo-card opt">
+        <span class="combo-tag-sm combo-tag-opt">Optimizar</span>
+        <div class="combo-name">${combo.name}</div>
+        <div class="combo-items">${combo.orders} órdenes en el período · ${totalOpts} opciones elegidas</div>
+        ${bodyHtml}
+        <div class="opt-rec">
+          <strong>Configurar defaults en la plataforma:</strong> ${defaultsByType}.
+          ${toEliminate.length>0 ? `<br><strong>Eliminar del combo (selección <10%):</strong> ${toEliminate.map(o=>'"'+o.name+'"').join(', ')}. Reduce fricción de decisión y simplifica la carta.` : '<br>No hay opciones con selección crítica baja.'}
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('combosOptimize').innerHTML = html_opts || '<div style="font-size:.7rem;color:var(--m);font-style:italic;padding:14px 0;text-align:center">Sin combos con opciones internas detectadas.</div>';
+  }
+}
+
+function renderPromos(){
+  if(!APP.catalogData || !APP.D) return;
+  const { l1, l2, l3 } = genPromoLayers();
+
+  document.getElementById('promosInsight').innerHTML = `<div class="alert ok"><span class="alert-ico">📐</span><span class="alert-body">
+    <strong>Marco de promociones — 3 capas no acumulables.</strong> Cada capa tiene reglas claras de activación, producto específico y proyección cuantitativa de impacto. Las capas no se superponen para proteger el margen y mantener consistencia frente al cliente.</span></div>`;
+
+  const renderLayer = (layerData, num, title, sub, targetId) => {
+    if(layerData.length === 0){
+      document.getElementById(targetId).innerHTML = `<div class="layer-section">
+        <div class="layer-h"><div class="layer-num">${num}</div><div class="layer-title">${title}</div></div>
+        <div class="layer-sub">${sub}</div>
+        <div style="font-size:.7rem;color:var(--m);font-style:italic;padding:6px 0">Sin recomendaciones para esta capa en el período analizado.</div>
+      </div>`;
+      return;
+    }
+    document.getElementById(targetId).innerHTML = `<div class="layer-section">
+      <div class="layer-h"><div class="layer-num">${num}</div><div class="layer-title">${title}</div></div>
+      <div class="layer-sub">${sub}</div>
+      ${layerData.map(p=>`<div class="promo-card">
+        <div class="promo-head"><div class="promo-name">${p.name}</div><div class="promo-when">${p.when}</div></div>
+        <div class="promo-prod">${p.product}</div>
+        <div class="promo-mech">
+          <div class="pm-cell"><div class="pm-lbl">Descuento</div><div class="pm-val dto">${p.mechanics.dto}</div></div>
+          <div class="pm-cell"><div class="pm-lbl">Target</div><div class="pm-val" style="font-size:.66rem;font-family:'DM Sans',sans-serif;font-weight:600">${p.mechanics.target}</div></div>
+          <div class="pm-cell"><div class="pm-lbl">Condiciones</div><div class="pm-val" style="font-size:.66rem;font-family:'DM Sans',sans-serif;font-weight:600">${p.mechanics.conditions}</div></div>
+        </div>
+        <div class="promo-impact">${p.impact}</div>
+        <div class="promo-rules">⚠ ${p.rules}</div>
+      </div>`).join('')}
+    </div>`;
+  };
+
+  renderLayer(l1, 1, 'Capa 1 — Always-on', 'Promos siempre activas que sostienen el flujo base de captación y desarrollo de ticket. No requieren intervención manual.', 'promoLayer1');
+  renderLayer(l2, 2, 'Capa 2 — Programada', 'Promos por día y bloque específico que activan demanda en franjas débiles. Mismo nombre cada semana para crear hábito.', 'promoLayer2');
+  renderLayer(l3, 3, 'Capa 3 — Táctica de rescate', 'Promos de activación puntual cuando se detecta una caída o se lanza un producto. Manejo manual.', 'promoLayer3');
+}
+
+
+// ════════════════════════════════════════════════════════
+//  ETAPA 5 — ADQUISICIÓN + TICKET + RETENCIÓN
+// ════════════════════════════════════════════════════════
+
+// ─── ADQUISICIÓN ─────────────────────────────────────────
+function renderAdq(){
+  if(!APP.catalogData || !APP.menuData) return;
+  const { catalog } = APP.catalogData;
+  const hasMenu = (APP.menu||[]).length > 0;
+  // Tomamos los ítems CON demanda (los que vale la pena optimizar para captar nuevos)
+  const items = catalog.filter(i => i.orders > 0 || (hasMenu && i.baseSource==='menu')).slice(0,12);
+
+  document.getElementById('adqInsight').innerHTML = `<div class="alert ${hasMenu?'ok':'warn'}"><span class="alert-ico">${hasMenu?'📸':'⚠️'}</span><span class="alert-body">
+    ${hasMenu
+      ? `Las plataformas posicionan productos según: <strong>foto · descripción · keywords · velocidad de venta</strong>. Aquí están las recomendaciones específicas por ítem para mejorar la posición orgánica en búsqueda y carrusel principal.`
+      : `Sin menú CSV cargado, las descripciones actuales están en blanco. <strong>Carga el menú</strong> (botón ⚙ Config) para que el motor compare la descripción actual con la sugerida ítem por ítem.`}</span></div>`;
+
+  if(items.length === 0){
+    document.getElementById('adqProductList').innerHTML = '<div style="font-size:.75rem;color:var(--m);font-style:italic;padding:20px;text-align:center">No hay productos para optimizar.</div>';
+    return;
+  }
+
+  const typeIcons = { main:'🍔', side:'🍟', drink:'🥤', dessert:'🍦', combo:'📦', addon:'➕', other:'•' };
+
+  document.getElementById('adqProductList').innerHTML = items.map(it=>{
+    const { base: descSugg, enhancer } = suggestDescription(it);
+    const kws = extractKeywords(it.name, it.desc);
+    const ordPerWk = APP.D?.weeks?.length>0 ? (it.orders/APP.D.weeks.length).toFixed(1) : '0';
+
+    // Checklist específico de foto por tipo
+    const photoChecks = {
+      main: [
+        'Ángulo 45° desde arriba-frente (ve queso/relleno)',
+        'Iluminación natural o blanca difusa, fondo oscuro o de madera',
+        'Carne visible con bordes crujientes, formato 16:9 portada',
+        'Formato 1:1 para detalle del producto en PedidosYa'
+      ],
+      side: [
+        'Foto cenital o ¾, montón abundante (no plato vacío)',
+        'Fondo neutro, papel kraft o tabla de madera',
+        'Sal/sazón visible, vapor o brillo de aceite',
+        'Encuadre vertical 4:5 funciona mejor en mobile'
+      ],
+      drink: [
+        'Botella o vaso enfocado, etiqueta legible',
+        'Fondo limpio, sin sombras duras',
+        'Si es servido en vaso: gotas de condensación visibles',
+        'Formato 1:1, producto centrado'
+      ],
+      dessert: [
+        'Toma cenital sobre tabla o plato pequeño',
+        'Detalle de textura visible (cremoso, brillo)',
+        'Decoración o topping bien centrados',
+        'Iluminación cálida (luz amarilla suave)'
+      ],
+      combo: [
+        'Toma cenital o ¾ que muestre TODOS los componentes',
+        'Bebida + comida + acompañamiento bien distribuidos',
+        'Fondo de mesa rústica o papel kraft',
+        'Formato 16:9 portada (es lo primero que ve el cliente)'
+      ],
+      addon: [
+        'Foto del producto agregado al ítem principal',
+        'Toma de cerca, textura visible',
+        'Fondo neutro, sin distracciones'
+      ],
+      other: [
+        'Toma clara, producto en el centro',
+        'Fondo neutro y bien iluminado',
+        'Formato 1:1 o 16:9 según destino'
+      ]
+    };
+    const checks = photoChecks[it.type] || photoChecks.other;
+
+    return `<div class="adq-product">
+      <div class="adq-prod-head">
+        <div class="prod-icon pi-${it.type}" style="width:38px;height:38px">${typeIcons[it.type]||'•'}</div>
+        <div style="flex:1">
+          <div class="adq-prod-name">${it.name}</div>
+          <div class="adq-prod-meta">${it.type} · ${it.orders} órdenes · ${ordPerWk}/sem · ${it.baseSource==='menu'?'precio del menú':'precio inferido de órdenes'}</div>
+        </div>
+      </div>
+      <div class="adq-grid-3">
+        <div class="adq-section">
+          <div class="adq-section-h">📸 Checklist de foto</div>
+          <div class="photo-checklist">
+            ${checks.map(c=>`<div class="photo-check-item">${c}</div>`).join('')}
+          </div>
+        </div>
+        <div class="adq-section">
+          <div class="adq-section-h">📝 Descripción</div>
+          ${it.desc
+            ? `<div class="desc-current"><strong style="font-size:.55rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--m)">Actual:</strong><br>${it.desc}</div>`
+            : `<div class="desc-current"><em>Sin descripción cargada</em></div>`}
+          <div class="desc-suggested"><strong style="font-size:.55rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--gr)">Sugerida:</strong> <button class="copy-btn" onclick="copyText(\`${descSugg.replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`,this)">copiar</button><br>${descSugg}</div>
+          ${enhancer ? `<div style="font-size:.62rem;color:var(--m);margin-top:5px;font-style:italic">+ atributos sugeridos: ${enhancer}</div>` : ''}
+        </div>
+        <div class="adq-section">
+          <div class="adq-section-h">🔍 Keywords inferidas</div>
+          <div style="font-size:.65rem;color:var(--m);margin-bottom:6px;line-height:1.45">Palabras y frases que captan búsquedas en la app. Repítelas naturalmente en nombre + descripción.</div>
+          <div class="kw-list">
+            ${kws.length>0 ? kws.map(k=>`<span class="kw-chip-sm">${k}</span>`).join('') : '<em style="font-size:.65rem;color:var(--m)">Carga descripción para extraer keywords</em>'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── DESARROLLO DE TICKET ────────────────────────────────
+function renderTicket(){
+  if(!APP.D || !APP.catalogData) return;
+  const D = APP.D;
+  const { catalog, platDisc, comboOpts } = APP.catalogData;
+
+  const ticketNow = D.avgTicket;
+  // Target: +25% sobre el ticket actual (alcanzable con la suma de palancas)
+  const ticketTarget = Math.round(ticketNow*1.25/5)*5;
+  const ticketGap = ticketTarget - ticketNow;
+
+  document.getElementById('ticketSummary').innerHTML = `
+    <div class="ticket-summary">
+      <h4>Ticket promedio actual → meta</h4>
+      <div style="font-size:.72rem;color:var(--m);line-height:1.55">Con las 4 palancas de abajo, proyectamos que el ticket promedio sube de <strong>${fp(ticketNow)}</strong> hacia <strong>${fp(ticketTarget)}</strong> en 8-12 semanas. Cada palanca apunta a un comportamiento específico del cliente.</div>
+      <div class="ticket-flow">
+        <div class="tf-step now"><div class="tfs-lbl">Hoy</div><div class="tfs-val">${fp(ticketNow)}</div></div>
+        <div class="tf-arrow">→</div>
+        <div class="tf-step target"><div class="tfs-lbl">Meta 8-12 sem</div><div class="tfs-val">${fp(ticketTarget)}</div></div>
+        <div class="tf-arrow">📈</div>
+        <div class="tf-step"><div class="tfs-lbl">GAP a cerrar</div><div class="tfs-val" style="color:var(--gr)">+${fp(ticketGap)}</div></div>
+      </div>
+    </div>`;
+
+  // ─── Palancas concretas con producto específico ──
+  // 1. Precio ancla
+  const allItems = catalog.filter(i=>basePriceFor(i,'peya')>0 || basePriceFor(i,'rappi')>0);
+  const sortedByPrice = allItems.map(i=>({...i, maxPrice:Math.max(basePriceFor(i,'peya'),basePriceFor(i,'rappi'))})).sort((a,b)=>b.maxPrice-a.maxPrice);
+  const anchorItem = sortedByPrice[0];
+  const secondItem = sortedByPrice[1];
+
+  // 2. Combo más popular para upsell
+  const topCombo = catalog.filter(i=>i.type==='combo' && i.orders>0).sort((a,b)=>b.orders-a.orders)[0];
+  const topMain  = catalog.filter(i=>i.type==='main' && i.orders>0).sort((a,b)=>b.orders-a.orders)[0];
+  const topSide  = catalog.filter(i=>i.type==='side' && i.orders>0).sort((a,b)=>b.orders-a.orders)[0];
+  const topDrink = catalog.filter(i=>i.type==='drink' && i.orders>0).sort((a,b)=>b.orders-a.orders)[0];
+
+  // 3. Distribución actual de tickets bajos
+  const lowTickets = (D.ticketDist||[]).filter(b=>b.lo<ticketTarget).reduce((s,b)=>s+b.count,0);
+  const lowTicketPct = lowTickets/Math.max(D.done_n,1)*100;
+
+  // 4. Precio mágico opportunity count
+  const magicOpps = catalog.filter(i=>{
+    const base = basePriceFor(i,'peya');
+    if(base<=0) return false;
+    const paid = round05(base*(1-(platDisc.peya||0.22)));
+    return Math.floor(paid)===paid;  // termina en entero, candidato a mágico
+  });
+
+  const levers = [];
+
+  // Palanca 1: Combos formales con upsell
+  if(topMain && topSide && topDrink){
+    const fakeCombo = basePriceFor(topMain,'peya') + basePriceFor(topSide,'peya') + basePriceFor(topDrink,'peya');
+    const comboDisc = round05(fakeCombo*0.92);
+    const incOrders = Math.round(D.done_n*0.20);
+    levers.push({
+      name:'Combos formales en lugar de ítems sueltos',
+      impact:`+${fp(round05((comboDisc-D.avgTicket)*0.3))}/orden`,
+      desc:`Formalizar combos con un main + acompañamiento + bebida sube el ticket porque elimina la fricción de armar el pedido. El cliente ve el "ahorro" pero paga más que si solo pidiera el main solo.`,
+      product:`<strong>${topMain.name}</strong> + <strong>${topSide.name}</strong> + <strong>${topDrink.name}</strong> = ${fp(comboDisc)} (suma individual ${fp(fakeCombo)}, ahorra ${fp(fakeCombo-comboDisc)} aparente). Si ~30% de los ~${incOrders} clientes mensuales que hoy compran solo main migran al combo, el ticket promedio sube ${fp(round05((comboDisc-D.avgTicket)*0.3))}.`,
+    });
+  }
+
+  // Palanca 2: Precio ancla
+  if(anchorItem && secondItem){
+    levers.push({
+      name:'Precio ancla en la carta',
+      impact:'+5-10% conversión',
+      desc:`Colocar al inicio de la carta un producto premium de precio alto (el "ancla") hace que los siguientes ítems parezcan razonables. El cliente compara contra el ancla y elige el "ahorro" — generalmente el segundo más caro.`,
+      product:`Ítem ancla recomendado: <strong>${anchorItem.name}</strong> a ${fp(anchorItem.maxPrice)}. Posicionarlo en lo alto de cada categoría hace que <strong>${secondItem.name}</strong> a ${fp(secondItem.maxPrice)} se vea ${(((anchorItem.maxPrice-secondItem.maxPrice)/anchorItem.maxPrice)*100).toFixed(0)}% más barato relativamente. Si Mr. Smash no tiene un ítem premium suficientemente caro, crear uno (combo doble, edición limitada).`,
+    });
+  }
+
+  // Palanca 3: Precios mágicos
+  if(magicOpps.length > 0){
+    levers.push({
+      name:'Precios mágicos (terminados en .90)',
+      impact:`+5-8% conversión en ${magicOpps.length} ítems`,
+      desc:`El cerebro lee S/34.90 como "S/34 y algo" en lugar de "casi S/35". El cambio es de S/0.10 pero la percepción es de un rango de precio menor. ${magicOpps.length} productos del menú terminan en entero (cliente paga S/34, S/40, etc.) y son candidatos directos.`,
+      product:`Top 3 candidatos: ${magicOpps.slice(0,3).map(i=>`<strong>${i.name}</strong> S/${Math.round(round05(basePriceFor(i,'peya')*(1-(platDisc.peya||0.22))))} → S/${Math.round(round05(basePriceFor(i,'peya')*(1-(platDisc.peya||0.22))))-1}.90`).join(' · ')}.`,
+    });
+  }
+
+  // Palanca 4: Umbral de beneficio
+  if(lowTicketPct > 30){
+    const target = Math.round(D.avgTicket*1.3/5)*5;
+    levers.push({
+      name:`Umbral de beneficio "Pedido ≥ ${fp(target)}"`,
+      impact:`+${fp(round05((target-D.avgTicket)*0.3))}/orden en pedidos < umbral`,
+      desc:`${lowTicketPct.toFixed(0)}% de los pedidos están bajo ${fp(target)}. Ofrecer un beneficio gratis (bebida regular o envío gratis) al alcanzarlo activa el comportamiento "agregar un ítem para llegar al beneficio".`,
+      product:`Comunicar visualmente en cada producto del checkout: <strong>"+${fp(D.avgTicket<target?target-D.avgTicket:5)} para bebida gratis"</strong>. El beneficio sugerido: <strong>${topDrink?topDrink.name:'una bebida regular'}</strong> (costo bajo, alto valor percibido).`,
+    });
+  }
+
+  document.getElementById('ticketLevers').innerHTML = levers.map(l=>`
+    <div class="lever-card">
+      <div class="lever-head">
+        <div class="lever-name">${l.name}</div>
+        <div class="lever-impact">${l.impact}</div>
+      </div>
+      <div class="lever-desc">${l.desc}</div>
+      <div class="lever-prod">${l.product}</div>
+    </div>`).join('');
+}
+
+// ─── RETENCIÓN & RECOMPRA ────────────────────────────────
+function renderRet(){
+  if(!APP.D) return;
+  const D = APP.D;
+  const totalOrd = D.done_n;
+  const weeks    = Math.max(D.weeks?.length||1, 1);
+  const ordPerWk = totalOrd/weeks;
+
+  // Aproximación de recompra: los datos no traen Customer ID, así que estimamos
+  // usando proxy: si una marca tiene N órdenes/semana y un mercado de M usuarios potenciales,
+  // la recompra se infiere por la consistencia semana a semana.
+  // Datos reales de PedidosYa Summary si están disponibles
+  const peyaSum = D.peyaSummary;
+
+  // Variabilidad semanal — si las semanas tienen volumen similar = retención alta
+  const weeklyVols = (D.weeks||[]).map(w=>D.byWeek[w].orders);
+  const avgWk  = weeklyVols.reduce((s,v)=>s+v,0)/Math.max(weeklyVols.length,1);
+  const stdWk  = Math.sqrt(weeklyVols.reduce((s,v)=>s+(v-avgWk)**2,0)/Math.max(weeklyVols.length,1));
+  const cvWk   = avgWk>0 ? stdWk/avgWk : 0;
+  // CV bajo (≤25%) sugiere base de clientes recurrentes; CV alto (>40%) sugiere mucho cliente nuevo único
+  const retentionScore = cvWk<=0.25 ? 'alta' : cvWk<=0.40 ? 'media' : 'baja';
+
+  document.getElementById('retInsight').innerHTML = `<div class="alert ${retentionScore==='alta'?'ok':retentionScore==='media'?'warn':'err'}"><span class="alert-ico">${retentionScore==='alta'?'✓':'⚠️'}</span><span class="alert-body">
+    <strong>Señal de retención: ${retentionScore.toUpperCase()}</strong> (coef. variación semanal ${(cvWk*100).toFixed(0)}%). Las plataformas no comparten Customer ID por orden, así que medimos la consistencia entre semanas como proxy. CV bajo = base recurrente fuerte. Para medir recompra exacta es necesario activar un loyalty propio (acción 1 abajo).</span></div>`;
+
+  // KPIs de retención
+  const kpis = [
+    { lbl:'Órdenes/semana (promedio)', val:avgWk.toFixed(1), sub:`σ ${stdWk.toFixed(1)} · CV ${(cvWk*100).toFixed(0)}%` },
+    { lbl:'Score de retención',        val:retentionScore==='alta'?'🟢 Alta':retentionScore==='media'?'🟡 Media':'🔴 Baja',
+      sub:retentionScore==='alta'?'Base recurrente fuerte':retentionScore==='media'?'Mezcla, foco en frecuencia':'Mucho cliente único, foco en recompra' },
+    { lbl:'GMV / semana',              val:fp(D.gmv/weeks), sub:`${weeks} semanas · ${ordPerWk.toFixed(1)} órd/sem` },
+  ];
+  document.getElementById('retKpis').innerHTML = kpis.map(k=>`
+    <div class="kpi-card primary">
+      <div class="kpi-lbl">${k.lbl}</div>
+      <div class="kpi-val" style="font-size:1.1rem">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+
+  // ─── 5 acciones concretas para retención ──
+  const actions = [
+    {
+      num: '1',
+      kpi: '% Recompra · LTV',
+      ttl: 'Empaque con QR de canje propio',
+      body: `Cada pedido entregado lleva en el empaque (sticker, tarjeta o ticket) un <strong>QR con descuento personal del 20% en el siguiente pedido</strong>, válido por 14 días. El QR lleva a un Linktree/WhatsApp que registra el teléfono → así construyes tu propia base de clientes (que Rappi y PedidosYa NO te dan). Costo: <strong>S/0.10/pedido</strong> en sticker.<br><br><strong>Cómo lo mides:</strong> # de QRs canjeados / # de stickers entregados = % recompra real. Con 100+ canjes por mes ya tienes universo para hacer remarketing por WhatsApp.`,
+    },
+    {
+      num: '2',
+      kpi: 'Volumen órdenes',
+      ttl: 'Calidad consistente: protocolo de cocina y empaque',
+      body: `La recompra orgánica nace de pedidos sin defectos. Implementar un protocolo simple por turno: (a) <strong>foto del pedido empaquetado antes de despacho</strong> (vs. screenshot del pedido) — auto-control que reduce errores ~70%; (b) <strong>checklist visible de salsas/extras</strong> impreso al lado del armado; (c) <strong>termómetro de aceite cada 2h</strong> para mantener crocancia.<br><br><strong>Cómo lo mides:</strong> tasa de reclamos en PedidosYa. Si baja del 5% al <2%, recompra orgánica sube 20-30% en 60 días.`,
+    },
+    {
+      num: '3',
+      kpi: 'Frecuencia',
+      ttl: 'Promo del día débil — nombre consistente cada semana',
+      body: `Si tienes un día débil (ver Patrones), <strong>nombrar la promo de manera consistente</strong> ("Maui Lunes" o "Combo Martes") en lugar de cambiar la promo cada semana. La consistencia genera hábito: el cliente sabe que ese día puede pedir su preferido a precio bajo. Comunicarlo en la portada del local en Rappi/PedidosYa.<br><br><strong>Cómo lo mides:</strong> órdenes del día designado vs. resto. Si sube 40%+ es señal de hábito formándose.`,
+    },
+    {
+      num: '4',
+      kpi: 'LTV',
+      ttl: 'Comunicar lanzamientos cada 30 días',
+      body: `Cada 30 días lanzar <strong>1 ítem nuevo o variante limitada</strong> (Burger del mes, milkshake estacional, salsa nueva). Las plataformas premian tiendas con menú activo dándoles visibilidad orgánica adicional. Además, las novedades reactivan a clientes recurrentes que ya pasaron por todo el menú.<br><br><strong>Cómo lo mides:</strong> # órdenes del nuevo ítem en sus primeras 2 semanas + cambio en órdenes totales del mes vs. el anterior. Tracker de KPIs en tab Financiero.`,
+    },
+    {
+      num: '5',
+      kpi: 'Retención/hábito',
+      ttl: 'Ventana de rescate semanal — antes de perder al cliente',
+      body: `Si el cliente promedio pide cada ~14 días, la <strong>ventana crítica es el día 12-16 desde el último pedido</strong>. Sin Customer ID propio no puedes hacerlo directo desde Rappi/PedidosYa, pero SÍ desde tu base WhatsApp (acción 1). Enviar un mensaje del tipo "te extrañamos, 20% off por 48h" justo en esa ventana evita la pérdida del cliente.<br><br><strong>Cómo lo mides:</strong> respuesta al mensaje / canjes / órdenes recuperadas. Target inicial: 15% de respuesta.`,
+    },
+  ];
+
+  document.getElementById('retActions').innerHTML = actions.map(a=>`
+    <div class="ret-action">
+      <div class="ret-action-h">
+        <div class="ret-action-num">${a.num}</div>
+        <div class="ret-action-ttl">${a.ttl}</div>
+        <div class="ret-action-kpi">${a.kpi}</div>
+      </div>
+      <div class="ret-action-body">${a.body}</div>
+    </div>`).join('');
+}
+
+
+// ════════════════════════════════════════════════════════
+//  ETAPA 6 — FINANCIERO COMPACTO + KPI TRACKER
+// ════════════════════════════════════════════════════════
+
+// ─── Financiero por plataforma con filtro ──────────────
+function computeFinByPlat(orders, plat){
+  const filtered = plat==='all' ? orders : orders.filter(o=>o.platform===plat);
+  const done = filtered.filter(o=>!o.cancelled && o.total>0);
+  const gmv  = done.reduce((s,o)=>s+o.total,0);
+  // Comisión: de la data si está, sino del fee configurado
+  let comFromData = 0, hasData = false;
+  done.forEach(o=>{ if(o.comision>0){ comFromData += o.comision; hasData = true; } });
+  let feeAmt;
+  if(hasData){
+    feeAmt = comFromData;
+  } else {
+    // Fee desde config
+    const feePct = plat==='rappi' ? (APP.config.feeRappi||0)
+                 : plat==='peya'  ? (APP.config.feePeya||0)
+                 : 0;
+    feeAmt = feePct>0 ? gmv*feePct/100 : 0;
+  }
+  // Ads (de PeYa Summary, prorrateado según la proporción del período cubierto por las órdenes vs el período del summary)
+  let adsAmt = 0;
+  let adsWindowMismatch = false;
+  if(APP.D?.peyaSummary && (plat==='all' || plat==='peya')){
+    const sumOrders = APP.D.peyaSummary.orders || 0;
+    const peyaOrdersInData = orders.filter(o=>o.platform==='peya' && !o.cancelled).length;
+    // Si el summary trae 490 órdenes y los archivos solo tienen 32, los archivos cubren ~6.5% del período
+    // Prorratear el ads de forma proporcional
+    if(sumOrders > peyaOrdersInData && peyaOrdersInData > 0){
+      const ratio = peyaOrdersInData / sumOrders;
+      adsAmt = APP.D.peyaSummary.adSpend * ratio;
+      adsWindowMismatch = true;
+    } else {
+      adsAmt = APP.D.peyaSummary.adSpend;
+    }
+  }
+  // Ingreso neto
+  const netAmt = gmv - feeAmt - adsAmt;
+  // Por orden
+  const costPerOrder  = done.length>0 ? (feeAmt+adsAmt)/done.length : 0;
+  const marginPerOrder = done.length>0 ? netAmt/done.length : 0;
+
+  return {
+    gmv, feeAmt, adsAmt, netAmt, costPerOrder, marginPerOrder,
+    orders: done.length, hasData, adsWindowMismatch,
+  };
+}
+
+function renderFinancial(){
+  if(!APP.D || !APP.allOrders) return;
+  // Plataforma filter (chips)
+  const plats = Object.keys(APP.D.byPlat).filter(p=>p!=='unknown');
+  const filterEl = document.getElementById('finPlatFilter');
+  if(filterEl){
+    const cur = APP.finPlat || 'all';
+    filterEl.innerHTML = `<button class="plat-chip ${cur==='all'?'active-all':''}" onclick="setFinPlat('all',this)">Todo delivery</button>` +
+      plats.map(p=>`<button class="plat-chip ${cur===p?('active-'+p):''}" onclick="setFinPlat('${p}',this)">${getPlatInfo(p).label}</button>`).join('');
+  }
+  const platSel = APP.finPlat || 'all';
+  const F = computeFinByPlat(APP.allOrders, platSel);
+
+  // 6 números
+  const pctFee = F.gmv>0 ? F.feeAmt/F.gmv*100 : 0;
+  const pctAds = F.gmv>0 ? F.adsAmt/F.gmv*100 : 0;
+  const pctNet = F.gmv>0 ? F.netAmt/F.gmv*100 : 0;
+  const platTag = platSel==='all' ? 'Todas las plataformas' : getPlatInfo(platSel).name;
+  const weeks = (APP.D.weeks||[]).length || 1;
+
+  document.getElementById('finNumbers').innerHTML = `
+    <div class="fin-card gmv">
+      <div class="fin-lbl">GMV Bruto</div>
+      <div class="fin-val">${fp(F.gmv)}</div>
+      <div class="fin-sub">${F.orders.toLocaleString()} órdenes · ${fp(F.gmv/weeks)}/sem</div>
+    </div>
+    <div class="fin-card fee">
+      <div class="fin-lbl">Comisión Plataforma</div>
+      <div class="fin-val">${fp(F.feeAmt)}</div>
+      <div class="fin-sub">${pctFee.toFixed(1)}% del GMV · ${F.hasData?'<strong>de la data</strong>':'estimado por fee configurado'}</div>
+    </div>
+    <div class="fin-card ads">
+      <div class="fin-lbl">Publicidad</div>
+      <div class="fin-val">${fp(F.adsAmt)}</div>
+      <div class="fin-sub">${pctAds.toFixed(1)}% del GMV · ${F.adsAmt>0?'de earnings summary':'sin datos · 0% asumido'}</div>
+    </div>
+    <div class="fin-card net">
+      <div class="fin-lbl">Ingreso Neto</div>
+      <div class="fin-val">${fp(F.netAmt)}</div>
+      <div class="fin-sub">${pctNet.toFixed(1)}% del GMV · ${fp(F.netAmt/weeks)}/sem</div>
+    </div>
+    <div class="fin-card net">
+      <div class="fin-lbl">Costo / Orden</div>
+      <div class="fin-val">${fp(F.costPerOrder)}</div>
+      <div class="fin-sub">comisión + ads / orden</div>
+    </div>
+    <div class="fin-card net">
+      <div class="fin-lbl">Margen / Orden</div>
+      <div class="fin-val">${fp(F.marginPerOrder)}</div>
+      <div class="fin-sub">${F.marginPerOrder>0?'antes de food cost y operaciones':'⚠ revisar'}</div>
+    </div>
+  `;
+
+  const notes = [];
+  if(!F.hasData){
+    notes.push(`<div class="alert warn"><span class="alert-ico">ℹ️</span><span class="alert-body">La comisión está estimada usando el fee configurado en <strong>⚙ Config</strong> (${(plats.includes('rappi')&&APP.config.feeRappi?APP.config.feeRappi+'% Rappi · ':'')}${(plats.includes('peya')&&APP.config.feePeya?APP.config.feePeya+'% PedidosYa':'')}). Si el reporte trae la comisión exacta por orden, se usa esa. Los costos de food cost (CMV) NO están incluidos — son parte del análisis operativo del restaurante.</span></div>`);
+  }
+  if(F.adsWindowMismatch){
+    const sumOrd = APP.D.peyaSummary.orders;
+    const dataOrd = APP.allOrders.filter(o=>o.platform==='peya' && !o.cancelled).length;
+    notes.push(`<div class="alert warn"><span class="alert-ico">📊</span><span class="alert-body"><strong>Ventana de datos no coincide:</strong> el resumen financiero de PedidosYa cubre ${sumOrd} órdenes (período completo), pero el archivo de órdenes solo trae ${dataOrd} (subconjunto). La publicidad mostrada está <strong>prorrateada</strong> a la proporción ${(dataOrd/sumOrd*100).toFixed(1)}%. Para ver el % real de ads, sube el archivo de órdenes que cubre el MISMO período que el earnings summary.</span></div>`);
+  }
+  document.getElementById('finNote').innerHTML = notes.join('');
+
+  renderKpiTracker();
+}
+
+function setFinPlat(plat, btn){
+  APP.finPlat = plat;
+  renderFinancial();
+}
+
+// ─── KPI Tracker (persistencia en localStorage) ──────
+function saveKpiEntry(){
+  const period   = document.getElementById('ktPeriod').value.trim();
+  const gmv      = parseFloat(document.getElementById('ktGmv').value)||0;
+  const orders   = parseInt(document.getElementById('ktOrders').value)||0;
+  const ticketIn = parseFloat(document.getElementById('ktTicket').value)||0;
+  const newUsers = parseInt(document.getElementById('ktNewUsers').value)||0;
+  const repPct   = parseFloat(document.getElementById('ktRepurchase').value)||0;
+  const plat     = document.getElementById('ktPlat').value;
+
+  if(!period){ alert('Indica el período (ej. "Sem 24" o "Jun 2026")'); return; }
+  if(gmv===0 && orders===0){ alert('Ingresa al menos GMV u Órdenes'); return; }
+
+  const ticket = ticketIn>0 ? ticketIn : (orders>0 ? gmv/orders : 0);
+  const entry = {
+    id: 'k_'+Date.now(),
+    period, gmv, orders, ticket,
+    newUsers: newUsers||null,
+    repPct:   repPct||null,
+    plat,
+    createdAt: new Date().toISOString(),
+  };
+  // Quitar duplicados por period+plat
+  APP.kpiHist = (APP.kpiHist||[]).filter(e => !(e.period===period && e.plat===plat));
+  APP.kpiHist.push(entry);
+  // Ordenar por createdAt
+  APP.kpiHist.sort((a,b)=>new Date(a.createdAt) - new Date(b.createdAt));
+  saveLS('sazon_kpi', APP.kpiHist);
+
+  // Limpiar form
+  ['ktPeriod','ktGmv','ktOrders','ktTicket','ktNewUsers','ktRepurchase'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ktPlat').value='all';
+  renderKpiTracker();
+}
+
+function deleteKpiEntry(id){
+  if(!confirm('¿Eliminar esta entrada del tracker?')) return;
+  APP.kpiHist = (APP.kpiHist||[]).filter(e => e.id !== id);
+  saveLS('sazon_kpi', APP.kpiHist);
+  renderKpiTracker();
+}
+
+function renderKpiTracker(){
+  const hist = APP.kpiHist || [];
+  const table = document.getElementById('ktTable');
+  const chartWrap = document.getElementById('ktChartWrap');
+  if(!table) return;
+  if(hist.length === 0){
+    table.innerHTML = '<div class="kt-empty">Sin entradas todavía. Ingresa el primer período arriba para empezar el historial.</div>';
+    if(chartWrap) chartWrap.style.display = 'none';
+    return;
+  }
+  // Build rows with deltas
+  const platLabel = { all:'Todo', rappi:'Rappi', peya:'PedidosYa', other:'Otra' };
+  const rows = hist.map((e,i)=>{
+    const prev = hist.filter((p,pi)=>pi<i && p.plat===e.plat).slice(-1)[0];
+    const deltaGmv = prev && prev.gmv>0 ? (e.gmv-prev.gmv)/prev.gmv*100 : null;
+    const deltaOrd = prev && prev.orders>0 ? (e.orders-prev.orders)/prev.orders*100 : null;
+    const deltaTk  = prev && prev.ticket>0 ? (e.ticket-prev.ticket)/prev.ticket*100 : null;
+    const cls = v => v===null?'flat':(v>=0?'up':'dn');
+    const sgn = v => v===null?'—':(v>=0?'↑ +':'↓ ')+Math.abs(v).toFixed(1)+'%';
+    return `<tr>
+      <td><strong>${e.period}</strong></td>
+      <td><span class="ptag-sm" style="background:#fff;color:var(--m)">${platLabel[e.plat]||e.plat}</span></td>
+      <td class="num">${fp(e.gmv)}</td>
+      <td class="delta ${cls(deltaGmv)}">${sgn(deltaGmv)}</td>
+      <td class="num">${e.orders.toLocaleString()}</td>
+      <td class="delta ${cls(deltaOrd)}">${sgn(deltaOrd)}</td>
+      <td class="num">${fp(e.ticket)}</td>
+      <td class="delta ${cls(deltaTk)}">${sgn(deltaTk)}</td>
+      <td class="num">${e.newUsers!==null?e.newUsers:'—'}</td>
+      <td class="num">${e.repPct!==null?e.repPct.toFixed(1)+'%':'—'}</td>
+      <td style="text-align:center"><span class="kt-action" onclick="deleteKpiEntry('${e.id}')" title="Eliminar">×</span></td>
+    </tr>`;
+  }).join('');
+  table.innerHTML = `<table class="kt-table">
+    <thead><tr>
+      <th>Período</th><th>Plat.</th>
+      <th class="num">GMV</th><th class="num">Δ</th>
+      <th class="num">Órd.</th><th class="num">Δ</th>
+      <th class="num">Ticket</th><th class="num">Δ</th>
+      <th class="num">Nuevos</th><th class="num">Recompra</th>
+      <th></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+
+  // Chart
+  if(chartWrap && hist.length >= 2){
+    chartWrap.style.display = 'block';
+    setTimeout(()=>{
+      const ctx = document.getElementById('ktChart');
+      if(!ctx) return;
+      if(APP.charts.ktChart){ try{APP.charts.ktChart.destroy();}catch(e){} }
+      APP.charts.ktChart = new Chart(ctx, {
+        type:'line',
+        data:{
+          labels: hist.map(e=>e.period),
+          datasets:[
+            {label:'GMV',     data:hist.map(e=>e.gmv), borderColor:'rgba(200,57,43,1)', backgroundColor:'rgba(200,57,43,.06)', yAxisID:'y',  tension:.3, fill:true, pointRadius:3, borderWidth:2},
+            {label:'Órdenes', data:hist.map(e=>e.orders),     borderColor:'rgba(45,106,79,1)', backgroundColor:'transparent', yAxisID:'y2', tension:.3, fill:false, pointRadius:3, borderWidth:2},
+            {label:'Ticket',  data:hist.map(e=>e.ticket),     borderColor:'rgba(200,160,69,1)', backgroundColor:'transparent', yAxisID:'y2', tension:.3, fill:false, pointRadius:3, borderWidth:2, hidden:false},
+          ]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{position:'bottom', labels:{font:{size:10}, padding:8, boxWidth:14}}},
+          scales:{
+            y:  { position:'left',  ticks:{font:{size:10}, callback:v=>'S/'+v.toLocaleString('es-PE')}, grid:{color:'rgba(15,15,13,.05)'}},
+            y2: { position:'right', ticks:{font:{size:10}}, grid:{display:false}},
+            x:  { ticks:{font:{size:10}}, grid:{display:false}},
+          }
+        }
+      });
+    }, 50);
+  } else if(chartWrap){
+    chartWrap.style.display = 'none';
+  }
+}
+
+function exportKpiHistory(){
+  const hist = APP.kpiHist || [];
+  if(hist.length === 0){ alert('No hay entradas para exportar'); return; }
+  const header = 'periodo,plataforma,gmv,ordenes,ticket_promedio,nuevos_usuarios,recompra_pct,creado\n';
+  const rows = hist.map(e=>[
+    '"'+e.period.replace(/"/g,'""')+'"',
+    e.plat, e.gmv, e.orders, e.ticket.toFixed(2),
+    e.newUsers||'', e.repPct||'',
+    e.createdAt,
+  ].join(',')).join('\n');
+  const blob = new Blob([header+rows],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sazon_kpi_history_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+
+// ════════════════════════════════════════════════════════
+//  ETAPA 7 — ROADMAP 90 DÍAS + NARRATIVA EJECUTIVA
+// ════════════════════════════════════════════════════════
+
+// Roadmap se construye a partir de TODOS los hallazgos previos
+function buildRoadmap(){
+  const D = APP.D;
+  const { catalog, platDisc, comboOpts } = APP.catalogData || { catalog:[], platDisc:{} };
+  const { bcg, elas } = APP.menuData || {};
+  if(!D || !catalog) return null;
+
+  // Datos clave
+  const plats = Object.keys(D.byPlat).filter(p=>p!=='unknown' && D.byPlat[p]?.done>0);
+  const platDom = plats.sort((a,b)=>(D.byPlat[b]?.gmv||0)-(D.byPlat[a]?.gmv||0))[0] || 'peya';
+  const topMain = catalog.filter(i=>i.type==='main' && i.orders>0).sort((a,b)=>b.orders-a.orders)[0];
+  const lowMain = catalog.filter(i=>i.type==='main' && i.orders>0).sort((a,b)=>a.orders-b.orders)[0];
+  const topCombo = catalog.filter(i=>i.type==='combo' && i.orders>0).sort((a,b)=>b.orders-a.orders)[0];
+  // Day of week con menor volumen
+  const weeks = (D.weeks||[]).length || 1;
+  const dowOrders = D.dowO || [0,0,0,0,0,0,0];
+  const lowDow = dowOrders.map((v,i)=>({i,v})).filter(x=>x.v>0).sort((a,b)=>a.v-b.v)[0]?.i ?? 1;
+  const DOW_NAMES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+  // ─── FASE 1 (Días 1-30): Quick wins ──────────────────────
+  const phase1 = {
+    num:'01', title:'Quick Wins', sub:'Días 1-30',
+    goal: 'Estabilizar la operación y capturar las primeras subidas de ticket y volumen sin invertir en publicidad nueva.',
+    actions: [
+      { t:'Configurar precios mágicos en los 9 ítems con precio entero',
+        d:'Cambiar precio lista para que el precio pagado termine en .90. Sin costo, +5-8% conversión.', tab:'Menú' },
+      { t:topMain ? `Activar "Promo ${DOW_NAMES[lowDow]}" sobre ${lowMain?.name||'el ítem de menor rotación'}` : 'Activar promo del día débil',
+        d:`Descuento +10pp solo los ${DOW_NAMES[lowDow]}. Mismo nombre cada semana para crear hábito.`, tab:'Promos' },
+      { t: comboOpts && topCombo ? `Configurar defaults dentro del ${topCombo.name}` : 'Optimizar opciones dentro de combos',
+        d:'Marcar como default la opción más elegida por categoría y eliminar las que están <10%. Reduce fricción de decisión.', tab:'Combos' },
+      { t: topMain ? `Actualizar foto y descripción de ${topMain.name}` : 'Actualizar foto y descripción del top main',
+        d:'Foto profesional 16:9 + descripción optimizada con keywords. El cambio de foto activa el algoritmo de "tienda actualizada".', tab:'Adquisición' },
+      { t:'Implementar empaque con QR de descuento personal',
+        d:'Sticker S/0.10 por pedido → genera base propia de clientes (Rappi/PedidosYa no la dan).', tab:'Retención' },
+    ]
+  };
+
+  // ─── FASE 2 (Días 31-60): Sistema y palancas ─────────────
+  const phase2 = {
+    num:'02', title:'Construcción del Sistema', sub:'Días 31-60',
+    goal: 'Implementar las palancas de ticket y formalizar los combos sugeridos. Empezar a medir resultados contra el baseline.',
+    actions: [
+      { t:'Lanzar 1-2 combos formales nuevos según co-ocurrencia',
+        d:`Basado en pares que ya se ordenan juntos. Precio combo con 8% off aparente vs suma.`, tab:'Combos' },
+      { t:`Activar precio dinámico por bloque en ${topMain?.name||'el top main'}`,
+        d:'Dto. reducido en peak, dto. activación en valle. Test A/B 2 semanas, comparar con baseline.', tab:'Precios' },
+      { t:'Configurar umbral "+ S/X para beneficio gratis"',
+        d:`Bebida o envío gratis al alcanzar el ticket meta. Comunicar visualmente en cada producto.`, tab:'Ticket' },
+      { t:'Actualizar fotos y descripciones del top 5 del menú',
+        d:'Aplicar mismo proceso de fase 1 al resto del menú. Cada actualización reactiva el algoritmo.', tab:'Adquisición' },
+      { t:'Empezar tracker semanal de KPIs',
+        d:'Registrar GMV, órdenes, ticket promedio cada semana en el módulo Financiero. Calibra los modelos.', tab:'Financiero' },
+    ]
+  };
+
+  // ─── FASE 3 (Días 61-90): Optimización y escala ──────────
+  const phase3 = {
+    num:'03', title:'Optimización & Escala', sub:'Días 61-90',
+    goal: 'Decisiones basadas en datos reales del tracker. Escalar lo que funcionó y cortar lo que no.',
+    actions: [
+      { t:'Evaluar combos nuevos y mantener solo los que pasan el filtro',
+        d:'Si un combo nuevo no pasa S/X de GMV incremental/sem, retirarlo o repensar el precio.', tab:'Combos' },
+      { t:'Calibrar modelo de elasticidad con datos del tracker',
+        d:'Comparar proyección del motor vs. resultado real. Ajustar multiplicadores. Las acciones futuras serán más precisas.', tab:'Precios' },
+      { t:'Lanzar 1 ítem nuevo o variante limitada',
+        d:'Activación de algoritmo + reactivación de clientes recurrentes. Promo de lanzamiento 25% × 14 días.', tab:'Promos' },
+      { t:'Implementar protocolo de calidad y empaque',
+        d:'Foto del pedido empaquetado, checklist visible, termómetro de aceite. Baja reclamos de 5% a <2%.', tab:'Retención' },
+      { t:'Decisión de plataforma 3 si Rappi+PedidosYa están maduros',
+        d:'Si los KPIs principales subieron 30%+ en 90 días, evaluar Didi Food o Glovo según mercado local.', tab:'Dashboard' },
+    ]
+  };
+
+  return { phase1, phase2, phase3 };
+}
+
+// ─── Resumen ejecutivo (la "narrativa" sin IA, generada del análisis) ───
+function buildNarrative(){
+  const D = APP.D;
+  const { catalog, platDisc, comboOpts } = APP.catalogData || { catalog:[], platDisc:{} };
+  if(!D) return null;
+
+  const plats = Object.keys(D.byPlat).filter(p=>p!=='unknown');
+  const platDom = plats.sort((a,b)=>(D.byPlat[b]?.gmv||0)-(D.byPlat[a]?.gmv||0))[0] || 'peya';
+  const topMain  = catalog.filter(i=>i.type==='main' && i.orders>0).sort((a,b)=>b.orders-a.orders)[0];
+  const lowMain  = catalog.filter(i=>i.type==='main' && i.orders>0).sort((a,b)=>a.orders-b.orders)[0];
+  const weeks = (D.weeks||[]).length || 1;
+  const ticketTarget = Math.round(D.avgTicket*1.25/5)*5;
+  const gmvWk = D.gmv/weeks;
+  const ordsWk = D.done_n/weeks;
+
+  // Variabilidad semanal (proxy de retención)
+  const weeklyVols = (D.weeks||[]).map(w=>D.byWeek[w].orders);
+  const avgWk  = weeklyVols.reduce((s,v)=>s+v,0)/Math.max(weeklyVols.length,1);
+  const stdWk  = Math.sqrt(weeklyVols.reduce((s,v)=>s+(v-avgWk)**2,0)/Math.max(weeklyVols.length,1));
+  const cvWk   = avgWk>0 ? stdWk/avgWk : 0;
+  const retScore = cvWk<=0.25 ? 'alta' : cvWk<=0.40 ? 'media' : 'baja';
+
+  // Proyecciones combinadas (suma estimada de impactos)
+  const projGmvWk = gmvWk * 1.20; // +20% combinando todos los módulos
+  const projTicket = Math.round(D.avgTicket*1.12); // +12% por ticket development
+
+  return {
+    period: `${D.totalDays} días analizados (${weeks} semanas)`,
+    summary: {
+      gmv:       fp(D.gmv),
+      ticket:    fp(D.avgTicket),
+      orders:    D.done_n.toLocaleString(),
+      cancel:    (D.canc_pct||0).toFixed(1)+'%',
+      gmvWk, ordsWk, weeks,
+    },
+    diagnosis: {
+      strongest:  `Tu producto principal es <strong>${topMain?.name||'—'}</strong> con ${topMain?.orders||0} órdenes en el período (${((topMain?.orders||0)/Math.max(D.done_n,1)*100).toFixed(0)}% del volumen).`,
+      weakest:    lowMain && lowMain !== topMain ? `Tu producto principal de menor rotación es <strong>${lowMain.name}</strong> con ${lowMain.orders} órdenes — candidato a promo de activación o revisar precio.` : '',
+      retention:  `Coeficiente de variación semanal de ${(cvWk*100).toFixed(0)}% → señal de retención <strong>${retScore.toUpperCase()}</strong>. ${retScore==='baja' ? 'Mucho cliente único — el foco debe estar en construir base propia (QR + WhatsApp).' : retScore==='media' ? 'Hay base recurrente, pero hay espacio para subir frecuencia.' : 'Base recurrente sólida — foco en subir ticket y LTV.'}`,
+      platforms:  plats.length === 1 ? `Solo operas en <strong>${getPlatInfo(platDom).name}</strong> — explorar segunda plataforma puede aportar 30-50% de volumen incremental.` : `Operas en ${plats.length} plataformas. <strong>${getPlatInfo(platDom).name}</strong> es la dominante con ${((D.byPlat[platDom]?.gmv||0)/Math.max(D.gmv,1)*100).toFixed(0)}% del GMV.`,
+      cancel:     D.canc_pct > 5 ? `Cancelaciones del <strong>${(D.canc_pct).toFixed(1)}%</strong> están sobre el benchmark (5%). Cada cancelación penaliza el ranking en el algoritmo.` : `Cancelaciones del ${(D.canc_pct).toFixed(1)}% — en rango saludable.`,
+    },
+    projection: {
+      gmvWk: projGmvWk,
+      ticket: projTicket,
+      message: `Aplicando el roadmap completo (90 días) proyectamos: GMV de <strong>${fp(gmvWk)}/sem → ${fp(projGmvWk)}/sem</strong> (+20%) y ticket de <strong>${fp(D.avgTicket)} → ${fp(projTicket)}</strong> (+12%). Las proyecciones se calibran con el tracker de KPIs durante la ejecución.`,
+    }
+  };
+}
+
+// ─── RENDER ──────────────────────────────────────────────
+function renderRoadmap(){
+  const R = buildRoadmap();
+  const N = buildNarrative();
+  if(!R || !N) return;
+  APP.roadmap = R;
+
+  // Exec summary
+  document.getElementById('execSummary').innerHTML = `<div class="exec-summary">
+    <h3>📋 Resumen ejecutivo</h3>
+    <div class="ex-sub">${N.period}</div>
+    <div class="ex-row">
+      <div><div class="ex-stat-lbl">GMV</div><div class="ex-stat-v">${N.summary.gmv}</div><div class="ex-stat-d">${fp(N.summary.gmvWk)}/sem</div></div>
+      <div><div class="ex-stat-lbl">Ticket prom.</div><div class="ex-stat-v">${N.summary.ticket}</div><div class="ex-stat-d">${N.summary.orders} órdenes</div></div>
+      <div><div class="ex-stat-lbl">Cancelaciones</div><div class="ex-stat-v">${N.summary.cancel}</div><div class="ex-stat-d">${parseFloat(N.summary.cancel)>5?'sobre benchmark':'en rango'}</div></div>
+      <div><div class="ex-stat-lbl">Proyección 90d</div><div class="ex-stat-v">${fp(N.projection.gmvWk)}/sem</div><div class="ex-stat-d">+20% GMV potencial</div></div>
+    </div>
+    <p><strong>Diagnóstico:</strong></p>
+    <p>${N.diagnosis.strongest}</p>
+    ${N.diagnosis.weakest ? `<p>${N.diagnosis.weakest}</p>` : ''}
+    <p>${N.diagnosis.retention}</p>
+    <p>${N.diagnosis.platforms}</p>
+    <p>${N.diagnosis.cancel}</p>
+    <p style="margin-top:10px"><strong>Proyección:</strong> ${N.projection.message}</p>
+  </div>`;
+
+  // Roadmap grid
+  const renderPhase = (p, cls) => `<div class="rm-phase">
+    <div class="rm-head ${cls}">
+      <div class="rm-h-num">FASE ${p.num}</div>
+      <div class="rm-h-ttl">${p.title}</div>
+      <div class="rm-h-sub">${p.sub}</div>
+    </div>
+    <div class="rm-body">
+      <div class="rm-goal">Objetivo</div>
+      <div class="rm-goal-v">${p.goal}</div>
+      ${p.actions.map((a,i)=>`<div class="rm-action">
+        <div class="rm-act-n">${i+1}</div>
+        <div class="rm-act-t"><strong>${a.t}<span class="rm-tab">${a.tab}</span></strong><span>${a.d}</span></div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+
+  document.getElementById('roadmapGrid').innerHTML = renderPhase(R.phase1,'p1') + renderPhase(R.phase2,'p2') + renderPhase(R.phase3,'p3');
+
+  // Narrative block: bullet points con foco accionable
+  document.getElementById('narrativeBlock').innerHTML = `<div class="narrative-card">
+    <h3>💡 Síntesis estratégica</h3>
+    <h4>3 prioridades clave para los próximos 30 días</h4>
+    <div class="narr-bullet"><strong>Precio mágico + Promo del día débil</strong> — ambas se ejecutan en menos de 1 hora en las plataformas y son las que tienen mayor ratio impacto/esfuerzo.</div>
+    <div class="narr-bullet"><strong>QR en empaque</strong> — porque sin base propia de clientes dependes 100% del algoritmo de Rappi/PedidosYa. El día que cambien las reglas, no hay nada que hacer.</div>
+    <div class="narr-bullet"><strong>Tracker semanal de KPIs</strong> — sin medir variaciones reales, las proyecciones del motor son hipótesis. Con 4 semanas de tracker, calibramos el modelo y cada acción futura es más precisa.</div>
+    <h4>Qué evitar</h4>
+    <div class="narr-bullet">Activar todas las acciones al mismo tiempo. El roadmap está secuenciado: las palancas de fase 2 dependen de tener baseline de fase 1.</div>
+    <div class="narr-bullet">Aumentar publicidad antes de tener foto/descripción optimizada. Pagar tráfico sobre un activo no optimizado tiene baja conversión.</div>
+    <div class="narr-bullet">Crear muchos combos nuevos sin matar los actuales. La carta debe ser corta y clara — más combos no es mejor.</div>
+    <div class="narrative-meta">Análisis generado por el motor de Sazón Growth Engine basado en ${N.period}. Resultados proyectados son hipótesis calibrables — usar el tracker de KPIs para ajustar con datos reales.</div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════════
+function showPanel(id){
+  const BLOCK_IDS = ['rptWrap'];
+  const el = document.getElementById(id);
+  if(el) el.style.display = BLOCK_IDS.includes(id) ? 'block' : 'flex';
+}
+function hide(id){ document.getElementById(id).style.display='none'; }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+
+// ═══════════════════════════════════════════════════════════
+//  SPRINT 2 A.2.2.a — Init Engine
+//  El engine no tiene IIFE (auth lo tenía). Este stub se
+//  invoca desde el SaaS después de cargar la marca del cliente.
+// ═══════════════════════════════════════════════════════════
+
+function initEngine() {
+  console.log('[Engine] initEngine() invocado - motor cargado en memoria (A.2.2.a)');
+  // En A.2.2.b conectaremos:
+  //  - Bind del onchange del input file → parseSheets → analyze → renderStage2
+  //  - Config UI en el nav → editar sucursales del cliente
+  // En A.2.2.c conectaremos:
+  //  - Hidratar APP.config desde APP.brand (fees, food_cost)
+  //  - Hidratar APP.menu desde tabla menu_items
+  //  - Hidratar APP.kpiHist desde tabla kpi_history
+}
+
 
 if(document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', boot);
