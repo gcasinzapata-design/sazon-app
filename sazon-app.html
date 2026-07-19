@@ -543,6 +543,98 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--t);font-s
 @media print{.nav,.tab-bar,.export-bar,.up-wrap,.ld,.an-btn{display:none!important;}.panel{display:block!important;page-break-before:always;}}
 
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SPRINT 2 A.2.2.b — Upload screen + Loading indicator
+   ═══════════════════════════════════════════════════════════════ */
+/* ── UPLOAD SCREEN ── */
+
+.up-wrap{min-height:calc(100vh - 46px);display:flex;align-items:flex-start;justify-content:center;padding:32px 20px;}
+.up-grid{display:grid;grid-template-columns:380px 1fr;gap:20px;width:100%;max-width:960px;}
+.up-card{background:var(--c);border:1px solid var(--l);border-radius:4px;overflow:hidden;}
+.up-head{background:var(--d);padding:20px 24px;}
+.up-h{font-family:'Playfair Display',serif;font-size:1rem;font-weight:900;color:#fff;margin-bottom:2px;}
+.up-sub{font-size:.7rem;color:rgba(255,255,255,.3);line-height:1.5;}
+.up-body{padding:20px 24px;}
+.field{margin-bottom:14px;}
+.field-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--m);margin-bottom:5px;display:block;}
+.field-inp{width:100%;padding:8px 10px;border:1px solid var(--l);border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:.82rem;background:#fff;color:var(--t);}
+.field-inp:focus{outline:none;border-color:var(--r);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.field-hint{font-size:.65rem;color:var(--m);margin-top:3px;}
+
+/* Branch/hours config */
+.branch-block{background:var(--w);border-radius:var(--rad);padding:12px;margin-bottom:10px;}
+.branch-name-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.branch-label{font-weight:600;font-size:.78rem;}
+.hours-grid{display:grid;grid-template-columns:auto 1fr 1fr;gap:5px 8px;align-items:center;font-size:.72rem;}
+.day-check{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--m);}
+.time-inp{padding:4px 7px;border:1px solid var(--l);border-radius:var(--rad);font-family:'DM Mono',monospace;font-size:.72rem;background:#fff;width:72px;}
+.add-branch{background:none;border:1px dashed rgba(200,57,43,.3);color:var(--r);font-family:'DM Sans',sans-serif;font-size:.7rem;font-weight:600;cursor:pointer;padding:6px 14px;border-radius:var(--rad);width:100%;margin-top:6px;}
+.add-branch:hover{background:var(--rlit);}
+
+/* Drop zone */
+.drop{border:2px dashed rgba(200,57,43,.22);border-radius:var(--rad);padding:22px 16px;text-align:center;cursor:pointer;transition:all .2s;}
+.drop:hover,.drop.on{border-color:var(--r);background:var(--rlit);}
+.drop-ico{font-size:1.5rem;margin-bottom:6px;}
+.drop-title{font-weight:600;font-size:.82rem;margin-bottom:3px;}
+.drop-sub{font-size:.68rem;color:var(--m);line-height:1.5;}
+.pick-btn{display:inline-block;margin-top:8px;padding:6px 16px;background:var(--r);color:#fff;border:none;border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.8px;}
+input[type=file]{display:none;}
+
+/* File list */
+.fitem{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fff;border:1px solid var(--l);border-radius:var(--rad);margin-top:5px;font-size:.73rem;}
+.fitem-name{flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ptag{font-size:.58rem;font-weight:700;text-transform:uppercase;padding:2px 6px;border-radius:100px;white-space:nowrap;flex-shrink:0;}
+.pt-rappi{background:rgba(255,105,0,.1);color:#FF6900;}
+.pt-peya{background:rgba(0,100,200,.1);color:#0064C8;}
+.pt-didi{background:rgba(255,140,0,.1);color:#FF8C00;}
+.pt-glovo{background:rgba(255,194,68,.1);color:#c8920a;}
+.pt-uber{background:rgba(6,193,103,.1);color:#06C167;}
+.pt-ifood{background:rgba(234,29,44,.1);color:#EA1D2C;}
+.pt-menu{background:var(--grlit);color:var(--gr);}
+.pt-unk{background:var(--dlit);color:var(--m);}
+.fx{cursor:pointer;color:var(--m);font-size:.7rem;flex-shrink:0;padding:0 3px;}
+.fx:hover{color:var(--r);}
+
+/* Format guide */
+.fmt-guide{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.fmt-card{background:var(--w);border-radius:var(--rad);padding:10px 12px;}
+.fmt-name{font-weight:700;font-size:.75rem;margin-bottom:3px;}
+.fmt-hint{font-size:.65rem;color:var(--m);line-height:1.5;}
+.fmt-hint code{background:#fff;padding:1px 4px;border-radius:2px;font-family:'DM Mono',monospace;font-size:.63rem;}
+
+/* Analyze btn */
+.an-btn{width:100%;padding:11px;background:var(--r);color:#fff;border:none;border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1.2px;margin-top:14px;}
+.an-btn:hover{background:#a82d22;}
+.an-btn:disabled{background:var(--m);cursor:default;}
+.demo-link{display:block;text-align:center;margin-top:8px;font-size:.7rem;color:var(--r);cursor:pointer;font-weight:600;}
+.demo-link:hover{text-decoration:underline;}
+
+/* Menu CSV section */
+.menu-status{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--grlit);border:1px solid rgba(45,106,79,.2);border-radius:var(--rad);font-size:.73rem;margin-top:8px;}
+.menu-status .dot{width:7px;height:7px;border-radius:50%;background:var(--gr);flex-shrink:0;}
+
+
+/* ── LOADING ── */
+
+.ld{min-height:calc(100vh - 46px);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.spin{width:40px;height:40px;border:3px solid var(--l);border-top-color:var(--r);border-radius:50%;animation:sp 1s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ld-txt{font-size:.78rem;color:var(--m);}
+
+
+
+/* Ajustes para el flujo SaaS */
+.upload-flow-container{max-width:1100px;margin:20px auto;padding:0 20px;}
+.upload-flow-heading{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:900;margin-bottom:6px;text-align:center;}
+.upload-flow-sub{font-size:.85rem;color:var(--m);text-align:center;margin-bottom:24px;line-height:1.55;}
+.upload-flow-brand-info{background:var(--c);border:1px solid var(--l);border-radius:3px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;font-size:.75rem;}
+.upload-flow-brand-info strong{color:var(--t);}
+.upload-flow-brand-info .info-ico{width:32px;height:32px;border-radius:50%;background:var(--rlit);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+
+
 </style>
 </head>
 <body>
@@ -635,6 +727,82 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--t);font-s
   </div>
 
   <div class="app-panel" id="appPanel">
+
+    <!-- ═══ UPLOAD FLOW (Sprint 2 A.2.2.b) ══════════════════════════════ -->
+    <div class="upload-flow-container" id="uploadFlow" style="display:none">
+      <div class="upload-flow-heading">Nuevo análisis</div>
+      <div class="upload-flow-sub">Sube los reportes de Rappi y/o PedidosYa para analizar el desempeño de <strong id="ufBrandName">tu marca</strong></div>
+
+      <div class="upload-flow-brand-info">
+        <div class="info-ico">🏢</div>
+        <div style="flex:1">
+          <div><strong id="ufBrandDisplay">—</strong> · Plan <strong id="ufPlanDisplay">—</strong></div>
+          <div style="color:var(--m);font-size:.7rem;margin-top:2px">Comisiones configuradas: Rappi <span id="ufFeeRappiDisplay">—</span>% · PedidosYa <span id="ufFeePeyaDisplay">—</span>%</div>
+        </div>
+      </div>
+
+      <!-- Campos ocultos que el motor v1 lee (hidratados desde APP.brand) -->
+      <input type="hidden" id="cfgBrand" value="">
+      <input type="hidden" id="cfgFeeRappi" value="">
+      <input type="hidden" id="cfgFeePeya" value="">
+      <div id="branchList" style="display:none"></div>
+
+      <!-- Menú CSV -->
+      <div style="margin-bottom:16px">
+        <label class="field-lbl" style="display:block;margin-bottom:6px">Menú (CSV) — opcional</label>
+        <div class="drop" id="menuDrop" onclick="document.getElementById('menuFile').click()" style="padding:14px">
+          <input type="file" id="menuFile" accept=".csv,.xlsx" onchange="handleMenuFile(event)">
+          <div class="drop-ico">📋</div>
+          <div class="drop-title" style="font-size:.78rem">Cargar menú con precios base</div>
+          <div class="drop-sub">CSV: nombre, descripcion, tipo, precio_rappi, precio_peya, categoria</div>
+        </div>
+        <div id="menuStatus"></div>
+        <div class="field-hint" style="margin-top:6px;font-size:.65rem;color:var(--m)">
+          Sin menú: los precios se estiman de los reportes de órdenes.
+          <a href="#" onclick="downloadMenuTemplate();return false" style="color:var(--r)">Descargar plantilla CSV</a>
+        </div>
+      </div>
+
+      <!-- Orders drop -->
+      <div class="up-card">
+        <div class="up-head">
+          <div class="up-h">Reportes de órdenes</div>
+          <div class="up-sub">Rappi y/o PedidosYa · uno o varios archivos XLSX</div>
+        </div>
+        <div class="up-body">
+          <div class="drop" id="ordersDrop">
+            <input type="file" id="ordersFile" multiple accept=".xlsx,.xls,.csv" onchange="handleOrderFiles(event)">
+            <div class="drop-ico">📊</div>
+            <div class="drop-title">Arrastra los reportes aquí</div>
+            <div class="drop-sub">Acepta exports de Rappi Partners y PedidosYa Hub</div>
+            <button class="pick-btn" onclick="document.getElementById('ordersFile').click()">Seleccionar archivos</button>
+          </div>
+          <div id="orderFileList"></div>
+
+          <div class="fmt-guide">
+            <div class="fmt-card">
+              <div class="fmt-name" style="color:#FF6900">🟠 Rappi</div>
+              <div class="fmt-hint">
+                <strong>Órdenes:</strong> Historial → Exportar Excel<br>
+                <strong>Financiero:</strong> Reportes → Detalle → Excel
+              </div>
+            </div>
+            <div class="fmt-card">
+              <div class="fmt-name" style="color:#0064C8">🔵 PedidosYa</div>
+              <div class="fmt-hint">
+                <strong>Órdenes:</strong> Finanzas → Reportes → Descargar<br>
+                <strong>Resumen:</strong> Earnings Summary CSV
+              </div>
+            </div>
+          </div>
+
+          <button class="an-btn" id="anBtn" disabled onclick="runAnalysis()">
+            Generar análisis →
+          </button>
+          <span class="demo-link" onclick="runDemo()">👁 Ver demo con datos de ejemplo</span>
+        </div>
+      </div>
+    </div>
     <div class="welcome-empty" id="welcomeEmpty">
       <h2>Bienvenido a Sazón Growth Engine</h2>
       <p>Aquí analizarás el desempeño de tu marca en las plataformas de delivery. Los módulos se activan según tu tier — click en cualquier tab para empezar.</p>
@@ -4776,6 +4944,132 @@ function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 //  El engine no tiene IIFE (auth lo tenía). Este stub se
 //  invoca desde el SaaS después de cargar la marca del cliente.
 // ═══════════════════════════════════════════════════════════
+
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 2 A.2.2.b — Bindings del motor con la UI del SaaS
+//  Conecta upload → parse → analyze → render
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Hidrata el config del motor desde APP.brand (Supabase)
+ * Sobrescribe cfgBrand/cfgFeeRappi/cfgFeePeya que el motor v1 lee
+ */
+function hydrateEngineConfig() {
+  if (!APP.brand) return;
+
+  APP.config.brand = APP.brand.name || '';
+  APP.config.feeRappi = APP.brand.fee_rappi_pct || 0;
+  APP.config.feePeya = APP.brand.fee_peya_pct || 0;
+  APP.config.branches = APP.config.branches || [];
+
+  // Hidratar los inputs ocultos del DOM que el motor lee
+  const cfgBrandEl = document.getElementById('cfgBrand');
+  const cfgRappiEl = document.getElementById('cfgFeeRappi');
+  const cfgPeyaEl = document.getElementById('cfgFeePeya');
+  if (cfgBrandEl) cfgBrandEl.value = APP.config.brand;
+  if (cfgRappiEl) cfgRappiEl.value = APP.config.feeRappi;
+  if (cfgPeyaEl) cfgPeyaEl.value = APP.config.feePeya;
+
+  // Refrescar los displays visibles del upload flow
+  const ufBrandName = document.getElementById('ufBrandName');
+  const ufBrandDisplay = document.getElementById('ufBrandDisplay');
+  const ufPlanDisplay = document.getElementById('ufPlanDisplay');
+  const ufFeeRappi = document.getElementById('ufFeeRappiDisplay');
+  const ufFeePeya = document.getElementById('ufFeePeyaDisplay');
+  if (ufBrandName) ufBrandName.textContent = APP.config.brand;
+  if (ufBrandDisplay) ufBrandDisplay.textContent = APP.config.brand;
+  if (ufPlanDisplay && APP.tier) ufPlanDisplay.textContent = APP.tier.label;
+  if (ufFeeRappi) ufFeeRappi.textContent = APP.config.feeRappi;
+  if (ufFeePeya) ufFeePeya.textContent = APP.config.feePeya;
+
+  console.log('[Engine] Config hidratado desde APP.brand:', APP.config);
+}
+
+/**
+ * Muestra el upload flow (esconde welcome y rptWrap)
+ */
+function showUploadFlow() {
+  setStyle('welcomeEmpty', 'display', 'none');
+  setStyle('rptWrap', 'display', 'none');
+  setStyle('uploadFlow', 'display', 'block');
+}
+
+/**
+ * Oculta el upload flow (para volver a la vista de tabs)
+ */
+function hideUploadFlow() {
+  setStyle('uploadFlow', 'display', 'none');
+}
+
+/**
+ * Sobrescribe el renderTabContent original para manejar el flujo con motor
+ */
+function renderTabContent(tabId) {
+  hideUploadFlow();
+  setStyle('welcomeEmpty', 'display', 'none');
+  setStyle('rptWrap', 'display', 'block');
+
+  // Desactivar todos los paneles
+  document.querySelectorAll('#rptWrap .panel').forEach(p => p.classList.remove('active'));
+
+  const targetPanel = document.getElementById('p-' + tabId);
+  if (!targetPanel) return;
+
+  targetPanel.classList.add('active');
+
+  // Si aún no hay análisis (APP.D es null), mostrar el prompt de subir archivos
+  if (!APP.D) {
+    // Mostrar mensaje en el panel activo
+    const placeholder = document.createElement('div');
+    placeholder.className = 'no-analysis-yet';
+    placeholder.style.cssText = 'text-align:center;padding:40px 24px;margin-top:20px;background:var(--w);border-radius:3px;border:1px dashed var(--l);';
+    placeholder.innerHTML = `
+      <div style="font-size:2rem;margin-bottom:8px">📥</div>
+      <h3 style="font-family:'Playfair Display',serif;margin-bottom:6px">Sin análisis todavía</h3>
+      <p style="font-size:.78rem;color:var(--m);margin-bottom:16px">Sube tus reportes de Rappi y/o PedidosYa para ver los resultados en este módulo.</p>
+      <button class="btn btn-red" onclick="showUploadFlow()">Cargar archivos</button>
+    `;
+    // Solo agregar si no existe
+    const existing = targetPanel.querySelector('.no-analysis-yet');
+    if (!existing) {
+      // Reemplazar el engine-placeholder de A.2.1 si existe
+      const engPh = targetPanel.querySelector('.engine-placeholder');
+      if (engPh) engPh.remove();
+      targetPanel.appendChild(placeholder);
+    }
+  } else {
+    // Ya hay análisis - remover cualquier placeholder de "no analysis yet"
+    targetPanel.querySelectorAll('.no-analysis-yet').forEach(el => el.remove());
+    targetPanel.querySelectorAll('.engine-placeholder').forEach(el => el.remove());
+  }
+}
+
+/**
+ * Sobrescribe la función renderApp para mostrar upload flow después de cargar la marca
+ */
+const _originalRenderApp = renderApp;
+renderApp = function() {
+  _originalRenderApp.apply(this, arguments);
+  // Solo para usuarios cliente (no admin)
+  if (APP.user && APP.user.role !== 'sazon_admin') {
+    hydrateEngineConfig();
+    // Si no hay análisis en memoria, mostrar el upload flow inmediatamente
+    if (!APP.D) {
+      showUploadFlow();
+    }
+  }
+};
+
+/**
+ * initEngine actualizado - se invoca desde el flujo boot cuando el cliente entra
+ */
+function initEngine() {
+  console.log('[Engine] initEngine() invocado (A.2.2.b)');
+  hydrateEngineConfig();
+}
+
 
 function initEngine() {
   console.log('[Engine] initEngine() invocado - motor cargado en memoria (A.2.2.a)');
