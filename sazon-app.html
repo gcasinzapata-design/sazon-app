@@ -746,6 +746,16 @@ input[type=file]{display:none;}
 .viewing-historical-badge{background:rgba(200,160,69,.15);color:#6b4800;padding:8px 14px;border-radius:3px;font-size:.72rem;text-align:center;margin-bottom:14px;border:1px solid rgba(200,160,69,.3);display:flex;align-items:center;justify-content:center;gap:8px;}
 .viewing-historical-badge strong{color:#6b4800;}
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SPRINT 2 A.2.3 FIX — Loading indicator del motor v1
+   ═══════════════════════════════════════════════════════════════ */
+.ld-wrap{position:fixed;inset:0;background:rgba(232,228,218,.95);z-index:700;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.ld-wrap.on,.ld-wrap[style*="flex"]{display:flex;}
+.ld-spinner{width:52px;height:52px;border:3px solid rgba(200,57,43,.15);border-top-color:var(--r);border-radius:50%;animation:spin 1s linear infinite;}
+.ld-txt{font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--t);font-weight:600;}
+
 </style>
 </head>
 <body>
@@ -2880,26 +2890,37 @@ async function runDemo(){
 }
 
 function showReport(isDemo=false){
-  hide('ldWrap'); hide('upWrap');
+  // Sprint 2 A.2.3 FIX: adaptado al SaaS (btnReset/btnExport/btnConfig NO existen)
+  hide('ldWrap');
+  hide('upWrap');  // mapea a uploadFlow
+  // Ocultar también welcomeEmpty explícitamente
+  const welcome = document.getElementById('welcomeEmpty');
+  if(welcome) welcome.style.display = 'none';
+  const prevAnalyses = document.getElementById('prevAnalyses');
+  if(prevAnalyses) prevAnalyses.style.display = 'none';
+
   showPanel('rptWrap');
-  document.getElementById('tabBar').style.display='flex';
-  // Nav
-  const nb=document.getElementById('navBrand');
-  nb.textContent = (isDemo?'👁 DEMO — ':'')+APP.config.brand;
-  nb.style.display='inline-block';
-  if(isDemo) nb.style.background='rgba(200,160,69,.15)';
-  document.getElementById('btnReset').style.display='inline-block';
-  document.getElementById('btnExport').style.display='inline-block';
-  document.getElementById('btnConfig').style.display='inline-block';
-  // Demo banner
-  const existing=document.getElementById('demoBanner');
+
+  const tabBar = document.getElementById('tabBar');
+  if(tabBar) tabBar.style.display = 'flex';
+
+  // Solo actualizar navBrand si NO estamos en modo admin (que ya lo controla el SaaS)
+  const nb = document.getElementById('navBrand');
+  if(nb && APP.user && APP.user.role !== 'sazon_admin' && APP.brand) {
+    nb.textContent = (isDemo?'👁 DEMO — ':'') + (APP.brand.name || APP.config.brand || '');
+    if(isDemo) nb.style.background='rgba(200,160,69,.15)';
+  }
+
+  // Demo banner - opcional
+  const existing = document.getElementById('demoBanner');
   if(existing) existing.remove();
   if(isDemo){
-    const banner=document.createElement('div');
-    banner.id='demoBanner';
-    banner.style.cssText='background:rgba(200,160,69,.1);border-bottom:1px solid rgba(200,160,69,.25);padding:7px 24px;font-size:.71rem;color:#8a6000;text-align:center';
-    banner.innerHTML='👁 <strong>MODO DEMO</strong> — Datos de ejemplo. Sube tus archivos reales para el análisis de tu marca.';
-    document.getElementById('rptWrap').prepend(banner);
+    const banner = document.createElement('div');
+    banner.id = 'demoBanner';
+    banner.style.cssText = 'background:rgba(200,160,69,.1);border-bottom:1px solid rgba(200,160,69,.25);padding:7px 24px;font-size:.71rem;color:#8a6000;text-align:center';
+    banner.innerHTML = '👁 <strong>MODO DEMO</strong> — Datos de ejemplo. Sube tus archivos reales para el análisis de tu marca.';
+    const rpt = document.getElementById('rptWrap');
+    if(rpt) rpt.prepend(banner);
   }
 }
 
@@ -5055,11 +5076,20 @@ function renderRoadmap(){
 //  UTILS
 // ════════════════════════════════════════════════════════
 function showPanel(id){
-  const BLOCK_IDS = ['rptWrap'];
-  const el = document.getElementById(id);
-  if(el) el.style.display = BLOCK_IDS.includes(id) ? 'block' : 'flex';
+  // Sprint 2 A.2.3 FIX: mapping de IDs del motor v1 a los del SaaS
+  const idMap = { 'upWrap': 'uploadFlow' };
+  const realId = idMap[id] || id;
+  const BLOCK_IDS = ['rptWrap', 'uploadFlow'];
+  const el = document.getElementById(realId);
+  if(el) el.style.display = BLOCK_IDS.includes(realId) ? 'block' : 'flex';
 }
-function hide(id){ document.getElementById(id).style.display='none'; }
+function hide(id){
+  // Sprint 2 A.2.3 FIX: mapping de IDs del motor v1 a los del SaaS
+  const idMap = { 'upWrap': 'uploadFlow' };
+  const realId = idMap[id] || id;
+  const el = document.getElementById(realId);
+  if(el) el.style.display='none';
+}
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
 
@@ -6099,6 +6129,14 @@ if(document.readyState === 'loading') {
 <!-- ═══ TOAST ══════════════════════════════════════════════════════════ -->
 <div class="sazon-toast" id="sazonToast">
   <span id="toastText"></span>
+</div>
+
+
+
+<!-- ═══ LOADING INDICATOR (Sprint 2 A.2.3 FIX) ══════════════════════ -->
+<div class="ld-wrap" id="ldWrap">
+  <div class="ld-spinner"></div>
+  <div class="ld-txt" id="ldTxt">Procesando...</div>
 </div>
 
 </body>
