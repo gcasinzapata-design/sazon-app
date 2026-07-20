@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Sazón config -->
 <script src="./sazon-config.js"></script>
+<script src="./sazon-persistence.js"></script>
 
 <style>
 :root{
@@ -688,6 +689,63 @@ input[type=file]{display:none;}
 .nav-cfg-btn{background:rgba(255,255,255,.07);color:rgba(255,255,255,.65);border:none;border-radius:3px;padding:6px 12px;font-size:.68rem;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.8px;}
 .nav-cfg-btn:hover{background:rgba(255,255,255,.14);color:#fff;}
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SPRINT 2 A.2.3 — Mis análisis previos
+   ═══════════════════════════════════════════════════════════════ */
+.prev-analyses{max-width:1100px;margin:20px auto 0;padding:0 20px;}
+.prev-analyses-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--l);}
+.prev-analyses-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:900;color:var(--t);}
+.prev-analyses-count{font-size:.65rem;color:var(--m);text-transform:uppercase;letter-spacing:1.5px;}
+.prev-analysis-card{background:var(--c);border:1px solid var(--l);border-radius:3px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;transition:all .15s;cursor:pointer;}
+.prev-analysis-card:hover{border-color:var(--r);background:#fff;}
+.prev-analysis-info{flex:1;min-width:0;}
+.prev-analysis-name{font-weight:700;font-size:.85rem;color:var(--t);margin-bottom:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.prev-analysis-name .name-txt{cursor:pointer;}
+.prev-analysis-name .name-txt:hover{color:var(--r);}
+.prev-analysis-meta{font-size:.68rem;color:var(--m);display:flex;flex-wrap:wrap;gap:12px;}
+.prev-analysis-meta .kpi-item{display:flex;align-items:center;gap:4px;}
+.prev-analysis-meta .kpi-item strong{color:var(--t);font-weight:600;}
+.prev-analysis-actions{display:flex;gap:6px;flex-shrink:0;}
+.prev-analysis-btn{background:transparent;border:1px solid var(--l);border-radius:3px;padding:5px 10px;font-size:.62rem;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:1px;color:var(--m);}
+.prev-analysis-btn:hover{border-color:var(--r);color:var(--r);}
+.prev-analysis-btn.load{background:var(--r);color:#fff;border-color:var(--r);}
+.prev-analysis-btn.load:hover{background:#a82d22;color:#fff;}
+.prev-analysis-btn.remove:hover{border-color:var(--r);color:var(--r);background:var(--rlit);}
+.prev-analysis-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+.prev-analysis-badge.expiring{background:rgba(200,160,69,.15);color:#6b4800;border:1px solid rgba(200,160,69,.3);}
+.prev-analysis-badge.expired-soon{background:rgba(200,57,43,.1);color:var(--r);border:1px solid rgba(200,57,43,.3);}
+.prev-analysis-loading{text-align:center;padding:30px;color:var(--m);}
+.prev-analysis-empty{text-align:center;padding:30px 20px;color:var(--m);border:1px dashed var(--l);border-radius:3px;}
+.prev-analysis-empty .icon{font-size:2rem;margin-bottom:8px;}
+
+/* Botón Nuevo análisis en el nav */
+.nav-new-btn{background:var(--r);color:#fff;border:none;border-radius:3px;padding:6px 14px;font-size:.68rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.8px;}
+.nav-new-btn:hover{background:#a82d22;}
+
+/* Modal renombrar */
+.rename-modal-overlay{position:fixed;inset:0;background:rgba(15,15,13,.75);z-index:860;display:none;align-items:center;justify-content:center;padding:20px;}
+.rename-modal-overlay.on{display:flex;}
+.rename-modal-box{background:var(--c);border-radius:4px;width:100%;max-width:440px;padding:24px;}
+.rename-modal-title{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:900;margin-bottom:5px;}
+.rename-modal-sub{font-size:.72rem;color:var(--m);margin-bottom:14px;}
+.rename-modal-input{width:100%;padding:9px 12px;border:1px solid var(--l);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:.85rem;background:#fff;margin-bottom:12px;}
+.rename-modal-input:focus{outline:none;border-color:var(--r);}
+.rename-modal-actions{display:flex;justify-content:flex-end;gap:8px;}
+.rename-modal-actions button{padding:9px 18px;border-radius:3px;border:none;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px;}
+.rename-modal-actions .btn-cancel{background:transparent;color:var(--m);border:1px solid var(--l);}
+.rename-modal-actions .btn-save{background:var(--r);color:#fff;}
+
+/* Toast de confirmación */
+.sazon-toast{position:fixed;bottom:20px;right:20px;background:var(--gr);color:#fff;padding:12px 18px;border-radius:3px;font-size:.78rem;font-weight:600;z-index:1000;box-shadow:0 4px 12px rgba(0,0,0,.15);opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;}
+.sazon-toast.on{opacity:1;transform:translateY(0);pointer-events:auto;}
+.sazon-toast.err{background:var(--r);}
+
+/* Indicador de "análisis viejo cargado" cuando se abre uno del histórico */
+.viewing-historical-badge{background:rgba(200,160,69,.15);color:#6b4800;padding:8px 14px;border-radius:3px;font-size:.72rem;text-align:center;margin-bottom:14px;border:1px solid rgba(200,160,69,.3);display:flex;align-items:center;justify-content:center;gap:8px;}
+.viewing-historical-badge strong{color:#6b4800;}
+
 </style>
 </head>
 <body>
@@ -771,6 +829,7 @@ input[type=file]{display:none;}
       <span class="nav-brand" id="navBrand">—</span>
       <span class="nav-plan" id="navPlan">—</span>
       <span class="nav-user" id="navUser">—</span>
+      <button class="nav-new-btn" id="btnNewAnalysis" onclick="startNewAnalysis()" style="display:none" title="Iniciar un nuevo análisis">➕ Nuevo análisis</button>
       <button class="nav-cfg-btn" id="btnBranches" onclick="openBranchModal()" style="display:none" title="Gestionar sucursales">📍 Sucursales</button>
       <button class="btn btn-ghost btn-sm" id="btnLogout" title="Cerrar sesión">⎋ Salir</button>
     </div>
@@ -857,6 +916,17 @@ input[type=file]{display:none;}
         </div>
       </div>
     </div>
+    <!-- ═══ MIS ANÁLISIS PREVIOS (Sprint 2 A.2.3) ══════════════════════ -->
+    <div class="prev-analyses" id="prevAnalyses" style="display:none">
+      <div class="prev-analyses-head">
+        <div class="prev-analyses-title">📁 Mis análisis previos</div>
+        <div class="prev-analyses-count" id="prevAnalysesCount">—</div>
+      </div>
+      <div id="prevAnalysesList">
+        <!-- Se renderiza dinámicamente -->
+      </div>
+    </div>
+
     <div class="welcome-empty" id="welcomeEmpty">
       <h2>Bienvenido a Sazón Growth Engine</h2>
       <p>Aquí analizarás el desempeño de tu marca en las plataformas de delivery. Los módulos se activan según tu tier — click en cualquier tab para empezar.</p>
@@ -5562,6 +5632,431 @@ hydrateEngineConfig = async function() {
 
 
 
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 2 A.2.3 — Persistencia real de análisis
+//  Conecta el motor v1 con SAZON_PERSISTENCE (Supabase)
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Estado local del listado de análisis previos
+ */
+APP.previousAnalyses = [];
+APP.previousAnalysesLoaded = false;
+APP.currentAnalysisId = null;         // ID del análisis actualmente en pantalla
+APP.viewingHistorical = false;         // true si estamos viendo un análisis viejo
+APP.renamingAnalysisId = null;
+
+/**
+ * Formatea una fecha ISO a algo legible en español
+ */
+function formatDate(isoStr) {
+  if (!isoStr) return '—';
+  try {
+    const d = new Date(isoStr);
+    return d.toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch { return '—'; }
+}
+
+function formatMoney(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return 'S/' + Number(n).toLocaleString('es-PE', {minimumFractionDigits:0, maximumFractionDigits:0});
+}
+
+function formatMoneyDetail(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return 'S/' + Number(n).toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+/**
+ * Days until expiration
+ */
+function daysUntil(isoStr) {
+  if (!isoStr) return null;
+  const now = new Date();
+  const exp = new Date(isoStr);
+  return Math.ceil((exp - now) / 86400000);
+}
+
+/**
+ * Toast helper
+ */
+function showToast(text, kind) {
+  const toast = document.getElementById('sazonToast');
+  const txt = document.getElementById('toastText');
+  if (!toast || !txt) return;
+  txt.textContent = text;
+  toast.className = 'sazon-toast on' + (kind === 'err' ? ' err' : '');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.remove('on'), 3200);
+}
+
+/**
+ * Carga la lista de análisis previos desde Supabase
+ */
+async function loadPreviousAnalyses() {
+  if (!APP.brand || !APP.supabase || !window.SAZON_PERSISTENCE) return;
+
+  const listEl = document.getElementById('prevAnalysesList');
+  const countEl = document.getElementById('prevAnalysesCount');
+  const container = document.getElementById('prevAnalyses');
+
+  if (listEl) listEl.innerHTML = '<div class="prev-analysis-loading">⏳ Cargando análisis previos...</div>';
+
+  const result = await window.SAZON_PERSISTENCE.listAnalyses(APP.supabase, APP.brand.id);
+
+  if (!result.success) {
+    if (listEl) listEl.innerHTML = '<div class="prev-analysis-empty">Error al cargar análisis previos: ' + (result.error || '') + '</div>';
+    return;
+  }
+
+  APP.previousAnalyses = result.analyses || [];
+  APP.previousAnalysesLoaded = true;
+
+  renderPreviousAnalysesList();
+
+  // Solo mostrar la sección si hay al menos 1 análisis
+  if (container) {
+    container.style.display = APP.previousAnalyses.length > 0 ? 'block' : 'none';
+  }
+}
+
+/**
+ * Renderiza la lista de análisis previos
+ */
+function renderPreviousAnalysesList() {
+  const listEl = document.getElementById('prevAnalysesList');
+  const countEl = document.getElementById('prevAnalysesCount');
+  if (!listEl) return;
+
+  const analyses = APP.previousAnalyses || [];
+  if (countEl) countEl.textContent = analyses.length + ' ' + (analyses.length === 1 ? 'análisis' : 'análisis');
+
+  if (analyses.length === 0) {
+    listEl.innerHTML = '<div class="prev-analysis-empty"><div class="icon">📁</div>Aún no tienes análisis guardados. Sube tus archivos arriba para empezar.</div>';
+    return;
+  }
+
+  let html = '';
+  for (const a of analyses) {
+    const daysLeft = daysUntil(a.expires_at);
+    let badge = '';
+    if (daysLeft !== null && daysLeft >= 0 && daysLeft <= 7) {
+      badge = `<span class="prev-analysis-badge expired-soon">⏰ Vence en ${daysLeft} ${daysLeft===1?'día':'días'}</span>`;
+    } else if (daysLeft !== null && daysLeft > 7 && daysLeft <= 30) {
+      badge = `<span class="prev-analysis-badge expiring">Vence en ${daysLeft} días</span>`;
+    }
+
+    const platIcons = (a.platforms || []).map(p => ({rappi:'🟠', peya:'🔵', didi:'🟡'}[p] || '')).join('');
+    const gmv = a.gmv ? formatMoney(a.gmv) : '—';
+    const ticket = a.avg_ticket ? formatMoneyDetail(a.avg_ticket) : '—';
+
+    html += `<div class="prev-analysis-card">
+      <div class="prev-analysis-info">
+        <div class="prev-analysis-name">
+          <span class="name-txt" onclick="loadAnalysisFromHistory('${a.id}')">${escapeHtml(a.display_name || a.name)}</span>
+          ${badge}
+        </div>
+        <div class="prev-analysis-meta">
+          <span class="kpi-item">📅 ${formatDate(a.created_at)}</span>
+          <span class="kpi-item">💰 GMV: <strong>${gmv}</strong></span>
+          <span class="kpi-item">🎫 Ticket: <strong>${ticket}</strong></span>
+          <span class="kpi-item">${platIcons} ${a.orders_count || 0} órdenes</span>
+        </div>
+      </div>
+      <div class="prev-analysis-actions">
+        <button class="prev-analysis-btn load" onclick="loadAnalysisFromHistory('${a.id}')">Ver</button>
+        <button class="prev-analysis-btn" onclick="openRenameModal('${a.id}', '${escapeHtml(a.display_name || a.name).replace(/'/g, "\\'")}')">Renombrar</button>
+        <button class="prev-analysis-btn remove" onclick="deleteAnalysisFromHistory('${a.id}')">Eliminar</button>
+      </div>
+    </div>`;
+  }
+  listEl.innerHTML = html;
+}
+
+/**
+ * Guarda el análisis actual en Supabase
+ * Se llama automáticamente después de que el motor termina el análisis
+ */
+async function persistCurrentAnalysis(processingMs) {
+  if (!APP.D || !APP.brand || !APP.supabase || !window.SAZON_PERSISTENCE) {
+    return { success: false, error: 'Missing data' };
+  }
+  if (APP.viewingHistorical) {
+    return { success: false, error: 'Viewing historical - not saving again' };
+  }
+
+  // Extraer los módulos del state actual (APP.D contiene los resultados de analyze())
+  const modules = {
+    // Se guardan snapshots ligeros - se recalculan al re-renderizar
+    dashboard: { generated: true },
+    patrones: APP.D.patterns || {},
+    precios: APP.D.pricing || {},
+    menu: APP.D.menuBcg || {},
+    combos: APP.D.combos || {},
+    promos: APP.D.promos || {},
+    adq: APP.D.adq || {},
+    ticket: APP.D.ticket || {},
+    retencion: APP.D.retencion || {},
+    financiero: APP.D.financial || {},
+    roadmap: APP.D.roadmap || {},
+  };
+
+  const files = (APP.files || []).map(f => ({
+    name: f.name || '',
+    size: f.size || 0,
+    platform: f._platform || 'unknown',
+    format: f._format || 'unknown'
+  }));
+
+  const result = await window.SAZON_PERSISTENCE.saveAnalysis({
+    supabase: APP.supabase,
+    brand: APP.brand,
+    orders: APP.allOrders || [],
+    modules,
+    files,
+    processingMs: processingMs || null
+  });
+
+  if (result.success) {
+    APP.currentAnalysisId = result.analysisId;
+    // Refrescar el listado en background
+    loadPreviousAnalyses();
+  }
+  return result;
+}
+
+/**
+ * Carga un análisis histórico y hidrata el estado
+ */
+async function loadAnalysisFromHistory(analysisId) {
+  if (!APP.supabase || !window.SAZON_PERSISTENCE) return;
+
+  const result = await window.SAZON_PERSISTENCE.getAnalysis(APP.supabase, analysisId);
+  if (!result.success) {
+    showToast('Error al cargar el análisis: ' + result.error, 'err');
+    return;
+  }
+
+  const a = result.analysis;
+  const meta = a.metadata || {};
+
+  // Reconstruir APP.D desde los datos guardados
+  // Para el Sprint 2 A.2.3: mostramos los KPIs top-level + un mensaje "análisis histórico"
+  // La reconstrucción completa de módulos con re-render viene en A.2.4 (opcional Sprint 3)
+
+  const kpis = meta.kpis || {};
+  APP.D = {
+    total_n: kpis.orders_total || a.orders_count || 0,
+    done_n: kpis.orders_completed || 0,
+    gmv: kpis.gmv || a.gmv || 0,
+    avgTicket: kpis.avg_ticket || a.avg_ticket || 0,
+    period_start: kpis.period_start || a.period_start,
+    period_end: kpis.period_end || a.period_end,
+    platforms: kpis.platforms || a.platforms || [],
+    _historicalMetadata: meta,
+    _historicalAnalysis: a,
+  };
+
+  APP.currentAnalysisId = a.id;
+  APP.viewingHistorical = true;
+
+  // Mostrar los tabs y el badge "Viendo histórico"
+  hideUploadFlow();
+  setStyle('welcomeEmpty', 'display', 'none');
+  setStyle('rptWrap', 'display', 'block');
+
+  // Mostrar botón "Nuevo análisis"
+  const btnNew = document.getElementById('btnNewAnalysis');
+  if (btnNew) btnNew.style.display = 'inline-block';
+
+  // Activar el tab dashboard si tiene esa opción, sino el primero disponible
+  const allowedTabs = new Set(APP.tier?.tabs || ['dashboard']);
+  let targetTab = 'dashboard';
+  if (!allowedTabs.has('dashboard')) {
+    targetTab = Array.from(allowedTabs)[0] || 'dashboard';
+  }
+
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const targetTabEl = document.querySelector('[data-tab="'+targetTab+'"]');
+  if (targetTabEl) targetTabEl.classList.add('active');
+
+  document.querySelectorAll('#rptWrap .panel').forEach(p => p.classList.remove('active'));
+  const targetPanel = document.getElementById('p-' + targetTab);
+  if (targetPanel) {
+    targetPanel.classList.add('active');
+    targetPanel.querySelectorAll('.no-analysis-yet, .engine-placeholder').forEach(el => el.remove());
+
+    // Insertar el badge "viendo histórico" al principio del panel
+    const oldBadge = targetPanel.querySelector('.viewing-historical-badge');
+    if (oldBadge) oldBadge.remove();
+    const badge = document.createElement('div');
+    badge.className = 'viewing-historical-badge';
+    badge.innerHTML = `📚 Estás viendo un análisis histórico: <strong>${escapeHtml(a.custom_name || a.name)}</strong> · ${formatDate(a.created_at)}`;
+    targetPanel.insertBefore(badge, targetPanel.firstChild);
+  }
+
+  APP.currentTab = targetTab;
+
+  // Nota importante para el usuario
+  showToast('Análisis histórico cargado. Los datos son de solo lectura.', 'ok');
+}
+
+/**
+ * Elimina un análisis del histórico
+ */
+async function deleteAnalysisFromHistory(analysisId) {
+  const a = APP.previousAnalyses.find(x => x.id === analysisId);
+  const name = a ? (a.display_name || a.name) : 'este análisis';
+  if (!confirm('¿Eliminar "' + name + '"?\n\nEsta acción no se puede deshacer.')) return;
+
+  const result = await window.SAZON_PERSISTENCE.deleteAnalysis(APP.supabase, analysisId);
+  if (!result.success) {
+    showToast('Error al eliminar: ' + result.error, 'err');
+    return;
+  }
+
+  // Si era el análisis actual, resetear
+  if (APP.currentAnalysisId === analysisId) {
+    APP.currentAnalysisId = null;
+    APP.viewingHistorical = false;
+    APP.D = null;
+  }
+
+  showToast('Análisis eliminado');
+  loadPreviousAnalyses();
+}
+
+/**
+ * Modal de renombrar
+ */
+function openRenameModal(analysisId, currentName) {
+  APP.renamingAnalysisId = analysisId;
+  const modal = document.getElementById('renameModal');
+  const input = document.getElementById('renameInput');
+  if (!modal || !input) return;
+  input.value = currentName || '';
+  modal.classList.add('on');
+  setTimeout(() => { input.focus(); input.select(); }, 100);
+}
+
+function closeRenameModal() {
+  const modal = document.getElementById('renameModal');
+  if (modal) modal.classList.remove('on');
+  APP.renamingAnalysisId = null;
+}
+
+async function saveRename() {
+  const input = document.getElementById('renameInput');
+  const btn = document.getElementById('renameSaveBtn');
+  if (!input || !APP.renamingAnalysisId) return;
+  const newName = (input.value || '').trim();
+  if (!newName) {
+    showToast('El nombre no puede estar vacío', 'err');
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+  const result = await window.SAZON_PERSISTENCE.renameAnalysis(APP.supabase, APP.renamingAnalysisId, newName);
+  if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
+
+  if (!result.success) {
+    showToast('Error: ' + result.error, 'err');
+    return;
+  }
+
+  closeRenameModal();
+  showToast('Análisis renombrado');
+  loadPreviousAnalyses();
+}
+
+/**
+ * Botón "Nuevo análisis" en el nav
+ */
+function startNewAnalysis() {
+  // Reset del estado
+  APP.D = null;
+  APP.allOrders = [];
+  APP.files = [];
+  APP.currentAnalysisId = null;
+  APP.viewingHistorical = false;
+
+  // Ocultar botón "Nuevo análisis"
+  const btnNew = document.getElementById('btnNewAnalysis');
+  if (btnNew) btnNew.style.display = 'none';
+
+  // Limpiar el file list de la UI
+  const orderFileList = document.getElementById('orderFileList');
+  if (orderFileList) orderFileList.innerHTML = '';
+  const anBtn = document.getElementById('anBtn');
+  if (anBtn) anBtn.disabled = true;
+
+  // Volver al upload flow
+  showUploadFlow();
+
+  // Recargar análisis previos
+  loadPreviousAnalyses();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  Hook post-analyze — se ejecuta después de runAnalysis() en el motor v1
+// ═══════════════════════════════════════════════════════════════════════
+
+// Envolver runAnalysis para persistir después
+if (typeof runAnalysis === 'function') {
+  const _originalRunAnalysis = runAnalysis;
+  window.runAnalysis = async function() {
+    const startTime = Date.now();
+    APP.viewingHistorical = false;  // reset
+    APP.currentAnalysisId = null;
+
+    // Ejecutar el análisis original del motor v1
+    try {
+      await _originalRunAnalysis.apply(this, arguments);
+    } catch (err) {
+      console.error('[Persistence] runAnalysis failed:', err);
+      return;
+    }
+
+    // Si hubo error o no hay data, no persistir
+    if (!APP.D || !APP.allOrders || !APP.allOrders.length) {
+      return;
+    }
+
+    const processingMs = Date.now() - startTime;
+
+    // Mostrar botón "Nuevo análisis"
+    const btnNew = document.getElementById('btnNewAnalysis');
+    if (btnNew) btnNew.style.display = 'inline-block';
+
+    // Persistir en background (no bloqueante para la UI)
+    persistCurrentAnalysis(processingMs).then(result => {
+      if (result.success) {
+        showToast('✓ Análisis guardado');
+      } else if (result.quotaExceeded) {
+        showToast('⚠️ ' + result.error, 'err');
+      } else {
+        showToast('⚠️ No se pudo guardar: ' + (result.error || 'error desconocido'), 'err');
+      }
+    });
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  Extender hydrateEngineConfig para cargar los análisis previos
+// ═══════════════════════════════════════════════════════════════════════
+
+const _hydrateConfigForPrev = hydrateEngineConfig;
+hydrateEngineConfig = async function() {
+  await _hydrateConfigForPrev.apply(this, arguments);
+  if (APP.user && APP.user.role !== 'sazon_admin') {
+    loadPreviousAnalyses();
+  }
+};
+
+
+
 if(document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', boot);
 } else {
@@ -5584,6 +6079,26 @@ if(document.readyState === 'loading') {
       <!-- Contenido se renderiza dinámicamente -->
     </div>
   </div>
+</div>
+
+
+
+<!-- ═══ MODAL RENOMBRAR ANÁLISIS (Sprint 2 A.2.3) ══════════════════════ -->
+<div class="rename-modal-overlay" id="renameModal">
+  <div class="rename-modal-box">
+    <div class="rename-modal-title">Renombrar análisis</div>
+    <div class="rename-modal-sub">Dale un nombre descriptivo para reconocerlo después</div>
+    <input type="text" id="renameInput" class="rename-modal-input" placeholder="Ej: Análisis lanzamiento nueva burger" maxlength="200">
+    <div class="rename-modal-actions">
+      <button class="btn-cancel" onclick="closeRenameModal()">Cancelar</button>
+      <button class="btn-save" id="renameSaveBtn" onclick="saveRename()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ══════════════════════════════════════════════════════════ -->
+<div class="sazon-toast" id="sazonToast">
+  <span id="toastText"></span>
 </div>
 
 </body>
