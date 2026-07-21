@@ -885,6 +885,21 @@ input[type=file]{display:none;}
 .admin-form-field .input-w-suffix input{flex:1;border-radius:3px 0 0 3px;}
 .admin-form-field .input-w-suffix .suffix{padding:9px 12px;background:var(--w);border:1px solid var(--l);border-left:none;border-radius:0 3px 3px 0;font-size:.72rem;color:var(--m);font-weight:600;}
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SPRINT 2 B.3 — CRUD de Usuarios (aprovecha CSS de B.2)
+   ═══════════════════════════════════════════════════════════════ */
+.user-role-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;}
+.user-role-badge.admin{background:rgba(200,57,43,.12);color:var(--r);}
+.user-role-badge.owner{background:rgba(45,106,79,.15);color:var(--gr);}
+.user-role-badge.editor{background:rgba(0,102,204,.12);color:#0066cc;}
+.user-role-badge.viewer{background:rgba(0,0,0,.06);color:var(--m);}
+.user-last-login{font-size:.65rem;color:var(--m);}
+.user-last-login.recent{color:var(--gr);}
+.user-last-login.old{color:#8a6000;}
+.user-last-login.never{color:var(--m);font-style:italic;}
+
 </style>
 </head>
 <body>
@@ -2319,17 +2334,424 @@ function escapeAttr(s) {
 }
 
 
-function renderAdminUsersStub() {
-  setHtml('adminPanelBody', `
+// ═══════════════════════════════════════════════════════════════════════
+//  USERS CRUD (Sprint 2 B.3)
+// ═══════════════════════════════════════════════════════════════════════
+
+APP.usersCache = [];
+APP.usersFilter = '';
+
+async function renderAdminUsersStub() { return renderAdminUsers(); }
+
+async function renderAdminUsers() {
+  const body = document.getElementById('adminPanelBody');
+  if (!body) return;
+
+  body.innerHTML = `
     <div class="admin-panel-title">👥 Gestión de Usuarios</div>
-    <div class="admin-panel-sub">Crear usuarios cliente y vincularlos a marcas</div>
-    <div class="admin-loading">
-      <div style="font-size:2rem;margin-bottom:10px">🚧</div>
-      <div style="font-size:.85rem;color:var(--t);font-weight:600;margin-bottom:6px">Panel de Usuarios — Sprint 2 B.3</div>
-      <div style="font-size:.72rem;color:var(--m)">CRUD de usuarios se implementa en el siguiente sub-bloque.</div>
+    <div class="admin-panel-sub">Crear usuarios cliente vinculados a marcas y gestionar roles · el usuario recibe un email para acceder por OTP</div>
+
+    <div class="admin-crud-toolbar">
+      <input type="text" class="admin-search-input" id="userSearchInp"
+        placeholder="Buscar por email, nombre o marca..." oninput="filterUsers(this.value)">
+      <button class="admin-btn-secondary" onclick="reloadUsers()">↻ Recargar</button>
+      <button class="admin-btn-primary" onclick="openUserCreateModal()">➕ Invitar usuario</button>
     </div>
-  `);
+
+    <div id="usersListContainer">
+      <div class="admin-loading"><div class="spinner"></div>Cargando usuarios...</div>
+    </div>
+  `;
+
+  await loadUsersList();
 }
+
+async function loadUsersList() {
+  const container = document.getElementById('usersListContainer');
+  if (!container) return;
+
+  // Necesitamos brands cache — si no hay, cargar
+  if (!APP.brandsCache || APP.brandsCache.length === 0) {
+    const { data: b } = await APP.supabase.from('brands').select('*');
+    APP.brandsCache = (b || []).map(x => ({...x, subscription:null, userCount:0}));
+  }
+
+  const { data, error } = await APP.supabase
+    .from('users')
+    .select('*')
+    .order('created_at', {ascending: false});
+
+  if (error) {
+    container.innerHTML = `<div class="admin-empty"><div class="icon">⚠️</div><div class="title">Error al cargar usuarios</div><div class="sub">${escapeHtmlAdmin(error.message)}</div></div>`;
+    return;
+  }
+
+  // Enriquecer con nombre de la marca
+  APP.usersCache = (data || []).map(u => {
+    const brand = APP.brandsCache.find(b => b.id === u.brand_id);
+    return { ...u, brandName: brand?.name || null };
+  });
+
+  renderUsersList();
+}
+
+function filterUsers(query) {
+  APP.usersFilter = (query || '').toLowerCase().trim();
+  renderUsersList();
+}
+
+function renderUsersList() {
+  const container = document.getElementById('usersListContainer');
+  if (!container) return;
+
+  const q = APP.usersFilter;
+  const filtered = q
+    ? APP.usersCache.filter(u =>
+        (u.email || '').toLowerCase().includes(q) ||
+        (u.full_name || '').toLowerCase().includes(q) ||
+        (u.brandName || '').toLowerCase().includes(q))
+    : APP.usersCache;
+
+  if (filtered.length === 0) {
+    if (APP.usersCache.length === 0) {
+      container.innerHTML = `<div class="admin-empty"><div class="icon">👥</div><div class="title">Sin usuarios</div><div class="sub">Invita al primer usuario con "➕ Invitar usuario"</div></div>`;
+    } else {
+      container.innerHTML = `<div class="admin-empty"><div class="icon">🔍</div><div class="title">Sin resultados</div><div class="sub">Ningún usuario coincide con "${escapeHtmlAdmin(q)}"</div></div>`;
+    }
+    return;
+  }
+
+  const gridTemplate = 'grid-template-columns:2.5fr 1fr 1.2fr 1fr 1fr 160px';
+
+  let html = `<div class="admin-table">
+    <div class="admin-table-head" style="${gridTemplate}">
+      <div>Usuario</div>
+      <div>Rol</div>
+      <div>Marca</div>
+      <div>Estado</div>
+      <div>Último login</div>
+      <div style="text-align:right">Acciones</div>
+    </div>`;
+
+  const now = Date.now();
+
+  for (const u of filtered) {
+    const roleBadge = `<span class="user-role-badge ${u.role || 'viewer'}">${u.role || 'viewer'}</span>`;
+
+    const activeBadge = u.is_active
+      ? '<span class="admin-row-badge active">activa</span>'
+      : '<span class="admin-row-badge inactive">inactiva</span>';
+
+    let lastLoginText = 'nunca';
+    let lastLoginCls = 'never';
+    if (u.last_login_at) {
+      const daysAgo = Math.floor((now - new Date(u.last_login_at).getTime()) / 86400000);
+      if (daysAgo === 0) { lastLoginText = 'hoy'; lastLoginCls = 'recent'; }
+      else if (daysAgo === 1) { lastLoginText = 'ayer'; lastLoginCls = 'recent'; }
+      else if (daysAgo <= 7) { lastLoginText = `hace ${daysAgo} días`; lastLoginCls = 'recent'; }
+      else if (daysAgo <= 30) { lastLoginText = `hace ${daysAgo} días`; lastLoginCls = ''; }
+      else { lastLoginText = `hace ${daysAgo} días`; lastLoginCls = 'old'; }
+    }
+
+    const activeCls = u.is_active ? '' : 'inactive';
+    const isCurrentUser = u.id === APP.user?.id;
+
+    html += `<div class="admin-table-row ${activeCls}" style="${gridTemplate}">
+      <div>
+        <div class="admin-row-primary">${escapeHtmlAdmin(u.full_name || u.email)}</div>
+        <div class="admin-row-secondary">${escapeHtmlAdmin(u.email)}${isCurrentUser ? ' · <em>(tú)</em>' : ''}</div>
+      </div>
+      <div>${roleBadge}</div>
+      <div class="admin-row-secondary">${escapeHtmlAdmin(u.brandName || (u.role === 'sazon_admin' ? '—' : 'Sin marca'))}</div>
+      <div>${activeBadge}</div>
+      <div><span class="user-last-login ${lastLoginCls}">${lastLoginText}</span></div>
+      <div class="admin-row-actions">
+        <button class="admin-row-btn" onclick="openUserEditModal('${u.id}')" ${isCurrentUser ? 'title="No puedes editarte a ti mismo desde acá"' : ''}>Editar</button>
+        ${!isCurrentUser ? `<button class="admin-row-btn danger" onclick="toggleUserActive('${u.id}', ${u.is_active})">${u.is_active ? 'Desactivar' : 'Activar'}</button>` : '<button class="admin-row-btn" disabled style="opacity:.4;cursor:not-allowed">—</button>'}
+      </div>
+    </div>`;
+  }
+
+  html += '</div>';
+  html += `<div style="margin-top:14px;font-size:.68rem;color:var(--m);text-align:right">Mostrando ${filtered.length} de ${APP.usersCache.length} usuarios</div>`;
+
+  container.innerHTML = html;
+}
+
+async function reloadUsers() {
+  await loadUsersList();
+  showToast('Usuarios recargados');
+}
+
+async function toggleUserActive(userId, currentActive) {
+  const u = APP.usersCache.find(x => x.id === userId);
+  const action = currentActive ? 'desactivar' : 'activar';
+  const confirmMsg = currentActive
+    ? `¿Desactivar al usuario "${u?.email}"?\n\nEsto bloquea su acceso a la app. Puedes reactivarlo cuando quieras.`
+    : `¿Reactivar el acceso de "${u?.email}"?`;
+  if (!confirm(confirmMsg)) return;
+
+  const { error } = await APP.supabase
+    .from('users')
+    .update({ is_active: !currentActive })
+    .eq('id', userId);
+
+  if (error) {
+    showToast('Error: ' + error.message, 'err');
+    return;
+  }
+
+  showToast(`Usuario ${action}do`);
+  await loadUsersList();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  MODAL — Crear/Editar usuario
+// ═══════════════════════════════════════════════════════════════════════
+
+APP.userEditingId = null;
+
+function openUserCreateModal() {
+  APP.userEditingId = null;
+  document.getElementById('userEditTitle').textContent = '➕ Invitar usuario';
+  const emptyUser = {
+    email:'', full_name:'', role:'owner', brand_id:'', is_active:true
+  };
+  renderUserEditForm(emptyUser, true);
+  document.getElementById('userEditModal').classList.add('on');
+  setTimeout(() => { const el = document.getElementById('userFieldEmail'); if(el) el.focus(); }, 100);
+}
+
+function openUserEditModal(userId) {
+  const u = APP.usersCache.find(x => x.id === userId);
+  if (!u) { showToast('Usuario no encontrado', 'err'); return; }
+  if (u.id === APP.user?.id) {
+    showToast('No puedes editarte a ti mismo desde acá', 'err');
+    return;
+  }
+
+  APP.userEditingId = userId;
+  document.getElementById('userEditTitle').textContent = '✏️ Editar ' + (u.full_name || u.email);
+  renderUserEditForm(u, false);
+  document.getElementById('userEditModal').classList.add('on');
+  setTimeout(() => { const el = document.getElementById('userFieldName'); if(el) el.focus(); }, 100);
+}
+
+function closeUserEditModal() {
+  document.getElementById('userEditModal').classList.remove('on');
+  APP.userEditingId = null;
+}
+
+function renderUserEditForm(u, isNew) {
+  const body = document.getElementById('userEditBody');
+  if (!body) return;
+
+  // Preparar el select de brands
+  const brands = APP.brandsCache.filter(b => b.is_active !== false);
+  const brandsOpts = brands.map(b =>
+    `<option value="${b.id}" ${u.brand_id === b.id ? 'selected' : ''}>${escapeHtmlAdmin(b.name)}</option>`
+  ).join('');
+
+  body.innerHTML = `
+    <div class="admin-form-section">
+      <div class="admin-form-section-title">Identificación</div>
+      <div class="admin-form-field" style="margin-bottom:12px">
+        <label>Email <span class="req">*</span></label>
+        <input type="email" id="userFieldEmail" value="${escapeAttr(u.email)}"
+          placeholder="usuario@marca.com" ${isNew ? '' : 'readonly disabled style="background:var(--w);cursor:not-allowed"'}>
+        ${isNew
+          ? '<div class="helper">El usuario recibirá un email para verificar su acceso vía OTP</div>'
+          : '<div class="helper">El email no se puede modificar por seguridad</div>'}
+      </div>
+      <div class="admin-form-field" style="margin-bottom:12px">
+        <label>Nombre completo</label>
+        <input type="text" id="userFieldName" value="${escapeAttr(u.full_name || '')}" placeholder="Nombre y apellido (opcional)">
+      </div>
+    </div>
+
+    <div class="admin-form-section">
+      <div class="admin-form-section-title">Acceso y permisos</div>
+      <div class="admin-form-row">
+        <div class="admin-form-field">
+          <label>Rol <span class="req">*</span></label>
+          <select id="userFieldRole" onchange="onUserRoleChange()">
+            <option value="owner" ${u.role === 'owner' ? 'selected' : ''}>Owner (dueño de marca)</option>
+            <option value="editor" ${u.role === 'editor' ? 'selected' : ''}>Editor (colaborador con permisos)</option>
+            <option value="viewer" ${u.role === 'viewer' ? 'selected' : ''}>Viewer (solo lectura)</option>
+            <option value="sazon_admin" ${u.role === 'sazon_admin' ? 'selected' : ''}>Sazón Admin (equipo interno)</option>
+          </select>
+          <div class="helper" id="userRoleHelper">Owner: control total sobre la marca. Editor: puede editar. Viewer: solo consultar.</div>
+        </div>
+        <div class="admin-form-field" id="userBrandFieldWrap">
+          <label>Marca asignada <span class="req">*</span></label>
+          <select id="userFieldBrand">
+            <option value="">— Selecciona —</option>
+            ${brandsOpts}
+          </select>
+          <div class="helper">Marca a la que este usuario tendrá acceso</div>
+        </div>
+      </div>
+    </div>
+
+    ${isNew ? `
+    <div class="admin-form-section" style="background:rgba(200,160,69,.08);border-left:3px solid #c8a045;padding:12px 14px;border-radius:0 3px 3px 0">
+      <div style="font-size:.72rem;color:#6b4800;font-weight:600;margin-bottom:4px">📧 Flujo de invitación</div>
+      <div style="font-size:.68rem;color:var(--t);line-height:1.55">Al guardar: (1) se crea el registro en la tabla users con el rol y marca asignados, (2) se envía OTP al email para que el usuario confirme su acceso. Cuando el cliente entre por primera vez, verá directamente su marca asignada.</div>
+    </div>
+    ` : ''}
+  `;
+
+  // Ajustar visibilidad de brand según rol inicial
+  setTimeout(() => onUserRoleChange(), 20);
+}
+
+function onUserRoleChange() {
+  const roleEl = document.getElementById('userFieldRole');
+  const brandWrap = document.getElementById('userBrandFieldWrap');
+  const helper = document.getElementById('userRoleHelper');
+  if (!roleEl || !brandWrap) return;
+
+  const role = roleEl.value;
+  const isAdmin = role === 'sazon_admin';
+
+  if (isAdmin) {
+    brandWrap.style.opacity = '0.4';
+    brandWrap.style.pointerEvents = 'none';
+    if (helper) helper.textContent = 'Sazón Admin no requiere marca — accede a todas.';
+  } else {
+    brandWrap.style.opacity = '1';
+    brandWrap.style.pointerEvents = 'auto';
+    if (helper) {
+      const descs = {
+        owner: 'Owner: dueño de la marca, control total sobre config y sucursales.',
+        editor: 'Editor: puede editar análisis y sucursales pero no cambiar config sensible.',
+        viewer: 'Viewer: solo lectura, ideal para reportes internos.'
+      };
+      helper.textContent = descs[role] || '';
+    }
+  }
+}
+
+async function saveUserEdit() {
+  const saveBtn = document.getElementById('userEditSaveBtn');
+  const email = document.getElementById('userFieldEmail')?.value?.trim().toLowerCase();
+  const fullName = document.getElementById('userFieldName')?.value?.trim() || null;
+  const role = document.getElementById('userFieldRole')?.value || 'owner';
+  const brandId = document.getElementById('userFieldBrand')?.value || null;
+
+  const isNew = !APP.userEditingId;
+
+  if (isNew && (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+    showToast('Email inválido', 'err');
+    return;
+  }
+
+  if (role !== 'sazon_admin' && !brandId) {
+    showToast('Debes seleccionar una marca para este rol', 'err');
+    return;
+  }
+
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
+
+  try {
+    if (isNew) {
+      // FLUJO INVITE:
+      // 1. signInWithOtp para crear el usuario en auth.users y enviarle el email
+      // 2. Después necesitamos su id de auth.users → pero signInWithOtp no lo devuelve
+      //    ya que el user aún no confirmó. Solución:
+      //    - Guardamos el "pending user" con email + role + brand_id en users
+      //      usando un id temporal (NULL brand_id no es ideal)
+      //    - Pero users.id es FK a auth.users, así que necesitamos que exista primero
+      //
+      // Estrategia alternativa: pre-crear el registro con id NULL no es viable.
+      // Mejor: llamamos signInWithOtp y luego INSERT users con el id del auth.
+      // Pero signInWithOtp no devuelve el id del user recién creado.
+      //
+      // Solución práctica: llamamos signInWithOtp SIN shouldCreateUser (para triggerear
+      // creation) y a la vez INSERT users. El id lo obtenemos con auth.admin.getUserByEmail
+      // pero eso requiere service_role.
+      //
+      // MEJOR ENFOQUE: usar signUp de Supabase con password aleatoria — devuelve el user
+      // inmediatamente. El cliente igual entrará por OTP (magic link) sin usar la password.
+      const tempPassword = crypto.getRandomValues(new Uint8Array(20)).reduce((s,b)=>s + b.toString(16).padStart(2,'0'),'');
+
+      const { data: signupData, error: signupError } = await APP.supabase.auth.signUp({
+        email,
+        password: tempPassword,
+        options: {
+          data: { full_name: fullName, invited_by_admin: true },
+          emailRedirectTo: window.location.origin + '/sazon-app'
+        }
+      });
+
+      if (signupError) {
+        // Si el email ya existe, informar
+        if (/already registered/i.test(signupError.message)) {
+          showToast('Ese email ya está registrado', 'err');
+        } else {
+          showToast('Error: ' + signupError.message, 'err');
+        }
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
+        return;
+      }
+
+      const newAuthUserId = signupData?.user?.id;
+      if (!newAuthUserId) {
+        showToast('No se pudo obtener el ID del usuario creado', 'err');
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
+        return;
+      }
+
+      // Insertar en tabla users con el id de auth
+      const { error: insertError } = await APP.supabase
+        .from('users')
+        .insert({
+          id: newAuthUserId,
+          email,
+          full_name: fullName,
+          role,
+          brand_id: role === 'sazon_admin' ? null : brandId,
+          is_active: true
+        });
+
+      if (insertError) {
+        showToast('Usuario creado en auth pero falló insert en users: ' + insertError.message, 'err');
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
+        return;
+      }
+
+      closeUserEditModal();
+      showToast('Usuario invitado. Recibirá un email para confirmar.');
+      await loadUsersList();
+    } else {
+      // UPDATE
+      const { error } = await APP.supabase
+        .from('users')
+        .update({
+          full_name: fullName,
+          role,
+          brand_id: role === 'sazon_admin' ? null : brandId,
+        })
+        .eq('id', APP.userEditingId);
+
+      if (error) {
+        showToast('Error: ' + error.message, 'err');
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
+        return;
+      }
+
+      closeUserEditModal();
+      showToast('Usuario actualizado');
+      await loadUsersList();
+    }
+  } catch (err) {
+    console.error('[saveUserEdit] Exception:', err);
+    showToast('Error inesperado: ' + err.message, 'err');
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
+  }
+}
+
 
 function renderAdminSubsStub() {
   setHtml('adminPanelBody', `
@@ -6940,6 +7362,28 @@ if(document.readyState === 'loading') {
     <div class="admin-modal-footer">
       <button class="btn-cancel" onclick="closeBrandEditModal()">Cancelar</button>
       <button class="btn-save" id="brandEditSaveBtn" onclick="saveBrandEdit()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ═══ MODAL USUARIO (Sprint 2 B.3) ══════════════════════════════════ -->
+<div class="admin-modal-overlay" id="userEditModal">
+  <div class="admin-modal-box" style="max-width:560px">
+    <div class="admin-modal-head">
+      <div>
+        <div class="admin-modal-h-title" id="userEditTitle">Nuevo usuario</div>
+        <div class="admin-modal-h-sub">El usuario recibe un email para confirmar acceso</div>
+      </div>
+      <button class="admin-modal-close" onclick="closeUserEditModal()">×</button>
+    </div>
+    <div class="admin-modal-body" id="userEditBody">
+      <!-- Formulario dinámico -->
+    </div>
+    <div class="admin-modal-footer">
+      <button class="btn-cancel" onclick="closeUserEditModal()">Cancelar</button>
+      <button class="btn-save" id="userEditSaveBtn" onclick="saveUserEdit()">Guardar</button>
     </div>
   </div>
 </div>
