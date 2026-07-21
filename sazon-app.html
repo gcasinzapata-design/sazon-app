@@ -756,6 +756,63 @@ input[type=file]{display:none;}
 .ld-spinner{width:52px;height:52px;border:3px solid rgba(200,57,43,.15);border-top-color:var(--r);border-radius:50%;animation:spin 1s linear infinite;}
 .ld-txt{font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--t);font-weight:600;}
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SPRINT 2 B.1 — Panel Admin
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Tab bar admin (reusa el estilo de .tab pero con badge distintivo) */
+.admin-tabs{display:flex;gap:0;background:var(--d);padding:0 24px;overflow-x:auto;border-bottom:2px solid var(--r);}
+.admin-tab{background:transparent;color:rgba(255,255,255,.55);border:none;padding:14px 22px;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .15s;}
+.admin-tab:hover{color:#fff;}
+.admin-tab.active{color:#fff;border-bottom-color:var(--r);background:rgba(200,57,43,.08);}
+.admin-tab .icon{margin-right:6px;}
+
+/* Container principal del panel admin */
+.admin-panel{max-width:1200px;margin:0 auto;padding:32px 24px;}
+.admin-panel-title{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;margin-bottom:6px;color:var(--t);}
+.admin-panel-sub{font-size:.78rem;color:var(--m);margin-bottom:24px;}
+
+/* Overview metrics cards */
+.admin-metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;}
+.admin-metric-card{background:var(--c);border:1px solid var(--l);border-radius:4px;padding:20px;}
+.admin-metric-label{font-size:.62rem;color:var(--m);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px;}
+.admin-metric-value{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:900;color:var(--t);line-height:1;margin-bottom:6px;}
+.admin-metric-hint{font-size:.68rem;color:var(--m);}
+.admin-metric-hint strong{color:var(--gr);font-weight:600;}
+.admin-metric-hint.warn strong{color:#8a6000;}
+.admin-metric-hint.error strong{color:var(--r);}
+
+/* Action list (cosas que requieren atención) */
+.admin-actions{background:var(--c);border:1px solid var(--l);border-radius:4px;padding:20px 24px;}
+.admin-actions-title{font-size:.85rem;font-weight:700;color:var(--t);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.admin-actions-title .count-badge{background:var(--r);color:#fff;font-size:.62rem;padding:2px 8px;border-radius:100px;font-weight:700;}
+.admin-actions-empty{text-align:center;padding:30px;color:var(--m);font-size:.78rem;}
+.admin-actions-empty .icon{font-size:2rem;display:block;margin-bottom:6px;}
+.admin-action-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--l);}
+.admin-action-item:last-child{border-bottom:none;}
+.admin-action-ico{font-size:1.1rem;flex-shrink:0;width:32px;height:32px;background:var(--w);border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.admin-action-ico.warn{background:rgba(200,160,69,.15);color:#8a6000;}
+.admin-action-ico.error{background:rgba(200,57,43,.1);color:var(--r);}
+.admin-action-body{flex:1;min-width:0;}
+.admin-action-title{font-size:.82rem;font-weight:600;color:var(--t);margin-bottom:3px;}
+.admin-action-meta{font-size:.68rem;color:var(--m);}
+.admin-action-btn{background:transparent;border:1px solid var(--l);border-radius:3px;padding:5px 12px;font-size:.62rem;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:1px;color:var(--m);flex-shrink:0;align-self:center;}
+.admin-action-btn:hover{border-color:var(--r);color:var(--r);}
+
+/* Loading state */
+.admin-loading{text-align:center;padding:60px;color:var(--m);}
+.admin-loading .spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--l);border-top-color:var(--r);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:10px;}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-metrics-grid{grid-template-columns:repeat(2,1fr);}
+  .admin-panel{padding:20px 14px;}
+  .admin-tabs{padding:0 14px;}
+  .admin-tab{padding:12px 14px;font-size:.7rem;}
+}
+
 </style>
 </head>
 <body>
@@ -942,6 +999,22 @@ input[type=file]{display:none;}
       <p>Aquí analizarás el desempeño de tu marca en las plataformas de delivery. Los módulos se activan según tu tier — click en cualquier tab para empezar.</p>
       <p style="font-size:.72rem">Usuario: <strong id="wUser">—</strong><br>Marca: <strong id="wBrand">—</strong><br>Plan: <strong id="wPlan">—</strong><br>Estado: <strong id="wStatus">—</strong></p>
       <p style="font-size:.68rem;color:var(--gr);margin-top:16px;padding:8px 12px;background:var(--grlit);border-radius:3px;display:inline-block">🚧 Sprint 2 A.2.1 en desarrollo · Paneles con estructura visual, motor aún no integrado</p>
+    </div>
+
+    
+
+    <!-- ═══ ADMIN PANEL (Sprint 2 B.1) ══════════════════════════════════ -->
+    <div id="adminPanel" style="display:none">
+      <div class="admin-tabs" id="adminTabs">
+        <button class="admin-tab active" data-atab="overview" onclick="switchAdminTab('overview')"><span class="icon">📊</span>Overview</button>
+        <button class="admin-tab" data-atab="brands" onclick="switchAdminTab('brands')"><span class="icon">🏢</span>Marcas</button>
+        <button class="admin-tab" data-atab="users" onclick="switchAdminTab('users')"><span class="icon">👥</span>Usuarios</button>
+        <button class="admin-tab" data-atab="subs" onclick="switchAdminTab('subs')"><span class="icon">💳</span>Suscripciones</button>
+        <button class="admin-tab" data-atab="locations" onclick="switchAdminTab('locations')"><span class="icon">📍</span>Sucursales</button>
+      </div>
+      <div class="admin-panel" id="adminPanelBody">
+        <!-- Contenido se renderiza dinámicamente según el tab -->
+      </div>
     </div>
 
     <!-- ═══ PANELES DEL MOTOR (Sprint 2 A.2.1) ═══════════════════════════ -->
@@ -1564,6 +1637,7 @@ async function loadUserProfile(){
 }
 
 async function renderAdminMode(){
+  // Sprint 2 B.1: Panel admin completo
   setStyle('bootScreen', 'display', 'none');
   show('appContent', true);
   setText('navUser', APP.user.email);
@@ -1571,16 +1645,256 @@ async function renderAdminMode(){
   setText('navPlan', 'SAZÓN');
   setStyle('navPlan', 'background', 'rgba(45,106,79,.15)');
   setStyle('navPlan', 'color', 'var(--gr)');
-  setHtml('welcomeEmpty', `
-    <h2>Modo Administrador Sazón</h2>
-    <p>Estás autenticado como admin. En el Sprint 2 tendrás el panel de gestión de marcas, usuarios y suscripciones aquí.</p>
-    <p style="font-size:.72rem">Por ahora puedes verificar el estado del sistema y las marcas desde el <a href="https://supabase.com/dashboard/project/qetiugzeqyhicgwxxxvv" target="_blank" style="color:var(--r)">dashboard de Supabase</a>.</p>
-  `);
-  setHtml('tabBar', '');
-  // Ocultar los paneles del motor en modo admin
+
+  // Ocultar los paneles del motor y el welcome (son para clientes)
   setStyle('rptWrap', 'display', 'none');
-  setStyle('welcomeEmpty', 'display', 'block');
+  setStyle('welcomeEmpty', 'display', 'none');
+  setStyle('uploadFlow', 'display', 'none');
+  setStyle('prevAnalyses', 'display', 'none');
+  setHtml('tabBar', '');  // Ocultar tab bar del cliente
+
+  // Mostrar panel admin
+  setStyle('adminPanel', 'display', 'block');
+
+  // Cargar el tab overview por default
+  APP.adminCurrentTab = 'overview';
+  await switchAdminTab('overview');
 }
+
+async function switchAdminTab(tabId) {
+  APP.adminCurrentTab = tabId;
+
+  // Actualizar UI de tabs
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  const activeTab = document.querySelector(`.admin-tab[data-atab="${tabId}"]`);
+  if (activeTab) activeTab.classList.add('active');
+
+  // Mostrar loading
+  setHtml('adminPanelBody', '<div class="admin-loading"><div class="spinner"></div>Cargando...</div>');
+
+  // Renderizar según el tab
+  try {
+    switch(tabId) {
+      case 'overview':    await renderAdminOverview(); break;
+      case 'brands':      renderAdminBrandsStub(); break;
+      case 'users':       renderAdminUsersStub(); break;
+      case 'subs':        renderAdminSubsStub(); break;
+      case 'locations':   renderAdminLocationsStub(); break;
+      default:            setHtml('adminPanelBody', '<div class="admin-panel">Tab no encontrado</div>');
+    }
+  } catch (err) {
+    console.error('[Admin] Error rendering tab:', err);
+    setHtml('adminPanelBody', `<div class="admin-panel"><div class="admin-panel-title">Error</div><div class="admin-panel-sub">No se pudo cargar el contenido: ${err.message}</div></div>`);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  OVERVIEW — métricas del negocio + acciones que requieren atención
+// ═══════════════════════════════════════════════════════════════════════
+
+async function renderAdminOverview() {
+  const body = document.getElementById('adminPanelBody');
+  if (!body) return;
+
+  // Cargar todos los datos en paralelo para overview
+  const [brandsRes, usersRes, subsRes, analysesRes] = await Promise.all([
+    APP.supabase.from('brands').select('id, name, slug, country, created_at, is_active'),
+    APP.supabase.from('users').select('id, email, role, brand_id, is_active, last_login_at'),
+    APP.supabase.from('subscriptions').select('id, brand_id, plan, status, current_period_end, trial_ends_at, price_usd_month'),
+    APP.supabase.from('analyses').select('id, brand_id, created_at, gmv').is('deleted_at', null).gte('created_at', new Date(Date.now() - 30*86400000).toISOString())
+  ]);
+
+  const brands = brandsRes.data || [];
+  const users = usersRes.data || [];
+  const subs = subsRes.data || [];
+  const analyses = analysesRes.data || [];
+
+  // ─── Calcular métricas ───
+  const activeBrands = brands.filter(b => b.is_active).length;
+  const totalUsers = users.filter(u => u.is_active).length;
+  const clientUsers = users.filter(u => u.role === 'owner' && u.is_active).length;
+  const analysesLast30 = analyses.length;
+
+  // MRR estimado (suma de price_usd_month de las active/trial)
+  const mrr = subs
+    .filter(s => ['active','trial','grace'].includes(s.status))
+    .reduce((sum, s) => sum + (Number(s.price_usd_month) || 0), 0);
+
+  // ─── Acciones que requieren atención ───
+  const actions = [];
+  const now = Date.now();
+  const days = ms => Math.ceil((ms - now) / 86400000);
+
+  // 1. Suscripciones que vencen en 7 días
+  const expiringSoon = subs.filter(s => {
+    if (!s.current_period_end) return false;
+    const d = days(new Date(s.current_period_end).getTime());
+    return d > 0 && d <= 7 && ['active','trial'].includes(s.status);
+  });
+  for (const s of expiringSoon) {
+    const brand = brands.find(b => b.id === s.brand_id);
+    const d = days(new Date(s.current_period_end).getTime());
+    actions.push({
+      kind: 'warn',
+      icon: '⏰',
+      title: `${brand?.name || 'Marca sin nombre'} vence en ${d} ${d===1?'día':'días'}`,
+      meta: `Plan ${s.plan.toUpperCase()} · Estado: ${s.status}`,
+    });
+  }
+
+  // 2. Trials que terminan en 7 días
+  const trialsEnding = subs.filter(s => {
+    if (!s.trial_ends_at || s.status !== 'trial') return false;
+    const d = days(new Date(s.trial_ends_at).getTime());
+    return d > 0 && d <= 7;
+  });
+  for (const s of trialsEnding) {
+    const brand = brands.find(b => b.id === s.brand_id);
+    const d = days(new Date(s.trial_ends_at).getTime());
+    actions.push({
+      kind: 'warn',
+      icon: '🎁',
+      title: `Trial de ${brand?.name || 'Marca'} termina en ${d} ${d===1?'día':'días'}`,
+      meta: `Plan ${s.plan.toUpperCase()} - convertir a pago pronto`,
+    });
+  }
+
+  // 3. Past due
+  const pastDue = subs.filter(s => s.status === 'past_due');
+  for (const s of pastDue) {
+    const brand = brands.find(b => b.id === s.brand_id);
+    actions.push({
+      kind: 'error',
+      icon: '⚠️',
+      title: `${brand?.name || 'Marca'} está en past_due`,
+      meta: `Plan ${s.plan.toUpperCase()} - contactar para regularizar pago`,
+    });
+  }
+
+  // 4. Marcas sin actividad hace 15 días
+  const brandActivity = {};
+  for (const a of analyses) brandActivity[a.brand_id] = true;
+  const inactiveBrands = brands.filter(b => b.is_active && !brandActivity[b.id]);
+  for (const b of inactiveBrands.slice(0, 5)) {  // limitar a 5 para no saturar
+    actions.push({
+      kind: 'warn',
+      icon: '💤',
+      title: `${b.name} sin análisis en 30 días`,
+      meta: `Considerar contactar al cliente`,
+    });
+  }
+
+  // ─── Render ───
+  const actionsHtml = actions.length === 0
+    ? '<div class="admin-actions-empty"><div class="icon">✨</div>Todo en orden. Sin acciones pendientes.</div>'
+    : actions.map(a => `
+        <div class="admin-action-item">
+          <div class="admin-action-ico ${a.kind}">${a.icon}</div>
+          <div class="admin-action-body">
+            <div class="admin-action-title">${escapeHtmlAdmin(a.title)}</div>
+            <div class="admin-action-meta">${escapeHtmlAdmin(a.meta)}</div>
+          </div>
+        </div>
+      `).join('');
+
+  body.innerHTML = `
+    <div class="admin-panel-title">Overview del negocio</div>
+    <div class="admin-panel-sub">Vista general de marcas, usuarios y suscripciones · actualizado hace unos segundos</div>
+
+    <div class="admin-metrics-grid">
+      <div class="admin-metric-card">
+        <div class="admin-metric-label">Marcas activas</div>
+        <div class="admin-metric-value">${activeBrands}</div>
+        <div class="admin-metric-hint">de <strong>${brands.length}</strong> registradas</div>
+      </div>
+      <div class="admin-metric-card">
+        <div class="admin-metric-label">Usuarios clientes</div>
+        <div class="admin-metric-value">${clientUsers}</div>
+        <div class="admin-metric-hint">${totalUsers} usuarios total (incluye admins)</div>
+      </div>
+      <div class="admin-metric-card">
+        <div class="admin-metric-label">MRR estimado</div>
+        <div class="admin-metric-value">$${Math.round(mrr).toLocaleString('en-US')}</div>
+        <div class="admin-metric-hint">USD/mes de suscripciones activas</div>
+      </div>
+      <div class="admin-metric-card">
+        <div class="admin-metric-label">Análisis últ. 30d</div>
+        <div class="admin-metric-value">${analysesLast30}</div>
+        <div class="admin-metric-hint">${brands.length > 0 ? (analysesLast30 / Math.max(1, brandActivity ? Object.keys(brandActivity).length : 1)).toFixed(1) : 0} promedio por marca activa</div>
+      </div>
+    </div>
+
+    <div class="admin-actions">
+      <div class="admin-actions-title">
+        📋 Acciones pendientes
+        ${actions.length > 0 ? `<span class="count-badge">${actions.length}</span>` : ''}
+      </div>
+      ${actionsHtml}
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  STUBS para tabs B.2/B.3/B.4/B.5 (se implementan después)
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderAdminBrandsStub() {
+  setHtml('adminPanelBody', `
+    <div class="admin-panel-title">🏢 Gestión de Marcas</div>
+    <div class="admin-panel-sub">Crear, editar y desactivar marcas</div>
+    <div class="admin-loading">
+      <div style="font-size:2rem;margin-bottom:10px">🚧</div>
+      <div style="font-size:.85rem;color:var(--t);font-weight:600;margin-bottom:6px">Panel de Marcas — Sprint 2 B.2</div>
+      <div style="font-size:.72rem;color:var(--m)">CRUD de marcas se implementa en el siguiente sub-bloque.</div>
+    </div>
+  `);
+}
+
+function renderAdminUsersStub() {
+  setHtml('adminPanelBody', `
+    <div class="admin-panel-title">👥 Gestión de Usuarios</div>
+    <div class="admin-panel-sub">Crear usuarios cliente y vincularlos a marcas</div>
+    <div class="admin-loading">
+      <div style="font-size:2rem;margin-bottom:10px">🚧</div>
+      <div style="font-size:.85rem;color:var(--t);font-weight:600;margin-bottom:6px">Panel de Usuarios — Sprint 2 B.3</div>
+      <div style="font-size:.72rem;color:var(--m)">CRUD de usuarios se implementa en el siguiente sub-bloque.</div>
+    </div>
+  `);
+}
+
+function renderAdminSubsStub() {
+  setHtml('adminPanelBody', `
+    <div class="admin-panel-title">💳 Gestión de Suscripciones</div>
+    <div class="admin-panel-sub">Cambiar planes, registrar pagos y activar/suspender</div>
+    <div class="admin-loading">
+      <div style="font-size:2rem;margin-bottom:10px">🚧</div>
+      <div style="font-size:.85rem;color:var(--t);font-weight:600;margin-bottom:6px">Panel de Suscripciones — Sprint 2 B.4</div>
+      <div style="font-size:.72rem;color:var(--m)">CRUD de suscripciones + registro de pagos manuales se implementa en el siguiente sub-bloque.</div>
+    </div>
+  `);
+}
+
+function renderAdminLocationsStub() {
+  setHtml('adminPanelBody', `
+    <div class="admin-panel-title">📍 Gestión de Sucursales</div>
+    <div class="admin-panel-sub">Editar sucursales de cualquier marca (para soporte)</div>
+    <div class="admin-loading">
+      <div style="font-size:2rem;margin-bottom:10px">🚧</div>
+      <div style="font-size:.85rem;color:var(--t);font-weight:600;margin-bottom:6px">Panel de Sucursales — Sprint 2 B.5</div>
+      <div style="font-size:.72rem;color:var(--m)">Se implementa en el último sub-bloque de B.</div>
+    </div>
+  `);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  Helper para escapar HTML en admin panel
+// ═══════════════════════════════════════════════════════════════════════
+function escapeHtmlAdmin(s) {
+  if (!s) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+
 
 function showLoginError(msg){
   setStyle('bootScreen', 'display', 'none');
