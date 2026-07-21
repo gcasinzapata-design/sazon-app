@@ -813,6 +813,78 @@ input[type=file]{display:none;}
   .admin-tab{padding:12px 14px;font-size:.7rem;}
 }
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SPRINT 2 B.2 — CRUD de Marcas
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Toolbar arriba del listado */
+.admin-crud-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.admin-search-input{flex:1;padding:8px 12px;border:1px solid var(--l);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:.78rem;background:#fff;}
+.admin-search-input:focus{outline:none;border-color:var(--r);}
+.admin-btn-primary{padding:8px 16px;background:var(--r);color:#fff;border:none;border-radius:3px;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
+.admin-btn-primary:hover{background:#a82d22;}
+.admin-btn-primary:disabled{background:var(--m);cursor:not-allowed;}
+.admin-btn-secondary{padding:8px 14px;background:transparent;color:var(--m);border:1px solid var(--l);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:1px;}
+.admin-btn-secondary:hover{border-color:var(--t);color:var(--t);}
+
+/* Tabla de datos */
+.admin-table{width:100%;background:var(--c);border:1px solid var(--l);border-radius:4px;overflow:hidden;}
+.admin-table-head{background:var(--d);color:#fff;display:grid;padding:12px 16px;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;gap:12px;}
+.admin-table-row{display:grid;padding:14px 16px;gap:12px;font-size:.78rem;border-top:1px solid var(--l);align-items:center;transition:background .1s;}
+.admin-table-row:hover{background:var(--w);}
+.admin-table-row.inactive{opacity:.55;background:repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(0,0,0,.02) 6px, rgba(0,0,0,.02) 12px);}
+.admin-row-primary{font-weight:600;color:var(--t);}
+.admin-row-secondary{color:var(--m);font-size:.7rem;}
+.admin-row-actions{display:flex;gap:6px;justify-content:flex-end;}
+.admin-row-btn{background:transparent;border:1px solid var(--l);border-radius:3px;padding:4px 10px;font-size:.6rem;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:1px;color:var(--m);white-space:nowrap;}
+.admin-row-btn:hover{border-color:var(--r);color:var(--r);}
+.admin-row-btn.danger:hover{background:var(--rlit);border-color:var(--r);color:var(--r);}
+.admin-row-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;}
+.admin-row-badge.active{background:rgba(45,106,79,.15);color:var(--gr);}
+.admin-row-badge.inactive{background:rgba(0,0,0,.08);color:var(--m);}
+.admin-row-badge.trial{background:rgba(200,160,69,.15);color:#8a6000;}
+.admin-row-badge.paid{background:rgba(45,106,79,.15);color:var(--gr);}
+
+/* Empty state */
+.admin-empty{text-align:center;padding:50px 20px;color:var(--m);}
+.admin-empty .icon{font-size:2.5rem;margin-bottom:10px;}
+.admin-empty .title{font-size:.9rem;font-weight:600;color:var(--t);margin-bottom:5px;}
+.admin-empty .sub{font-size:.72rem;}
+
+/* Modal Grande (edit/create) */
+.admin-modal-overlay{position:fixed;inset:0;background:rgba(15,15,13,.75);z-index:900;display:none;align-items:center;justify-content:center;padding:20px;}
+.admin-modal-overlay.on{display:flex;}
+.admin-modal-box{background:var(--c);border-radius:4px;width:100%;max-width:720px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;}
+.admin-modal-head{background:var(--d);padding:16px 22px;color:#fff;display:flex;align-items:center;justify-content:space-between;}
+.admin-modal-h-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:900;}
+.admin-modal-h-sub{font-size:.65rem;color:rgba(255,255,255,.55);margin-top:2px;}
+.admin-modal-close{background:transparent;color:rgba(255,255,255,.7);border:none;font-size:1.5rem;cursor:pointer;padding:0 4px;}
+.admin-modal-close:hover{color:#fff;}
+.admin-modal-body{padding:24px 26px;overflow-y:auto;flex:1;}
+.admin-modal-footer{padding:14px 22px;border-top:1px solid var(--l);display:flex;justify-content:flex-end;gap:8px;background:var(--w);}
+.admin-modal-footer button{padding:9px 20px;border-radius:3px;border:none;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px;}
+.admin-modal-footer .btn-cancel{background:transparent;color:var(--m);border:1px solid var(--l);}
+.admin-modal-footer .btn-save{background:var(--r);color:#fff;}
+.admin-modal-footer .btn-save:disabled{background:var(--m);cursor:not-allowed;}
+
+/* Form fields */
+.admin-form-section{margin-bottom:24px;}
+.admin-form-section-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--r);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--l);}
+.admin-form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}
+.admin-form-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.admin-form-row.cols-4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.admin-form-field{display:flex;flex-direction:column;}
+.admin-form-field label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--m);margin-bottom:4px;}
+.admin-form-field label .req{color:var(--r);}
+.admin-form-field input,.admin-form-field select,.admin-form-field textarea{padding:8px 10px;border:1px solid var(--l);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:.78rem;background:#fff;color:var(--t);}
+.admin-form-field input:focus,.admin-form-field select:focus,.admin-form-field textarea:focus{outline:none;border-color:var(--r);}
+.admin-form-field .helper{font-size:.6rem;color:var(--m);margin-top:3px;font-style:italic;}
+.admin-form-field .input-w-suffix{display:flex;align-items:center;}
+.admin-form-field .input-w-suffix input{flex:1;border-radius:3px 0 0 3px;}
+.admin-form-field .input-w-suffix .suffix{padding:9px 12px;background:var(--w);border:1px solid var(--l);border-left:none;border-radius:0 3px 3px 0;font-size:.72rem;color:var(--m);font-weight:600;}
+
 </style>
 </head>
 <body>
@@ -1838,17 +1910,414 @@ async function renderAdminOverview() {
 //  STUBS para tabs B.2/B.3/B.4/B.5 (se implementan después)
 // ═══════════════════════════════════════════════════════════════════════
 
-function renderAdminBrandsStub() {
-  setHtml('adminPanelBody', `
+// ═══════════════════════════════════════════════════════════════════════
+//  BRANDS CRUD (Sprint 2 B.2)
+// ═══════════════════════════════════════════════════════════════════════
+
+APP.brandsCache = [];
+APP.brandsFilter = '';
+
+async function renderAdminBrandsStub() { return renderAdminBrands(); }
+
+async function renderAdminBrands() {
+  const body = document.getElementById('adminPanelBody');
+  if (!body) return;
+
+  body.innerHTML = `
     <div class="admin-panel-title">🏢 Gestión de Marcas</div>
-    <div class="admin-panel-sub">Crear, editar y desactivar marcas</div>
-    <div class="admin-loading">
-      <div style="font-size:2rem;margin-bottom:10px">🚧</div>
-      <div style="font-size:.85rem;color:var(--t);font-weight:600;margin-bottom:6px">Panel de Marcas — Sprint 2 B.2</div>
-      <div style="font-size:.72rem;color:var(--m)">CRUD de marcas se implementa en el siguiente sub-bloque.</div>
+    <div class="admin-panel-sub">Crear, editar y desactivar marcas · las suscripciones se gestionan por separado</div>
+
+    <div class="admin-crud-toolbar">
+      <input type="text" class="admin-search-input" id="brandSearchInp"
+        placeholder="Buscar por nombre, slug o país..." oninput="filterBrands(this.value)">
+      <button class="admin-btn-secondary" onclick="reloadBrands()">↻ Recargar</button>
+      <button class="admin-btn-primary" onclick="openBrandCreateModal()">➕ Nueva marca</button>
     </div>
-  `);
+
+    <div id="brandsListContainer">
+      <div class="admin-loading"><div class="spinner"></div>Cargando marcas...</div>
+    </div>
+  `;
+
+  await loadBrandsList();
 }
+
+async function loadBrandsList() {
+  const container = document.getElementById('brandsListContainer');
+  if (!container) return;
+
+  // Cargar marcas + suscripciones + conteo de usuarios en paralelo
+  const [brandsRes, subsRes, usersRes] = await Promise.all([
+    APP.supabase.from('brands').select('*').order('created_at', {ascending:false}),
+    APP.supabase.from('subscriptions').select('brand_id, plan, status'),
+    APP.supabase.from('users').select('brand_id').eq('is_active', true)
+  ]);
+
+  if (brandsRes.error) {
+    container.innerHTML = `<div class="admin-empty"><div class="icon">⚠️</div><div class="title">Error al cargar marcas</div><div class="sub">${escapeHtmlAdmin(brandsRes.error.message)}</div></div>`;
+    return;
+  }
+
+  const brands = brandsRes.data || [];
+  const subs = subsRes.data || [];
+  const users = usersRes.data || [];
+
+  // Contar usuarios por brand
+  const usersByBrand = {};
+  for (const u of users) {
+    if (u.brand_id) usersByBrand[u.brand_id] = (usersByBrand[u.brand_id] || 0) + 1;
+  }
+
+  // Cache para búsqueda/filter
+  APP.brandsCache = brands.map(b => ({
+    ...b,
+    subscription: subs.find(s => s.brand_id === b.id),
+    userCount: usersByBrand[b.id] || 0
+  }));
+
+  renderBrandsList();
+}
+
+function filterBrands(query) {
+  APP.brandsFilter = (query || '').toLowerCase().trim();
+  renderBrandsList();
+}
+
+function renderBrandsList() {
+  const container = document.getElementById('brandsListContainer');
+  if (!container) return;
+
+  const q = APP.brandsFilter;
+  const filtered = q
+    ? APP.brandsCache.filter(b =>
+        (b.name || '').toLowerCase().includes(q) ||
+        (b.slug || '').toLowerCase().includes(q) ||
+        (b.country || '').toLowerCase().includes(q))
+    : APP.brandsCache;
+
+  if (filtered.length === 0) {
+    if (APP.brandsCache.length === 0) {
+      container.innerHTML = `<div class="admin-empty"><div class="icon">🏢</div><div class="title">No hay marcas registradas</div><div class="sub">Crea la primera con el botón "➕ Nueva marca"</div></div>`;
+    } else {
+      container.innerHTML = `<div class="admin-empty"><div class="icon">🔍</div><div class="title">Sin resultados</div><div class="sub">Ninguna marca coincide con "${escapeHtmlAdmin(q)}"</div></div>`;
+    }
+    return;
+  }
+
+  const gridTemplate = 'grid-template-columns:2fr 1fr 1fr 1fr 1fr 180px';
+
+  let html = `<div class="admin-table">
+    <div class="admin-table-head" style="${gridTemplate}">
+      <div>Marca</div>
+      <div>País</div>
+      <div>Plan</div>
+      <div>Estado</div>
+      <div>Usuarios</div>
+      <div style="text-align:right">Acciones</div>
+    </div>`;
+
+  for (const b of filtered) {
+    const sub = b.subscription;
+    const planLabel = sub?.plan ? sub.plan.toUpperCase() : 'SIN PLAN';
+    const statusBadge = !sub
+      ? '<span class="admin-row-badge inactive">sin sub</span>'
+      : sub.status === 'active' ? '<span class="admin-row-badge paid">activa</span>'
+      : sub.status === 'trial' ? '<span class="admin-row-badge trial">trial</span>'
+      : sub.status === 'past_due' ? '<span class="admin-row-badge" style="background:rgba(200,57,43,.1);color:var(--r)">past due</span>'
+      : `<span class="admin-row-badge inactive">${sub.status}</span>`;
+
+    const activeCls = b.is_active ? '' : 'inactive';
+
+    html += `<div class="admin-table-row ${activeCls}" style="${gridTemplate}">
+      <div>
+        <div class="admin-row-primary">${escapeHtmlAdmin(b.name)}</div>
+        <div class="admin-row-secondary">${escapeHtmlAdmin(b.slug)}${!b.is_active ? ' · <em>inactiva</em>' : ''}</div>
+      </div>
+      <div class="admin-row-secondary">${escapeHtmlAdmin(b.country || '—')}</div>
+      <div>${planLabel}</div>
+      <div>${statusBadge}</div>
+      <div class="admin-row-secondary">${b.userCount}</div>
+      <div class="admin-row-actions">
+        <button class="admin-row-btn" onclick="openBrandEditModal('${b.id}')">Editar</button>
+        <button class="admin-row-btn danger" onclick="toggleBrandActive('${b.id}', ${b.is_active})">${b.is_active ? 'Desactivar' : 'Activar'}</button>
+      </div>
+    </div>`;
+  }
+
+  html += '</div>';
+  html += `<div style="margin-top:14px;font-size:.68rem;color:var(--m);text-align:right">Mostrando ${filtered.length} de ${APP.brandsCache.length} marcas</div>`;
+
+  container.innerHTML = html;
+}
+
+async function reloadBrands() {
+  await loadBrandsList();
+  showToast('Marcas recargadas');
+}
+
+async function toggleBrandActive(brandId, currentActive) {
+  const b = APP.brandsCache.find(x => x.id === brandId);
+  const action = currentActive ? 'desactivar' : 'activar';
+  const confirmMsg = currentActive
+    ? `¿Desactivar la marca "${b?.name}"?\n\nEsto oculta la marca del listado y bloquea el acceso del cliente. Los datos históricos se mantienen y se puede reactivar cuando quieras.`
+    : `¿Reactivar la marca "${b?.name}"?`;
+  if (!confirm(confirmMsg)) return;
+
+  const { error } = await APP.supabase
+    .from('brands')
+    .update({ is_active: !currentActive, updated_at: new Date().toISOString() })
+    .eq('id', brandId);
+
+  if (error) {
+    showToast('Error: ' + error.message, 'err');
+    return;
+  }
+
+  showToast(`Marca ${action}da`);
+  await loadBrandsList();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  MODAL — Crear/Editar marca
+// ═══════════════════════════════════════════════════════════════════════
+
+APP.brandEditingId = null;
+
+function openBrandCreateModal() {
+  APP.brandEditingId = null;
+  document.getElementById('brandEditTitle').textContent = '➕ Nueva marca';
+  const emptyBrand = {
+    name:'', slug:'', country:'PE', timezone:'America/Lima', currency_display:'USD',
+    fee_rappi_pct:20, fee_peya_pct:19, fee_didi_pct:'', fee_glovo_pct:'', fee_ubereats_pct:'', fee_ifood_pct:'', fee_justo_pct:'',
+    food_cost_pct:30, logo_url:'', is_active:true
+  };
+  renderBrandEditForm(emptyBrand);
+  document.getElementById('brandEditModal').classList.add('on');
+  setTimeout(() => { const el = document.getElementById('brandFieldName'); if(el) el.focus(); }, 100);
+}
+
+function openBrandEditModal(brandId) {
+  const b = APP.brandsCache.find(x => x.id === brandId);
+  if (!b) { showToast('Marca no encontrada', 'err'); return; }
+
+  APP.brandEditingId = brandId;
+  document.getElementById('brandEditTitle').textContent = '✏️ Editar ' + b.name;
+  renderBrandEditForm(b);
+  document.getElementById('brandEditModal').classList.add('on');
+  setTimeout(() => { const el = document.getElementById('brandFieldName'); if(el) el.focus(); }, 100);
+}
+
+function closeBrandEditModal() {
+  document.getElementById('brandEditModal').classList.remove('on');
+  APP.brandEditingId = null;
+}
+
+function renderBrandEditForm(b) {
+  const body = document.getElementById('brandEditBody');
+  if (!body) return;
+
+  body.innerHTML = `
+    <div class="admin-form-section">
+      <div class="admin-form-section-title">Información básica</div>
+      <div class="admin-form-row">
+        <div class="admin-form-field">
+          <label>Nombre <span class="req">*</span></label>
+          <input type="text" id="brandFieldName" value="${escapeAttr(b.name)}" placeholder="Ej: Mr. Smash Burger">
+        </div>
+        <div class="admin-form-field">
+          <label>Slug <span class="req">*</span></label>
+          <input type="text" id="brandFieldSlug" value="${escapeAttr(b.slug)}" placeholder="mr-smash" onblur="normalizeSlug()">
+          <div class="helper">URL amigable, minúsculas y guiones</div>
+        </div>
+      </div>
+      <div class="admin-form-row cols-3">
+        <div class="admin-form-field">
+          <label>País</label>
+          <select id="brandFieldCountry">
+            <option value="PE" ${b.country==='PE'?'selected':''}>🇵🇪 Perú</option>
+            <option value="CO" ${b.country==='CO'?'selected':''}>🇨🇴 Colombia</option>
+            <option value="CL" ${b.country==='CL'?'selected':''}>🇨🇱 Chile</option>
+            <option value="EC" ${b.country==='EC'?'selected':''}>🇪🇨 Ecuador</option>
+            <option value="MX" ${b.country==='MX'?'selected':''}>🇲🇽 México</option>
+            <option value="AR" ${b.country==='AR'?'selected':''}>🇦🇷 Argentina</option>
+            <option value="UY" ${b.country==='UY'?'selected':''}>🇺🇾 Uruguay</option>
+            <option value="BR" ${b.country==='BR'?'selected':''}>🇧🇷 Brasil</option>
+          </select>
+        </div>
+        <div class="admin-form-field">
+          <label>Timezone</label>
+          <select id="brandFieldTz">
+            <option value="America/Lima" ${b.timezone==='America/Lima'?'selected':''}>America/Lima (PE)</option>
+            <option value="America/Bogota" ${b.timezone==='America/Bogota'?'selected':''}>America/Bogota (CO)</option>
+            <option value="America/Santiago" ${b.timezone==='America/Santiago'?'selected':''}>America/Santiago (CL)</option>
+            <option value="America/Guayaquil" ${b.timezone==='America/Guayaquil'?'selected':''}>America/Guayaquil (EC)</option>
+            <option value="America/Mexico_City" ${b.timezone==='America/Mexico_City'?'selected':''}>America/Mexico_City (MX)</option>
+            <option value="America/Argentina/Buenos_Aires" ${b.timezone==='America/Argentina/Buenos_Aires'?'selected':''}>Argentina/Buenos_Aires</option>
+            <option value="America/Sao_Paulo" ${b.timezone==='America/Sao_Paulo'?'selected':''}>America/Sao_Paulo (BR)</option>
+          </select>
+        </div>
+        <div class="admin-form-field">
+          <label>Moneda</label>
+          <select id="brandFieldCurrency">
+            <option value="USD" ${b.currency_display==='USD'?'selected':''}>USD</option>
+            <option value="PEN" ${b.currency_display==='PEN'?'selected':''}>PEN (S/)</option>
+            <option value="COP" ${b.currency_display==='COP'?'selected':''}>COP</option>
+            <option value="CLP" ${b.currency_display==='CLP'?'selected':''}>CLP</option>
+            <option value="MXN" ${b.currency_display==='MXN'?'selected':''}>MXN</option>
+            <option value="ARS" ${b.currency_display==='ARS'?'selected':''}>ARS</option>
+            <option value="BRL" ${b.currency_display==='BRL'?'selected':''}>BRL</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-form-section">
+      <div class="admin-form-section-title">Comisiones por plataforma (%)</div>
+      <div class="admin-form-row cols-4">
+        <div class="admin-form-field">
+          <label>Rappi</label>
+          <div class="input-w-suffix"><input type="number" id="brandFieldFeeRappi" step="0.1" value="${b.fee_rappi_pct ?? ''}" placeholder="20"><span class="suffix">%</span></div>
+        </div>
+        <div class="admin-form-field">
+          <label>PedidosYa</label>
+          <div class="input-w-suffix"><input type="number" id="brandFieldFeePeya" step="0.1" value="${b.fee_peya_pct ?? ''}" placeholder="19"><span class="suffix">%</span></div>
+        </div>
+        <div class="admin-form-field">
+          <label>Didi Food</label>
+          <div class="input-w-suffix"><input type="number" id="brandFieldFeeDidi" step="0.1" value="${b.fee_didi_pct ?? ''}"><span class="suffix">%</span></div>
+        </div>
+        <div class="admin-form-field">
+          <label>Glovo</label>
+          <div class="input-w-suffix"><input type="number" id="brandFieldFeeGlovo" step="0.1" value="${b.fee_glovo_pct ?? ''}"><span class="suffix">%</span></div>
+        </div>
+      </div>
+      <div class="admin-form-row cols-3">
+        <div class="admin-form-field">
+          <label>UberEats</label>
+          <div class="input-w-suffix"><input type="number" id="brandFieldFeeUber" step="0.1" value="${b.fee_ubereats_pct ?? ''}"><span class="suffix">%</span></div>
+        </div>
+        <div class="admin-form-field">
+          <label>iFood</label>
+          <div class="input-w-suffix"><input type="number" id="brandFieldFeeIfood" step="0.1" value="${b.fee_ifood_pct ?? ''}"><span class="suffix">%</span></div>
+        </div>
+        <div class="admin-form-field">
+          <label>Justo</label>
+          <div class="input-w-suffix"><input type="number" id="brandFieldFeeJusto" step="0.1" value="${b.fee_justo_pct ?? ''}"><span class="suffix">%</span></div>
+        </div>
+      </div>
+      <div class="helper" style="font-size:.65rem;color:var(--m);margin-top:6px">Deja en blanco las plataformas donde la marca no opera. Los % son visibles solo para el motor de análisis, no para el cliente en la UI.</div>
+    </div>
+
+    <div class="admin-form-section">
+      <div class="admin-form-section-title">Operación</div>
+      <div class="admin-form-row">
+        <div class="admin-form-field">
+          <label>Food cost (%)</label>
+          <div class="input-w-suffix"><input type="number" id="brandFieldFoodCost" step="0.1" value="${b.food_cost_pct ?? ''}" placeholder="30"><span class="suffix">%</span></div>
+          <div class="helper">CMV como % del precio de venta. Típico gastronomía: 25-35%</div>
+        </div>
+        <div class="admin-form-field">
+          <label>Logo URL (opcional)</label>
+          <input type="text" id="brandFieldLogo" value="${escapeAttr(b.logo_url || '')}" placeholder="https://...">
+          <div class="helper">URL pública a un PNG cuadrado</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function normalizeSlug() {
+  const nameEl = document.getElementById('brandFieldName');
+  const slugEl = document.getElementById('brandFieldSlug');
+  if (!slugEl) return;
+
+  let s = slugEl.value.trim();
+  if (!s && nameEl) {
+    // Autogenerar del nombre
+    s = nameEl.value.trim();
+  }
+  s = s.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // sin acentos
+    .replace(/[^a-z0-9\s-]/g, '')  // solo alfanumérico + espacios + guiones
+    .replace(/\s+/g, '-')  // espacios a guiones
+    .replace(/-+/g, '-')  // colapsar múltiples guiones
+    .replace(/^-|-$/g, '');  // sin guiones al inicio/fin
+  slugEl.value = s;
+}
+
+async function saveBrandEdit() {
+  const saveBtn = document.getElementById('brandEditSaveBtn');
+  const name = document.getElementById('brandFieldName')?.value?.trim();
+  const slug = document.getElementById('brandFieldSlug')?.value?.trim();
+
+  if (!name) { showToast('El nombre es obligatorio', 'err'); return; }
+  if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
+    showToast('El slug debe ser alfanumérico con guiones, minúsculas', 'err');
+    return;
+  }
+
+  const payload = {
+    name,
+    slug,
+    country: document.getElementById('brandFieldCountry')?.value || 'PE',
+    timezone: document.getElementById('brandFieldTz')?.value || 'America/Lima',
+    currency_display: document.getElementById('brandFieldCurrency')?.value || 'USD',
+    fee_rappi_pct: parseNumOrNull(document.getElementById('brandFieldFeeRappi')?.value),
+    fee_peya_pct: parseNumOrNull(document.getElementById('brandFieldFeePeya')?.value),
+    fee_didi_pct: parseNumOrNull(document.getElementById('brandFieldFeeDidi')?.value),
+    fee_glovo_pct: parseNumOrNull(document.getElementById('brandFieldFeeGlovo')?.value),
+    fee_ubereats_pct: parseNumOrNull(document.getElementById('brandFieldFeeUber')?.value),
+    fee_ifood_pct: parseNumOrNull(document.getElementById('brandFieldFeeIfood')?.value),
+    fee_justo_pct: parseNumOrNull(document.getElementById('brandFieldFeeJusto')?.value),
+    food_cost_pct: parseNumOrNull(document.getElementById('brandFieldFoodCost')?.value),
+    logo_url: document.getElementById('brandFieldLogo')?.value?.trim() || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
+
+  let result;
+  if (APP.brandEditingId) {
+    // UPDATE
+    const { data, error } = await APP.supabase
+      .from('brands')
+      .update(payload)
+      .eq('id', APP.brandEditingId)
+      .select().single();
+    result = { data, error };
+  } else {
+    // INSERT
+    payload.is_active = true;
+    const { data, error } = await APP.supabase
+      .from('brands')
+      .insert(payload)
+      .select().single();
+    result = { data, error };
+  }
+
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
+
+  if (result.error) {
+    showToast('Error al guardar: ' + result.error.message, 'err');
+    return;
+  }
+
+  closeBrandEditModal();
+  showToast(APP.brandEditingId ? 'Marca actualizada' : 'Marca creada');
+  await loadBrandsList();
+}
+
+function parseNumOrNull(v) {
+  if (v === undefined || v === null || v === '') return null;
+  const n = parseFloat(v);
+  return isNaN(n) ? null : n;
+}
+
+function escapeAttr(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 
 function renderAdminUsersStub() {
   setHtml('adminPanelBody', `
@@ -6451,6 +6920,28 @@ if(document.readyState === 'loading') {
 <div class="ld-wrap" id="ldWrap">
   <div class="ld-spinner"></div>
   <div class="ld-txt" id="ldTxt">Procesando...</div>
+</div>
+
+
+
+<!-- ═══ MODAL BRAND EDIT/CREATE (Sprint 2 B.2) ══════════════════════════ -->
+<div class="admin-modal-overlay" id="brandEditModal">
+  <div class="admin-modal-box">
+    <div class="admin-modal-head">
+      <div>
+        <div class="admin-modal-h-title" id="brandEditTitle">Nueva marca</div>
+        <div class="admin-modal-h-sub">Configura los datos operativos y comerciales</div>
+      </div>
+      <button class="admin-modal-close" onclick="closeBrandEditModal()">×</button>
+    </div>
+    <div class="admin-modal-body" id="brandEditBody">
+      <!-- Formulario se renderiza dinámicamente -->
+    </div>
+    <div class="admin-modal-footer">
+      <button class="btn-cancel" onclick="closeBrandEditModal()">Cancelar</button>
+      <button class="btn-save" id="brandEditSaveBtn" onclick="saveBrandEdit()">Guardar</button>
+    </div>
+  </div>
 </div>
 
 </body>
