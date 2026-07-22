@@ -3167,9 +3167,10 @@ function openPaymentModal(subId) {
       <div class="admin-form-field">
         <label>Estado</label>
         <select id="payStatus">
-          <option value="succeeded" selected>Recibido</option>
+          <option value="paid" selected>Pagado</option>
           <option value="pending">Pendiente</option>
           <option value="failed">Fallido</option>
+          <option value="refunded">Reembolsado</option>
         </select>
       </div>
     </div>
@@ -3204,7 +3205,7 @@ function openPaymentModal(subId) {
 
     <div style="background:rgba(45,106,79,.08);border-left:3px solid var(--gr);padding:12px 14px;border-radius:0 3px 3px 0;margin-top:14px">
       <div style="font-size:.72rem;color:var(--gr);font-weight:600;margin-bottom:4px">✓ Al registrar el pago</div>
-      <div style="font-size:.68rem;color:var(--t);line-height:1.55">Se creará un registro en payment_events. Si el pago tiene estado "Recibido", además:
+      <div style="font-size:.68rem;color:var(--t);line-height:1.55">Se creará un registro en payment_events. Si el pago tiene estado "Pagado", además:
       <br>• Se actualizará el <strong>current_period_end</strong> de la suscripción al valor "hasta" indicado
       <br>• El estado cambiará a <strong>active</strong> si estaba en trial/past_due/grace</div>
     </div>
@@ -3228,7 +3229,7 @@ async function savePayment() {
 
   const amount = parseNumOrNull(document.getElementById('payAmount')?.value);
   const method = document.getElementById('payMethod')?.value || 'manual';
-  const status = document.getElementById('payStatus')?.value || 'succeeded';
+  const status = document.getElementById('payStatus')?.value || 'paid';
   const periodStart = document.getElementById('payPeriodStart')?.value;
   const periodEnd = document.getElementById('payPeriodEnd')?.value;
   const externalRef = document.getElementById('payExternalRef')?.value?.trim() || null;
@@ -3267,7 +3268,7 @@ async function savePayment() {
     }
 
     // 2. Si el pago está confirmado, actualizar la suscripción
-    if (status === 'succeeded') {
+    if (status === 'paid') {
       const subUpdate = {
         current_period_end: periodEnd + 'T23:59:59Z',
         current_period_start: periodStart ? periodStart + 'T00:00:00Z' : new Date().toISOString(),
@@ -3296,7 +3297,7 @@ async function savePayment() {
     }
 
     closePaymentModal();
-    showToast(status === 'succeeded' ? '✓ Pago registrado y suscripción activada' : 'Pago registrado (pendiente)');
+    showToast(status === 'paid' ? '✓ Pago registrado y suscripción activada' : 'Pago registrado (' + status + ')');
     await loadSubsList();
   } catch (err) {
     showToast('Error inesperado: ' + err.message, 'err');
