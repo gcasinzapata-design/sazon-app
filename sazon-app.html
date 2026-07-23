@@ -7735,6 +7735,18 @@ function renderTabContent(tabId) {
     // Ya hay análisis - remover cualquier placeholder de "no analysis yet"
     targetPanel.querySelectorAll('.no-analysis-yet').forEach(el => el.remove());
     targetPanel.querySelectorAll('.engine-placeholder').forEach(el => el.remove());
+
+    // Sprint 3: llamar renderer específico de cada tab al activarlo
+    // (garantiza que el contenido se renderice aunque renderStage2 no lo haya hecho)
+    try {
+      if (tabId === 'costos' && typeof renderCostos === 'function') renderCostos();
+      else if (tabId === 'roas' && typeof renderROAS === 'function') renderROAS();
+      else if (tabId === 'tendencias' && typeof renderTendencias === 'function') renderTendencias();
+      else if (tabId === 'tiempos' && typeof renderTiempos === 'function') renderTiempos();
+      else if (tabId === 'reclamos' && typeof renderReclamos === 'function') renderReclamos();
+    } catch (err) {
+      console.error('[renderTabContent] Error renderizando tab', tabId, err);
+    }
   }
 }
 
