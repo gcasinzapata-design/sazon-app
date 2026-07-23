@@ -4041,7 +4041,7 @@ function renderTabBar(){
     ['menu', 'combos', 'promos'],
     ['adq', 'ticket', 'retencion'],
     ['tendencias', 'tiempos', 'reclamos'],
-    ['costos', 'roas', 'financiero', 'roadmap'],
+    ['costos', 'roas', 'roadmap'],
   ];
   let html = '';
   groups.forEach((group, gi) => {
@@ -9746,7 +9746,22 @@ window.showReport = function() {
   APP.currentPeriodFilter = 'all';
   APP.currentPlatformFilter = 'all';
   APP.customRange = null;
-  APP._unfilteredOrders = APP.allOrders;
+
+  // Guardar una copia con TODOS los metadata (para preservar en filtros)
+  const originalOrders = APP.allOrders;
+  APP._unfilteredOrders = originalOrders.slice();
+  APP._unfilteredOrders._peyaSummary = originalOrders._peyaSummary;
+  APP._unfilteredOrders._peyaMonthlyHistory = originalOrders._peyaMonthlyHistory;
+  APP._unfilteredOrders._parseLog = originalOrders._parseLog;
+
+  // También asegurar que APP.D tiene los metadata (para renderers que leen de ahí)
+  if (APP.D && originalOrders._peyaMonthlyHistory) {
+    APP.D._peyaMonthlyHistory = originalOrders._peyaMonthlyHistory;
+  }
+  if (APP.D && originalOrders._peyaSummary) {
+    APP.D.peyaSummary = originalOrders._peyaSummary;
+    APP.D._peyaSummary = originalOrders._peyaSummary;
+  }
 
   // Reset UI de botones
   document.querySelectorAll('#periodQuickBtns .filter-btn').forEach(b => {
