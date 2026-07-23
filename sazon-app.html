@@ -9792,7 +9792,7 @@ function applyPeriodFilter() {
 
     // Re-renderizar TODO
     if (typeof renderDashboard === 'function') renderDashboard(APP.D, APP.allOrders);
-    if (typeof window.renderStage2 === 'function') window.renderStage2();
+    if (typeof renderStage2 === 'function') renderStage2();
     if (typeof renderCharts === 'function') setTimeout(() => renderCharts(APP.D), 80);
 
     console.log('[Filter] END - todos los módulos re-renderizados');
