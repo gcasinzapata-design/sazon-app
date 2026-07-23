@@ -9083,19 +9083,7 @@ function drawCostosDonut(data) {
   });
 }
 
-// Enganchar renderCostos al flujo de análisis
-// Cuando renderStage2 corra, también renderiza costos
-const _originalRenderStage2 = window.renderStage2;
-window.renderStage2 = function() {
-  if (typeof _originalRenderStage2 === 'function') {
-    _originalRenderStage2.apply(this, arguments);
-  }
-  try {
-    renderCostos();
-  } catch (err) {
-    console.error('[Costos] render error:', err);
-  }
-};
+// Sprint 3: renderCostos ahora se llama desde renderAllSprint3Modules()
 
 
 
@@ -9510,18 +9498,7 @@ function renderROAS() {
   `;
 }
 
-// Enganchar al flujo de análisis
-const _renderStage2Prev = window.renderStage2;
-window.renderStage2 = function() {
-  if (typeof _renderStage2Prev === 'function') {
-    _renderStage2Prev.apply(this, arguments);
-  }
-  try {
-    renderROAS();
-  } catch (err) {
-    console.error('[ROAS] render error:', err);
-  }
-};
+// Sprint 3: renderROAS ahora se llama desde renderAllSprint3Modules()
 
 
 
@@ -9617,7 +9594,12 @@ function applyDateRange() {
 }
 
 function applyPeriodFilter() {
-  if (!APP._unfilteredOrders || APP._unfilteredOrders.length === 0) return;
+  console.log('[Filter] START — period:', APP.currentPeriodFilter, 'platform:', APP.currentPlatformFilter);
+
+  if (!APP._unfilteredOrders || APP._unfilteredOrders.length === 0) {
+    console.warn('[Filter] APP._unfilteredOrders vacío o null');
+    return;
+  }
 
   const period = APP.currentPeriodFilter;
   const plat = APP.currentPlatformFilter;
@@ -9652,6 +9634,9 @@ function applyPeriodFilter() {
   APP.allOrders = filtered;
   APP.allOrders._peyaSummary = APP._unfilteredOrders._peyaSummary;
   APP.allOrders._parseLog = APP._unfilteredOrders._parseLog;
+
+  console.log('[Filter] filtered.length =', filtered.length, 'de', APP._unfilteredOrders.length);
+  console.log('[Filter] _peyaMonthlyHistory presente?', !!APP._unfilteredOrders._peyaMonthlyHistory);
 
   // Actualizar info visible
   const info = document.getElementById('periodInfo');
@@ -9712,22 +9697,14 @@ function applyPeriodFilter() {
       setTimeout(() => renderCharts(APP.D), 80);
     }
 
-    // Módulos Sprint 3 - llamar TODOS explícitamente
-    if (typeof renderCostos === 'function') {
-      try { renderCostos(); } catch(e) { console.warn('[Filter] renderCostos error:', e); }
+    // Módulos Sprint 3 - función unificada
+    console.log('[Filter] Calling renderAllSprint3Modules');
+    if (typeof renderAllSprint3Modules === 'function') {
+      renderAllSprint3Modules();
+    } else {
+      console.warn('[Filter] renderAllSprint3Modules NOT DEFINED');
     }
-    if (typeof renderROAS === 'function') {
-      try { renderROAS(); } catch(e) { console.warn('[Filter] renderROAS error:', e); }
-    }
-    if (typeof renderTendencias === 'function') {
-      try { renderTendencias(); } catch(e) { console.warn('[Filter] renderTendencias error:', e); }
-    }
-    if (typeof renderTiempos === 'function') {
-      try { renderTiempos(); } catch(e) { console.warn('[Filter] renderTiempos error:', e); }
-    }
-    if (typeof renderReclamos === 'function') {
-      try { renderReclamos(); } catch(e) { console.warn('[Filter] renderReclamos error:', e); }
-    }
+    console.log('[Filter] END');
   } catch (err) {
     console.error('[Filter] Re-render error:', err);
   }
@@ -10427,16 +10404,39 @@ function renderReclamos() {
   `;
 }
 
-// Enganchar los 3 nuevos al flujo renderStage2
-const _prevRenderStage2Sprint3 = window.renderStage2;
-window.renderStage2 = function() {
-  if (typeof _prevRenderStage2Sprint3 === 'function') {
-    _prevRenderStage2Sprint3.apply(this, arguments);
-  }
-  try { renderTendencias(); } catch (e) { console.error('[Tendencias]', e); }
-  try { renderTiempos(); } catch (e) { console.error('[Tiempos]', e); }
-  try { renderReclamos(); } catch (e) { console.error('[Reclamos]', e); }
-};
+// Sprint 3: los 3 renderers se llaman desde renderAllSprint3Modules()
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 3 — Función unificada de re-render
+//  Se llama después de renderStage2 original y después de aplicar filtros
+// ═══════════════════════════════════════════════════════════════════════
+function renderAllSprint3Modules() {
+  const modules = [
+    { name: 'Costos', fn: typeof renderCostos === 'function' ? renderCostos : null },
+    { name: 'ROAS', fn: typeof renderROAS === 'function' ? renderROAS : null },
+    { name: 'Tendencias', fn: typeof renderTendencias === 'function' ? renderTendencias : null },
+    { name: 'Tiempos', fn: typeof renderTiempos === 'function' ? renderTiempos : null },
+    { name: 'Reclamos', fn: typeof renderReclamos === 'function' ? renderReclamos : null },
+  ];
+  modules.forEach(m => {
+    if (m.fn) {
+      try { m.fn(); }
+      catch (err) { console.error('[' + m.name + '] error:', err); }
+    }
+  });
+}
+
+// Interceptar renderStage2 UNA SOLA VEZ para agregar los módulos Sprint 3
+if (!window._sprint3Hook) {
+  window._sprint3Hook = true;
+  const _origStage2 = window.renderStage2;
+  window.renderStage2 = function() {
+    if (typeof _origStage2 === 'function') {
+      _origStage2.apply(this, arguments);
+    }
+    renderAllSprint3Modules();
+  };
+}
 
 
 
