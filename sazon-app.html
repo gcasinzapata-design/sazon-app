@@ -1072,6 +1072,64 @@ input[type=file]{display:none;}
   .roas-kpi-grid{grid-template-columns:repeat(2,1fr);}
 }
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SPRINT 3 — Módulos Tendencias / Tiempos / Reclamos
+   ═══════════════════════════════════════════════════════════════ */
+.mod-hero{background:linear-gradient(135deg, var(--c) 0%, var(--w) 100%);border-radius:6px;padding:24px;margin-bottom:20px;}
+.mod-hero.tendencias{border-top:4px solid #2d6a4f;}
+.mod-hero.tiempos{border-top:4px solid #0064c8;}
+.mod-hero.reclamos{border-top:4px solid #c8392b;}
+.mod-hero-title{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;margin-bottom:6px;color:var(--t);}
+.mod-hero-desc{font-size:.85rem;color:var(--m);line-height:1.55;}
+
+.mod-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.mod-kpi{background:#fff;border:1px solid var(--l);border-radius:4px;padding:16px;text-align:center;}
+.mod-kpi-label{font-size:.62rem;color:var(--m);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px;}
+.mod-kpi-val{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--t);line-height:1;}
+.mod-kpi-val.up{color:#2d6a4f;}
+.mod-kpi-val.dn{color:#c8392b;}
+.mod-kpi-val.warn{color:#8a6000;}
+.mod-kpi-hint{font-size:.65rem;color:var(--m);margin-top:6px;}
+
+.mod-chart-wrap{background:#fff;border:1px solid var(--l);border-radius:4px;padding:18px;margin-bottom:16px;}
+.mod-chart-title{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;margin-bottom:12px;color:var(--t);}
+.mod-chart-canvas{height:280px;position:relative;}
+
+.mod-table{background:#fff;border:1px solid var(--l);border-radius:4px;overflow:hidden;margin-top:16px;}
+.mod-table-head{background:var(--d);color:#fff;display:grid;padding:10px 14px;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;gap:12px;}
+.mod-table-row{display:grid;padding:12px 14px;gap:12px;border-top:1px solid var(--l);font-size:.78rem;align-items:center;}
+.mod-table-row:hover{background:var(--w);}
+.mod-table-row.total{background:var(--w);font-weight:700;color:var(--t);border-top:2px solid var(--d);}
+
+.mod-insights{background:rgba(45,106,79,.05);border-left:3px solid var(--gr);padding:16px 20px;border-radius:0 4px 4px 0;margin-top:20px;}
+.mod-insights.tiempos{background:rgba(0,100,200,.05);border-left-color:#0064c8;}
+.mod-insights.reclamos{background:rgba(200,57,43,.05);border-left-color:var(--r);}
+.mod-insights-title{font-family:'Playfair Display',serif;font-weight:700;font-size:1rem;margin-bottom:10px;color:var(--gr);}
+.mod-insights.tiempos .mod-insights-title{color:#0064c8;}
+.mod-insights.reclamos .mod-insights-title{color:var(--r);}
+.mod-insight-item{display:flex;gap:10px;margin-bottom:8px;font-size:.82rem;color:var(--t);line-height:1.5;}
+.mod-insight-item .ico{flex-shrink:0;font-size:1rem;}
+.mod-insight-item strong{color:var(--gr);}
+.mod-insights.tiempos .mod-insight-item strong{color:#0064c8;}
+.mod-insights.reclamos .mod-insight-item strong{color:var(--r);}
+
+.mod-noData{background:#fff;border:2px dashed var(--l);border-radius:4px;padding:36px;text-align:center;color:var(--m);}
+.mod-noData-ico{font-size:2.5rem;margin-bottom:10px;}
+.mod-noData-title{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--t);margin-bottom:6px;}
+.mod-noData-desc{font-size:.85rem;line-height:1.6;max-width:520px;margin:0 auto;}
+.mod-noData-desc code{background:var(--w);padding:2px 6px;border-radius:2px;font-family:'DM Mono',monospace;font-size:.78rem;color:var(--r);}
+
+.trend-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;}
+.trend-badge.up{background:rgba(45,106,79,.15);color:#2d6a4f;}
+.trend-badge.dn{background:rgba(200,57,43,.12);color:#c8392b;}
+.trend-badge.flat{background:rgba(0,0,0,.06);color:var(--m);}
+
+@media (max-width:900px){
+  .mod-kpi-grid{grid-template-columns:repeat(2,1fr);}
+}
+
 </style>
 </head>
 <body>
@@ -1635,6 +1693,42 @@ input[type=file]{display:none;}
         </div>
       </div>
 
+      <!-- ── TENDENCIAS (Sprint 3 - Análisis 1) ── -->
+      <div class="panel" id="p-tendencias">
+        <div class="section-head">
+          <div class="section-ico">📈</div>
+          <div>
+            <div class="section-title">Tendencias mes a mes</div>
+            <div class="section-sub">Evolución histórica de ventas, pedidos y ticket promedio</div>
+          </div>
+        </div>
+        <div id="tendenciasBody"></div>
+      </div>
+
+      <!-- ── TIEMPOS OPERATIVOS (Sprint 3 - Análisis 2) ── -->
+      <div class="panel" id="p-tiempos">
+        <div class="section-head">
+          <div class="section-ico">⏱️</div>
+          <div>
+            <div class="section-title">Tiempos operativos</div>
+            <div class="section-sub">Tiempo de preparación · demoras · cancelaciones por lentitud</div>
+          </div>
+        </div>
+        <div id="tiemposBody"></div>
+      </div>
+
+      <!-- ── RECLAMOS (Sprint 3 - Análisis 3) ── -->
+      <div class="panel" id="p-reclamos">
+        <div class="section-head">
+          <div class="section-ico">⚠️</div>
+          <div>
+            <div class="section-title">Reclamos y cancelaciones</div>
+            <div class="section-sub">% de órdenes con problemas · causas más comunes · qué acciones tomar</div>
+          </div>
+        </div>
+        <div id="reclamosBody"></div>
+      </div>
+
     </div>
 
     <!-- ═══ MIS ANÁLISIS PREVIOS (Sprint 2 A.2.3) - Movido debajo (Sprint 3) ══════════════════════ -->
@@ -1727,6 +1821,9 @@ const TAB_META = {
   retencion:  { icon: '🔁', label: 'Retención' },
   costos:     { icon: '💸', label: 'Costos reales' },
   roas:       { icon: '📈', label: 'Publicidad' },
+  tendencias: { icon: '📈', label: 'Tendencias' },
+  tiempos:    { icon: '⏱️', label: 'Tiempos' },
+  reclamos:   { icon: '⚠️', label: 'Reclamos' },
   financiero: { icon: '📊', label: 'Financiero' },
   roadmap:    { icon: '📋', label: 'Roadmap' },
 };
@@ -3943,6 +4040,7 @@ function renderTabBar(){
     ['patrones', 'precios'],
     ['menu', 'combos', 'promos'],
     ['adq', 'ticket', 'retencion'],
+    ['tendencias', 'tiempos', 'reclamos'],
     ['costos', 'roas', 'financiero', 'roadmap'],
   ];
   let html = '';
@@ -4480,6 +4578,7 @@ function parseRappiFinancial(rows, platOverride){
     comPlat:    fi(/^uso y alquiler de plataforma rappi$/),
     descAli:    fi(/descuento de producto asumido por el ali/),
     prime:      fi(/^prime$/),
+    prepTime:   fi(/tiempo de preparaci.n/),
     // Sprint 3 - Cargos ocultos (extendido)
     descDAR:    fi(/descuentos por inversi.n de rappi dar/),
     domGratis:  fi(/descuento por domicilio gratis/),
@@ -4540,6 +4639,7 @@ function parseRappiFinancial(rows, platOverride){
       ingreso:  base - comPlat,
       items:'',
       isPrime:  /true/i.test(String(g(row,'prime')||'')),
+      prepTime: toFloat(g(row,'prepTime')),  // Sprint 3: tiempo preparación
       costs,  // Sprint 3: cargos desglosados
       _fmt:'rappi_financial',
     };
@@ -4693,6 +4793,89 @@ function parseSheet(rows, pl, logEntry){
   return { summary: null, orders: parsed, fmt };
 }
 
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 3 — Parser de ordersPerMonth (histórico PeYa 6 meses)
+// ═══════════════════════════════════════════════════════════════════════
+
+function parsePeyaMonthlyHistory(rows) {
+  if (!rows || rows.length < 2) return null;
+
+  const headers = rows[0];
+  if (!headers) return null;
+
+  // Verificar que tiene los headers esperados
+  const hasMonth = headers.some(h => /^mes$/i.test(String(h || '')));
+  const hasOrders = headers.some(h => /^pedidos$/i.test(String(h || '')));
+  const hasSales = headers.some(h => /^ventas$/i.test(String(h || '')));
+  if (!hasMonth || !hasOrders || !hasSales) return null;
+
+  // Encontrar índices
+  const fi = (kw) => headers.findIndex(h => kw.test(String(h || '')));
+  const ci = {
+    month:       fi(/^mes$/i),
+    orders:      fi(/^pedidos$/i),
+    rejected:    fi(/^rechazados$/i),
+    sales:       fi(/^ventas$/i),
+    ordersDelivery: fi(/pedidos con delivery/i),
+    ordersPickup:   fi(/pedidos con pickup/i),
+    salesDelivery:  fi(/ventas con delivery/i),
+    salesPickup:    fi(/ventas con pickup/i),
+    ordersOnline:   fi(/pedidos con pago online/i),
+  };
+
+  // Parser numérico que maneja formato PeYa: "4.031,50" → 4031.50
+  const parsePeyaNum = (v) => {
+    if (!v && v !== 0) return 0;
+    let s = String(v).trim();
+    // Formato PeYa: punto miles, coma decimal
+    if (/^\d{1,3}(\.\d{3})*(,\d+)?$/.test(s)) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      s = s.replace(/,/g, '.');
+    }
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
+
+  const months = [];
+  for (const row of rows.slice(1)) {
+    const monthStr = String(row[ci.month] || '').trim();
+    if (!monthStr || !/^\d{4}-\d{2}$/.test(monthStr)) continue;
+
+    const orders = parsePeyaNum(row[ci.orders]);
+    const rejected = parsePeyaNum(row[ci.rejected]);
+    const sales = parsePeyaNum(row[ci.sales]);
+
+    if (orders === 0 && sales === 0) continue;
+
+    months.push({
+      month: monthStr,  // "2026-01"
+      orders,
+      rejected,
+      sales,
+      avgTicket: orders > 0 ? sales / orders : 0,
+      rejectionRate: (orders + rejected) > 0 ? (rejected / (orders + rejected)) * 100 : 0,
+      ordersDelivery: parsePeyaNum(row[ci.ordersDelivery]),
+      ordersPickup: parsePeyaNum(row[ci.ordersPickup]),
+      salesDelivery: parsePeyaNum(row[ci.salesDelivery]),
+      salesPickup: parsePeyaNum(row[ci.salesPickup]),
+      ordersOnline: parsePeyaNum(row[ci.ordersOnline]),
+    });
+  }
+
+  if (months.length === 0) return null;
+
+  months.sort((a, b) => a.month.localeCompare(b.month));
+  return {
+    _type: 'peya_monthly_history',
+    months,
+    monthCount: months.length,
+  };
+}
+
+
 async function parseAllFiles(files){
   const orders = [];
   orders._peyaSummary = null;
@@ -4756,6 +4939,17 @@ async function parseAllFiles(files){
         const rows = XLSX.utils.sheet_to_json(ws, { raw:false, defval:'', header:1 });
         if(!rows || rows.length < 2) continue;
         logEntry.rows += rows.length;
+
+        // Sprint 3: intentar como historial mensual PeYa primero
+        const monthlyHist = parsePeyaMonthlyHistory(rows);
+        if (monthlyHist) {
+          orders._peyaMonthlyHistory = monthlyHist;
+          logEntry.fmt = 'peya_monthly_history';
+          logEntry.orders = monthlyHist.months.length;
+          logEntry.sheets.push({ name: sn, fmt: 'peya_monthly_history', orders: monthlyHist.months.length });
+          fileOrders += monthlyHist.months.length;
+          continue;
+        }
 
         const res = parseSheet(rows, pl, logEntry);
         logEntry.sheets.push({ name: sn, fmt: res.fmt, orders: res.orders.length });
@@ -9467,21 +9661,44 @@ function applyPeriodFilter() {
 
   // Re-computar y re-renderizar TODOS los módulos
   try {
-    APP.D = analyze(APP.allOrders);
+    // IMPORTANTE: resetear el filtro interno del motor (chips de plataforma)
+    // para que no interfiera con nuestro filtro global
+    APP.platFilter = 'all';
 
-    // Dashboard principal
+    // Preservar peyaSummary
+    const savedPeyaSummary = APP._unfilteredOrders._peyaSummary;
+    if (savedPeyaSummary) {
+      APP.allOrders._peyaSummary = savedPeyaSummary;
+    }
+
+    APP.D = analyze(APP.allOrders);
+    // El motor pierde peyaSummary en analyze(), reasignar
+    if (savedPeyaSummary) {
+      APP.D.peyaSummary = savedPeyaSummary;
+      APP.D._peyaSummary = savedPeyaSummary;
+    }
+
+    // Dashboard principal (recrea chips, KPIs, alerts, tabla plataformas)
     if (typeof renderDashboard === 'function') {
       renderDashboard(APP.D, APP.allOrders);
     }
 
-    // Todos los otros módulos (Patrones, Precios, Menú, Combos, Promos, Adq, Ticket, Retención, Financiero, Roadmap)
+    // Todos los otros módulos
     if (typeof window.renderStage2 === 'function') {
       window.renderStage2();
     }
 
-    // Gráficos del Dashboard
+    // Gráficos del Dashboard (línea GMV diario, DOW, ticket semanal, distribución, heatmap)
     if (typeof renderCharts === 'function') {
       setTimeout(() => renderCharts(APP.D), 80);
+    }
+
+    // Módulos Sprint 3
+    if (typeof renderCostos === 'function') {
+      try { renderCostos(); } catch(e) { console.warn('[Filter] renderCostos error:', e); }
+    }
+    if (typeof renderROAS === 'function') {
+      try { renderROAS(); } catch(e) { console.warn('[Filter] renderROAS error:', e); }
     }
   } catch (err) {
     console.error('[Filter] Re-render error:', err);
@@ -9515,6 +9732,660 @@ window.showReport = function() {
   if (info && APP.allOrders) {
     info.innerHTML = `<strong>${APP.allOrders.length}</strong> órdenes en total`;
   }
+};
+
+
+
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 3 - ANÁLISIS 1: TENDENCIAS (mes a mes)
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderTendencias() {
+  const body = document.getElementById('tendenciasBody');
+  if (!body) return;
+
+  // Datos del histórico mensual PeYa
+  const history = APP.allOrders?._peyaMonthlyHistory
+                || APP._unfilteredOrders?._peyaMonthlyHistory
+                || null;
+
+  if (!history || !history.months || history.months.length < 2) {
+    body.innerHTML = `
+      <div class="mod-noData">
+        <div class="mod-noData-ico">📈</div>
+        <div class="mod-noData-title">Sin historial mensual</div>
+        <div class="mod-noData-desc">
+          Para ver tendencias mes a mes necesitamos el reporte histórico agregado de PedidosYa:<br><br>
+          <strong>PedidosYa Hub</strong> → Finanzas → Reportes → <code>Pedidos por mes</code> → Descargar
+          <br><br>
+          Se necesitan al menos 2 meses para poder mostrar tendencias.
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const months = history.months;
+  const money = n => 'S/' + Math.round(n).toLocaleString('es-PE');
+  const moneyDec = n => 'S/' + n.toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const pct = n => n.toFixed(2) + '%';
+  const num = n => Math.round(n).toLocaleString('es-PE');
+
+  // KPIs comparativos: último mes vs anterior
+  const lastMonth = months[months.length - 1];
+  const prevMonth = months[months.length - 2];
+
+  const salesChange = prevMonth.sales > 0 ? ((lastMonth.sales - prevMonth.sales) / prevMonth.sales) * 100 : 0;
+  const ordersChange = prevMonth.orders > 0 ? ((lastMonth.orders - prevMonth.orders) / prevMonth.orders) * 100 : 0;
+  const ticketChange = prevMonth.avgTicket > 0 ? ((lastMonth.avgTicket - prevMonth.avgTicket) / prevMonth.avgTicket) * 100 : 0;
+  const rejectionChange = lastMonth.rejectionRate - prevMonth.rejectionRate;
+
+  const clsCh = (v, inverse = false) => {
+    const positive = inverse ? v < 0 : v > 0;
+    if (Math.abs(v) < 1) return 'flat';
+    return positive ? 'up' : 'dn';
+  };
+  const signCh = v => (v >= 0 ? '↑ +' : '↓ ') + Math.abs(v).toFixed(1);
+
+  // Totales del período
+  const totalSales = months.reduce((s,m) => s + m.sales, 0);
+  const totalOrders = months.reduce((s,m) => s + m.orders, 0);
+  const avgMonthlySales = totalSales / months.length;
+
+  // Fecha legible
+  const fmtMonth = (m) => {
+    const [year, mo] = m.split('-');
+    const monthNames = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    return monthNames[parseInt(mo) - 1] + ' ' + year;
+  };
+
+  // Rows de tabla
+  const rowsHtml = months.slice().reverse().map((m, i) => {
+    const isLast = i === 0;
+    let deltaVal = '';
+    if (i < months.length - 1) {
+      const prev = months.slice().reverse()[i + 1];
+      if (prev.sales > 0) {
+        const ch = ((m.sales - prev.sales) / prev.sales) * 100;
+        const badge = clsCh(ch);
+        deltaVal = `<span class="trend-badge ${badge}">${signCh(ch)}%</span>`;
+      }
+    }
+    return `<div class="mod-table-row" style="grid-template-columns:1.2fr 1fr 1fr 1fr 1fr 1fr;">
+      <div><strong>${fmtMonth(m.month)}</strong>${isLast ? ' <span style="font-size:.62rem;color:var(--m);font-weight:400">(último)</span>' : ''}</div>
+      <div>${moneyDec(m.sales)} ${deltaVal}</div>
+      <div>${num(m.orders)}</div>
+      <div>${moneyDec(m.avgTicket)}</div>
+      <div>${num(m.rejected)}</div>
+      <div>${pct(m.rejectionRate)}</div>
+    </div>`;
+  }).join('');
+
+  // Insights
+  const insights = [];
+  if (Math.abs(salesChange) >= 15) {
+    insights.push({
+      ico: salesChange > 0 ? '🚀' : '⚠️',
+      text: `Las ventas del último mes ${salesChange > 0 ? 'crecieron' : 'cayeron'} <strong>${Math.abs(salesChange).toFixed(1)}%</strong> vs el mes anterior. ${salesChange > 0 ? 'Momento óptimo para escalar' : 'Revisá qué cambió operativamente'}.`
+    });
+  }
+  if (lastMonth.rejectionRate > 5) {
+    insights.push({
+      ico: '❌',
+      text: `Tasa de rechazo del <strong>${pct(lastMonth.rejectionRate)}</strong> el último mes — está sobre el benchmark saludable (<5%). Cada rechazo penaliza el ranking.`
+    });
+  }
+  // Encontrar el mejor y peor mes
+  const sortedByS = [...months].sort((a,b) => b.sales - a.sales);
+  const bestMonth = sortedByS[0];
+  const worstMonth = sortedByS[sortedByS.length - 1];
+  if (bestMonth.month !== worstMonth.month) {
+    const range = ((bestMonth.sales - worstMonth.sales) / worstMonth.sales) * 100;
+    insights.push({
+      ico: '📊',
+      text: `Rango de ventas: mejor mes <strong>${fmtMonth(bestMonth.month)} (${money(bestMonth.sales)})</strong>, peor mes <strong>${fmtMonth(worstMonth.month)} (${money(worstMonth.sales)})</strong>. La brecha es del ${range.toFixed(0)}%.`
+    });
+  }
+  if (ticketChange > 3) {
+    insights.push({
+      ico: '💰',
+      text: `El ticket promedio subió <strong>${moneyDec(lastMonth.avgTicket - prevMonth.avgTicket)}</strong> (+${ticketChange.toFixed(1)}%) — señal de que los clientes están comprando más por orden.`
+    });
+  } else if (ticketChange < -3) {
+    insights.push({
+      ico: '📉',
+      text: `El ticket promedio bajó <strong>${moneyDec(prevMonth.avgTicket - lastMonth.avgTicket)}</strong> (${ticketChange.toFixed(1)}%). Podría indicar más órdenes chicas o descuentos agresivos.`
+    });
+  }
+
+  const insightsHtml = insights.length > 0
+    ? `<div class="mod-insights">
+        <div class="mod-insights-title">💡 Qué hacer con esto</div>
+        ${insights.map(i => `<div class="mod-insight-item"><span class="ico">${i.ico}</span><div>${i.text}</div></div>`).join('')}
+      </div>`
+    : '';
+
+  body.innerHTML = `
+    <div class="mod-hero tendencias">
+      <div class="mod-hero-title">📈 Evolución de los últimos ${months.length} meses</div>
+      <div class="mod-hero-desc">Datos históricos desde ${fmtMonth(months[0].month)} hasta ${fmtMonth(months[months.length-1].month)} · datos agregados de PedidosYa</div>
+    </div>
+
+    <div class="mod-kpi-grid">
+      <div class="mod-kpi">
+        <div class="mod-kpi-label">Ventas último mes</div>
+        <div class="mod-kpi-val ${clsCh(salesChange)}">${money(lastMonth.sales)}</div>
+        <div class="mod-kpi-hint">${signCh(salesChange)}% vs mes anterior</div>
+      </div>
+      <div class="mod-kpi">
+        <div class="mod-kpi-label">Órdenes último mes</div>
+        <div class="mod-kpi-val ${clsCh(ordersChange)}">${num(lastMonth.orders)}</div>
+        <div class="mod-kpi-hint">${signCh(ordersChange)}% vs mes anterior</div>
+      </div>
+      <div class="mod-kpi">
+        <div class="mod-kpi-label">Ticket promedio</div>
+        <div class="mod-kpi-val ${clsCh(ticketChange)}">${moneyDec(lastMonth.avgTicket)}</div>
+        <div class="mod-kpi-hint">${signCh(ticketChange)}% vs mes anterior</div>
+      </div>
+      <div class="mod-kpi">
+        <div class="mod-kpi-label">Ventas promedio mensual</div>
+        <div class="mod-kpi-val">${money(avgMonthlySales)}</div>
+        <div class="mod-kpi-hint">${months.length} meses de historia</div>
+      </div>
+    </div>
+
+    <div class="mod-chart-wrap">
+      <div class="mod-chart-title">📈 Ventas y órdenes mensuales</div>
+      <div class="mod-chart-canvas"><canvas id="tendChart"></canvas></div>
+    </div>
+
+    <div class="mod-table">
+      <div class="mod-table-head" style="grid-template-columns:1.2fr 1fr 1fr 1fr 1fr 1fr;">
+        <div>Mes</div>
+        <div>Ventas</div>
+        <div>Órdenes</div>
+        <div>Ticket promedio</div>
+        <div>Rechazadas</div>
+        <div>% rechazo</div>
+      </div>
+      ${rowsHtml}
+    </div>
+
+    ${insightsHtml}
+  `;
+
+  // Dibujar chart
+  setTimeout(() => drawTendChart(months, fmtMonth), 60);
+}
+
+function drawTendChart(months, fmtMonth) {
+  const canvas = document.getElementById('tendChart');
+  if (!canvas || !window.Chart) return;
+
+  if (APP.charts && APP.charts.tendChart) {
+    try { APP.charts.tendChart.destroy(); } catch(e){}
+  }
+
+  APP.charts = APP.charts || {};
+  APP.charts.tendChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: months.map(m => fmtMonth(m.month)),
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Ventas (S/)',
+          data: months.map(m => m.sales),
+          backgroundColor: 'rgba(45,106,79,.6)',
+          borderColor: '#2d6a4f',
+          borderWidth: 1,
+          yAxisID: 'y',
+          order: 2,
+        },
+        {
+          type: 'line',
+          label: 'Órdenes',
+          data: months.map(m => m.orders),
+          borderColor: '#c8392b',
+          backgroundColor: 'rgba(200,57,43,.15)',
+          borderWidth: 2,
+          tension: 0.3,
+          fill: false,
+          yAxisID: 'y1',
+          order: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 11 } } },
+      },
+      scales: {
+        y: {
+          position: 'left',
+          ticks: { callback: v => 'S/' + v.toLocaleString('es-PE'), font: { size: 10 } },
+          grid: { color: 'rgba(0,0,0,.05)' },
+        },
+        y1: {
+          position: 'right',
+          ticks: { font: { size: 10 } },
+          grid: { display: false },
+        },
+      },
+    },
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 3 - ANÁLISIS 2: TIEMPOS OPERATIVOS
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderTiempos() {
+  const body = document.getElementById('tiemposBody');
+  if (!body) return;
+
+  const orders = APP.allOrders || [];
+
+  // El motor ya captura o.prepTime en Rappi (columna "Tiempo de preparación")
+  const withPrep = orders.filter(o => !o.cancelled && o.total > 0 && o.prepTime && o.prepTime > 0);
+
+  if (withPrep.length < 5) {
+    body.innerHTML = `
+      <div class="mod-noData">
+        <div class="mod-noData-ico">⏱️</div>
+        <div class="mod-noData-title">Sin datos suficientes de tiempos</div>
+        <div class="mod-noData-desc">
+          Para analizar tiempos operativos necesitamos el reporte con timestamps:<br><br>
+          <strong>Rappi</strong>: Reporte Financiero completo (columna "Tiempo de preparación")<br>
+          <strong>PedidosYa</strong>: Order Details XLSX (timestamps de cada estado)<br><br>
+          Se necesitan al menos 5 órdenes con datos de tiempo.
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const num = n => Math.round(n).toLocaleString('es-PE');
+
+  // Estadísticas
+  const prepTimes = withPrep.map(o => o.prepTime).sort((a,b) => a - b);
+  const total = prepTimes.length;
+  const avg = prepTimes.reduce((s,v) => s+v, 0) / total;
+  const median = prepTimes[Math.floor(total/2)];
+  const p90 = prepTimes[Math.floor(total*0.9)];
+  const p10 = prepTimes[Math.floor(total*0.1)];
+  const min = prepTimes[0];
+  const max = prepTimes[total-1];
+
+  // Distribución por bandas
+  const bands = [
+    { min: 0, max: 10, lbl: '<10 min' },
+    { min: 10, max: 15, lbl: '10-15 min' },
+    { min: 15, max: 20, lbl: '15-20 min' },
+    { min: 20, max: 30, lbl: '20-30 min' },
+    { min: 30, max: 45, lbl: '30-45 min' },
+    { min: 45, max: 9999, lbl: '>45 min' },
+  ];
+  const dist = bands.map(b => ({
+    ...b,
+    count: withPrep.filter(o => o.prepTime >= b.min && o.prepTime < b.max).length,
+  }));
+  dist.forEach(d => d.pct = (d.count / total) * 100);
+
+  // Por sucursal
+  const bySucursal = {};
+  withPrep.forEach(o => {
+    const s = o.sucursal || 'Principal';
+    if (!bySucursal[s]) bySucursal[s] = { orders: 0, totalTime: 0 };
+    bySucursal[s].orders++;
+    bySucursal[s].totalTime += o.prepTime;
+  });
+  const sucursales = Object.entries(bySucursal)
+    .map(([name, v]) => ({ name, orders: v.orders, avgTime: v.totalTime / v.orders }))
+    .sort((a,b) => b.avgTime - a.avgTime);
+
+  // Clases
+  const clsAvg = avg < 15 ? 'up' : avg < 25 ? 'warn' : 'dn';
+
+  // Insights
+  const insights = [];
+  if (avg > 25) {
+    insights.push({
+      ico: '🐢',
+      text: `Tiempo de preparación promedio: <strong>${num(avg)} min</strong> — está sobre el benchmark saludable (<20 min). Cada minuto de más impacta el ranking y aumenta cancelaciones.`
+    });
+  } else if (avg < 15) {
+    insights.push({
+      ico: '⚡',
+      text: `Excelente tiempo promedio de <strong>${num(avg)} min</strong> — muy por debajo del benchmark. Esto favorece tu ranking en las plataformas.`
+    });
+  }
+
+  const slowOrders = withPrep.filter(o => o.prepTime > 30).length;
+  const slowPct = (slowOrders / total) * 100;
+  if (slowPct > 10) {
+    insights.push({
+      ico: '⚠️',
+      text: `<strong>${slowPct.toFixed(0)}%</strong> de las órdenes tomaron más de 30 minutos. Identificá si son horarios específicos o platos particulares.`
+    });
+  }
+
+  if (p90 > 45) {
+    insights.push({
+      ico: '📊',
+      text: `El 10% más lento tomó más de <strong>${num(p90)} min</strong>. Estos son los pedidos que generan reclamos y malas reviews.`
+    });
+  }
+
+  if (sucursales.length > 1) {
+    const best = sucursales[sucursales.length - 1];
+    const worst = sucursales[0];
+    if (worst.avgTime - best.avgTime > 5) {
+      insights.push({
+        ico: '🏢',
+        text: `Diferencia significativa entre sucursales: <strong>${worst.name}</strong> promedia ${num(worst.avgTime)} min, <strong>${best.name}</strong> promedia ${num(best.avgTime)} min. Estudiá qué hace bien la más rápida.`
+      });
+    }
+  }
+
+  const insightsHtml = insights.length > 0
+    ? `<div class="mod-insights tiempos">
+        <div class="mod-insights-title">💡 Qué hacer con esto</div>
+        ${insights.map(i => `<div class="mod-insight-item"><span class="ico">${i.ico}</span><div>${i.text}</div></div>`).join('')}
+      </div>`
+    : '';
+
+  // Tabla distribución
+  const maxCount = Math.max(...dist.map(d => d.count));
+  const distHtml = dist.map(b => `
+    <div style="display:grid;grid-template-columns:100px 1fr 60px 50px;gap:12px;align-items:center;padding:8px 0;font-size:.78rem;">
+      <div style="font-weight:600">${b.lbl}</div>
+      <div style="background:rgba(0,100,200,.08);border-radius:100px;height:16px;overflow:hidden;">
+        <div style="height:100%;background:#0064c8;width:${maxCount > 0 ? (b.count/maxCount*100) : 0}%;transition:width .3s;"></div>
+      </div>
+      <div style="text-align:right;font-family:'DM Mono',monospace;">${b.count}</div>
+      <div style="text-align:right;color:var(--m);font-size:.7rem;">${b.pct.toFixed(1)}%</div>
+    </div>
+  `).join('');
+
+  const sucursalRows = sucursales.map(s => {
+    const clsS = s.avgTime < 15 ? 'up' : s.avgTime < 25 ? 'warn' : 'dn';
+    return `<div class="mod-table-row" style="grid-template-columns:2fr 1fr 1fr;">
+      <div><strong>${s.name}</strong></div>
+      <div>${s.orders} órdenes</div>
+      <div><span class="mod-kpi-val ${clsS}" style="font-size:.95rem">${num(s.avgTime)} min</span></div>
+    </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="mod-hero tiempos">
+      <div class="mod-hero-title">⏱️ Análisis de tiempos operativos</div>
+      <div class="mod-hero-desc">Basado en ${total} órdenes con datos de tiempo de preparación</div>
+    </div>
+
+    <div class="mod-kpi-grid">
+      <div class="mod-kpi">
+        <div class="mod-kpi-label">Tiempo promedio</div>
+        <div class="mod-kpi-val ${clsAvg}">${num(avg)} min</div>
+        <div class="mod-kpi-hint">Benchmark saludable: <20 min</div>
+      </div>
+      <div class="mod-kpi">
+        <div class="mod-kpi-label">Mediana</div>
+        <div class="mod-kpi-val">${num(median)} min</div>
+        <div class="mod-kpi-hint">50% de órdenes bajo este tiempo</div>
+      </div>
+      <div class="mod-kpi">
+        <div class="mod-kpi-label">P90 (el 10% más lento)</div>
+        <div class="mod-kpi-val ${p90 > 45 ? 'dn' : p90 > 30 ? 'warn' : ''}">${num(p90)} min</div>
+        <div class="mod-kpi-hint">Orden que tarda más</div>
+      </div>
+      <div class="mod-kpi">
+        <div class="mod-kpi-label">Rango</div>
+        <div class="mod-kpi-val">${num(min)}-${num(max)}</div>
+        <div class="mod-kpi-hint">Min - Max detectados</div>
+      </div>
+    </div>
+
+    <div class="mod-chart-wrap">
+      <div class="mod-chart-title">📊 Distribución de tiempos de preparación</div>
+      ${distHtml}
+    </div>
+
+    ${sucursales.length > 1 ? `
+      <div class="mod-chart-wrap">
+        <div class="mod-chart-title">🏢 Por sucursal (más lenta arriba)</div>
+        <div class="mod-table">
+          <div class="mod-table-head" style="grid-template-columns:2fr 1fr 1fr;">
+            <div>Sucursal</div>
+            <div>Volumen</div>
+            <div>Tiempo promedio</div>
+          </div>
+          ${sucursalRows}
+        </div>
+      </div>
+    ` : ''}
+
+    ${insightsHtml}
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 3 - ANÁLISIS 3: RECLAMOS Y CANCELACIONES
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderReclamos() {
+  const body = document.getElementById('reclamosBody');
+  if (!body) return;
+
+  const orders = APP.allOrders || [];
+  const totalOrders = orders.length;
+
+  if (totalOrders === 0) {
+    body.innerHTML = `<div class="mod-noData"><div class="mod-noData-ico">⚠️</div><div class="mod-noData-title">Sin datos</div><div class="mod-noData-desc">Sube tus reportes para analizar reclamos y cancelaciones.</div></div>`;
+    return;
+  }
+
+  const num = n => Math.round(n).toLocaleString('es-PE');
+  const pct = n => n.toFixed(2) + '%';
+  const money = n => 'S/' + Math.round(n).toLocaleString('es-PE');
+
+  const cancelled = orders.filter(o => o.cancelled);
+  const done = orders.filter(o => !o.cancelled && o.total > 0);
+  const cancelledPct = totalOrders > 0 ? (cancelled.length / totalOrders) * 100 : 0;
+
+  // Categorizar cancelaciones por estado (o razón)
+  const cancByReason = {};
+  cancelled.forEach(o => {
+    const reason = String(o.estado || 'cancelada').toLowerCase();
+    let cat;
+    if (/timeout|tiempo|expir/.test(reason)) cat = 'Timeout / no aceptada a tiempo';
+    else if (/rider|driver|repartidor/.test(reason)) cat = 'Sin rider disponible';
+    else if (/cliente|customer|user|usuario/.test(reason)) cat = 'Cancelada por cliente';
+    else if (/tienda|store|restaurant|comercio|aliado/.test(reason)) cat = 'Cancelada por restaurante';
+    else if (/rechaz|reject/.test(reason)) cat = 'Rechazada';
+    else cat = 'Otras cancelaciones';
+    cancByReason[cat] = (cancByReason[cat] || 0) + 1;
+  });
+
+  const sortedReasons = Object.entries(cancByReason).sort((a,b) => b[1] - a[1]);
+
+  // Por plataforma
+  const cancByPlat = {};
+  orders.forEach(o => {
+    const p = o.platform || 'unknown';
+    if (!cancByPlat[p]) cancByPlat[p] = { total: 0, canc: 0 };
+    cancByPlat[p].total++;
+    if (o.cancelled) cancByPlat[p].canc++;
+  });
+
+  // Costo estimado de cancelaciones (ticket promedio × canceladas)
+  const avgTicket = done.length > 0 ? done.reduce((s,o) => s+o.total, 0) / done.length : 0;
+  const estLoss = cancelled.length * avgTicket;
+
+  // Por hora del día (heatmap)
+  const cancByHour = new Array(24).fill(0);
+  cancelled.forEach(o => {
+    if (o.date instanceof Date) {
+      cancByHour[o.date.getHours()]++;
+    }
+  });
+  const maxHourCanc = Math.max(...cancByHour);
+  const worstHour = cancByHour.indexOf(maxHourCanc);
+
+  const clsCanc = cancelledPct < 5 ? 'up' : cancelledPct < 10 ? 'warn' : 'dn';
+
+  // Insights
+  const insights = [];
+  if (cancelledPct > 10) {
+    insights.push({
+      ico: '🚨',
+      text: `Tasa de cancelaciones del <strong>${pct(cancelledPct)}</strong> — muy sobre el benchmark saludable (<5%). Esto penaliza tu ranking gravemente.`
+    });
+  } else if (cancelledPct > 5) {
+    insights.push({
+      ico: '⚠️',
+      text: `Tasa de cancelaciones del <strong>${pct(cancelledPct)}</strong> — sobre el benchmark (<5%). Hay espacio para mejorar.`
+    });
+  }
+
+  if (sortedReasons.length > 0) {
+    const [topReason, topCount] = sortedReasons[0];
+    const topPct = (topCount / cancelled.length) * 100;
+    insights.push({
+      ico: '🎯',
+      text: `La principal causa de cancelación es <strong>"${topReason}"</strong> con ${topCount} órdenes (${pct(topPct)} de las canceladas).`
+    });
+  }
+
+  if (estLoss > 0) {
+    insights.push({
+      ico: '💸',
+      text: `Costo estimado de cancelaciones: <strong>${money(estLoss)}</strong> en ventas perdidas (ticket promedio × canceladas). Este es dinero que dejaste sobre la mesa.`
+    });
+  }
+
+  if (maxHourCanc > 0 && worstHour >= 0) {
+    insights.push({
+      ico: '🕐',
+      text: `La hora con más cancelaciones es <strong>${worstHour}:00</strong> hs (${maxHourCanc} órdenes). Revisá si es un problema de capacidad de cocina en ese horario.`
+    });
+  }
+
+  const platEntries = Object.entries(cancByPlat).filter(([,v]) => v.total > 0);
+  if (platEntries.length > 1) {
+    platEntries.sort((a,b) => (b[1].canc/b[1].total) - (a[1].canc/a[1].total));
+    const [worstPlat, worstV] = platEntries[0];
+    const worstPct = (worstV.canc / worstV.total) * 100;
+    const [bestPlat, bestV] = platEntries[platEntries.length - 1];
+    const bestPct = (bestV.canc / bestV.total) * 100;
+    if (worstPct - bestPct > 3) {
+      insights.push({
+        ico: '⚖️',
+        text: `<strong>${worstPlat.toUpperCase()}</strong> tiene una tasa de cancelación de <strong>${pct(worstPct)}</strong> vs <strong>${pct(bestPct)}</strong> de ${bestPlat.toUpperCase()}. Investigá qué es diferente.`
+      });
+    }
+  }
+
+  const insightsHtml = insights.length > 0
+    ? `<div class="mod-insights reclamos">
+        <div class="mod-insights-title">💡 Qué hacer con esto</div>
+        ${insights.map(i => `<div class="mod-insight-item"><span class="ico">${i.ico}</span><div>${i.text}</div></div>`).join('')}
+      </div>`
+    : '';
+
+  // Tabla razones
+  const maxReason = sortedReasons[0]?.[1] || 1;
+  const reasonsHtml = sortedReasons.map(([reason, count]) => {
+    const p = (count / cancelled.length) * 100;
+    return `<div style="display:grid;grid-template-columns:2fr 1fr 60px 60px;gap:12px;align-items:center;padding:10px 0;font-size:.78rem;">
+      <div><strong>${reason}</strong></div>
+      <div style="background:rgba(200,57,43,.08);border-radius:100px;height:16px;overflow:hidden;">
+        <div style="height:100%;background:#c8392b;width:${(count/maxReason*100).toFixed(1)}%;transition:width .3s;"></div>
+      </div>
+      <div style="text-align:right;font-family:'DM Mono',monospace;">${count}</div>
+      <div style="text-align:right;color:var(--m);">${p.toFixed(1)}%</div>
+    </div>`;
+  }).join('');
+
+  // Tabla plataformas
+  const platRows = platEntries.sort((a,b) => (b[1].canc/b[1].total) - (a[1].canc/a[1].total)).map(([p, v]) => {
+    const rate = v.total > 0 ? (v.canc/v.total)*100 : 0;
+    const clsRate = rate < 5 ? 'up' : rate < 10 ? 'warn' : 'dn';
+    return `<div class="mod-table-row" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+      <div><strong>${p.toUpperCase()}</strong></div>
+      <div>${num(v.total)}</div>
+      <div>${num(v.canc)}</div>
+      <div><span class="mod-kpi-val ${clsRate}" style="font-size:.95rem">${pct(rate)}</span></div>
+    </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="mod-hero reclamos">
+      <div class="mod-hero-title">⚠️ Análisis de cancelaciones</div>
+      <div class="mod-hero-desc">Basado en ${num(totalOrders)} órdenes totales del período</div>
+    </div>
+
+    <div class="mod-kpi-grid">
+      <div class="mod-kpi">
+        <div class="mod-kpi-label">Órdenes canceladas</div>
+        <div class="mod-kpi-val ${clsCanc}">${num(cancelled.length)}</div>
+        <div class="mod-kpi-hint">${pct(cancelledPct)} del total</div>
+      </div>
+      <div class="mod-kpi">
+        <div class="mod-kpi-label">Pérdida estimada</div>
+        <div class="mod-kpi-val dn">${money(estLoss)}</div>
+        <div class="mod-kpi-hint">Canceladas × ticket promedio</div>
+      </div>
+      <div class="mod-kpi">
+        <div class="mod-kpi-label">Causa principal</div>
+        <div class="mod-kpi-val" style="font-size:.9rem">${sortedReasons[0] ? sortedReasons[0][0].substring(0, 20) : '—'}</div>
+        <div class="mod-kpi-hint">${sortedReasons[0] ? num(sortedReasons[0][1]) + ' órdenes' : ''}</div>
+      </div>
+      <div class="mod-kpi">
+        <div class="mod-kpi-label">Hora crítica</div>
+        <div class="mod-kpi-val">${maxHourCanc > 0 ? worstHour + ':00' : '—'}</div>
+        <div class="mod-kpi-hint">${maxHourCanc > 0 ? maxHourCanc + ' cancelaciones' : 'Sin patrón claro'}</div>
+      </div>
+    </div>
+
+    ${sortedReasons.length > 0 ? `
+    <div class="mod-chart-wrap">
+      <div class="mod-chart-title">🎯 Causas de cancelación (ranking)</div>
+      ${reasonsHtml}
+    </div>` : ''}
+
+    ${platEntries.length > 1 ? `
+    <div class="mod-chart-wrap">
+      <div class="mod-chart-title">🏢 Cancelaciones por plataforma</div>
+      <div class="mod-table">
+        <div class="mod-table-head" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+          <div>Plataforma</div>
+          <div>Órdenes totales</div>
+          <div>Canceladas</div>
+          <div>Tasa cancelación</div>
+        </div>
+        ${platRows}
+      </div>
+    </div>` : ''}
+
+    ${insightsHtml}
+  `;
+}
+
+// Enganchar los 3 nuevos al flujo renderStage2
+const _prevRenderStage2Sprint3 = window.renderStage2;
+window.renderStage2 = function() {
+  if (typeof _prevRenderStage2Sprint3 === 'function') {
+    _prevRenderStage2Sprint3.apply(this, arguments);
+  }
+  try { renderTendencias(); } catch (e) { console.error('[Tendencias]', e); }
+  try { renderTiempos(); } catch (e) { console.error('[Tiempos]', e); }
+  try { renderReclamos(); } catch (e) { console.error('[Reclamos]', e); }
 };
 
 
