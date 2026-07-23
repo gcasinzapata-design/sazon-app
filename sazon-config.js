@@ -1,6 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════
 //  SAZÓN GROWTH ENGINE — CONFIG
-//  Este archivo se sirve al frontend. Solo credenciales públicas aquí.
 // ═══════════════════════════════════════════════════════════════════════
 
 window.SAZON_CONFIG = {
@@ -13,7 +12,6 @@ window.SAZON_CONFIG = {
     email:         'gc.asin.zapata@gmail.com',
     demoUrl:       'https://sazonpartner.com/#contacto',
   },
-  // Tiers actualizados: 'financiero' eliminado (Costos+ROAS lo reemplazan)
   tiers: {
     starter: {
       label:  'Starter',
