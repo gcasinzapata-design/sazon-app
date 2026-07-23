@@ -995,6 +995,10 @@ input[type=file]{display:none;}
 
 
 /* Platform blocks (Sprint 3 fix) */
+.costos-platform-note{margin-top:14px;padding:12px 14px;background:rgba(200,160,69,.08);border-left:3px solid #c8a045;border-radius:0 3px 3px 0;font-size:.78rem;color:var(--t);line-height:1.55;}
+.costos-platform-note strong{color:#6b4800;}
+.costos-platform-note em{font-style:italic;}
+
 .costos-platform-card{background:#fff;border:1px solid var(--l);border-radius:6px;padding:20px 22px;margin-bottom:16px;}
 .costos-platform-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--l);}
 .costos-platform-emoji{font-size:1.8rem;}
@@ -8483,25 +8487,28 @@ function renderCostos() {
           <span class="costos-platform-emoji">🟠</span>
           <div>
             <div class="costos-platform-title">Rappi</div>
-            <div class="costos-platform-sub">GMV del período: <strong>${money(costos.gmvRappi)}</strong></div>
+            <div class="costos-platform-sub">Ventas del período: <strong>${money(costos.gmvRappi)}</strong></div>
           </div>
         </div>
         <div class="costos-platform-grid">
           <div class="costos-platform-metric">
-            <div class="costos-metric-label">Comisión declarada</div>
+            <div class="costos-metric-label">Comisión efectiva</div>
             <div class="costos-metric-val">${pct(r.commissionPct)}</div>
-            <div class="costos-metric-hint">${moneyDec(r.commissionAmt)}</div>
+            <div class="costos-metric-hint">${moneyDec(r.commissionAmt)} sobre tus ventas</div>
           </div>
           <div class="costos-platform-metric highlight">
-            <div class="costos-metric-label">Costo real (todo incluido)</div>
+            <div class="costos-metric-label">Costo total (todo incluido)</div>
             <div class="costos-metric-val">${pct(r.totalCostPct)}</div>
-            <div class="costos-metric-hint">${moneyDec(r.totalCostAmt)}</div>
+            <div class="costos-metric-hint">${moneyDec(r.totalCostAmt)} de cargos totales</div>
           </div>
           <div class="costos-platform-metric">
-            <div class="costos-metric-label">Diferencia (cargos ocultos)</div>
+            <div class="costos-metric-label">Cargos ocultos + IVAs</div>
             <div class="costos-metric-val gap">+${pct(gap)}</div>
-            <div class="costos-metric-hint">${moneyDec(r.totalCostAmt - r.commissionAmt)}</div>
+            <div class="costos-metric-hint">${moneyDec(r.totalCostAmt - r.commissionAmt)} extra</div>
           </div>
+        </div>
+        <div class="costos-platform-note">
+          <strong>ℹ️ Nota:</strong> Rappi te dice que la comisión es 20% pero la calcula sobre una <em>venta base</em> que es menor a lo que efectivamente cobras. Por eso el % efectivo sobre tus ventas reales es distinto al del contrato. Este número es el que impacta tu bolsillo.
         </div>
       </div>`;
   }
@@ -8525,15 +8532,18 @@ function renderCostos() {
             <div class="costos-metric-hint">${moneyDec(p.commissionAmt)}</div>
           </div>
           <div class="costos-platform-metric highlight">
-            <div class="costos-metric-label">Costo real (todo incluido)</div>
+            <div class="costos-metric-label">Costo total (todo incluido)</div>
             <div class="costos-metric-val">${pct(p.totalCostPct)}</div>
-            <div class="costos-metric-hint">${moneyDec(p.totalCostAmt)}</div>
+            <div class="costos-metric-hint">${moneyDec(p.totalCostAmt)} de cargos totales</div>
           </div>
           <div class="costos-platform-metric">
-            <div class="costos-metric-label">Diferencia (cargos ocultos)</div>
+            <div class="costos-metric-label">Cargos ocultos + IVAs</div>
             <div class="costos-metric-val gap">+${pct(gap)}</div>
-            <div class="costos-metric-hint">${moneyDec(p.totalCostAmt - p.commissionAmt)}</div>
+            <div class="costos-metric-hint">${moneyDec(p.totalCostAmt - p.commissionAmt)} extra</div>
           </div>
+        </div>
+        <div class="costos-platform-note">
+          <strong>ℹ️ Nota:</strong> Además de la comisión, PedidosYa cobra Platform Fee, Plus Partner, POS y otros cargos que salen del payout semanal. Estos son los "cargos ocultos" que casi nadie contabiliza al calcular sus márgenes.
         </div>
       </div>`;
   }
@@ -8593,8 +8603,8 @@ function renderCostos() {
           </div>
         </div>
         <div class="costos-headline">
-          <div class="costos-headline-big">De cada <span class="highlight">${money(100)}</span> vendidos,<br><span class="highlight">${money(costos.consolidatedCostPct)}</span> son cargos de plataforma.</div>
-          <div class="costos-headline-desc">Desglose por plataforma abajo — comisión declarada vs costo real con todos los cargos incluidos.</div>
+          <div class="costos-headline-big">De cada <span class="highlight">S/100</span> vendidos,<br><span class="highlight">S/${costos.consolidatedCostPct.toFixed(2)}</span> son cargos totales de plataforma.</div>
+          <div class="costos-headline-desc">Desglose por plataforma abajo. Aquí ves cuánto realmente pagás en cada una, con todos los cargos ocultos e IVAs incluidos.</div>
         </div>
       </div>
     </div>
