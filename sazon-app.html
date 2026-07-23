@@ -3307,17 +3307,303 @@ async function savePayment() {
 }
 
 
-function renderAdminLocationsStub() {
-  setHtml('adminPanelBody', `
+// ═══════════════════════════════════════════════════════════════════════
+//  LOCATIONS ADMIN (Sprint 2 B.5)
+//  Reusa lógica del cliente (A.2.2.c) con selector de marca
+// ═══════════════════════════════════════════════════════════════════════
+
+APP.adminSelectedBrandId = null;
+APP.adminLocationsCache = [];
+
+async function renderAdminLocationsStub() { return renderAdminLocations(); }
+
+async function renderAdminLocations() {
+  const body = document.getElementById('adminPanelBody');
+  if (!body) return;
+
+  // Cargar brands si no hay cache
+  if (!APP.brandsCache || APP.brandsCache.length === 0) {
+    const { data: b } = await APP.supabase.from('brands').select('*');
+    APP.brandsCache = (b || []).map(x => ({...x, subscription:null, userCount:0}));
+  }
+
+  const activeBrands = APP.brandsCache.filter(b => b.is_active !== false);
+  const brandsOpts = activeBrands.map(b =>
+    `<option value="${b.id}" ${APP.adminSelectedBrandId === b.id ? 'selected' : ''}>${escapeHtmlAdmin(b.name)}</option>`
+  ).join('');
+
+  body.innerHTML = `
     <div class="admin-panel-title">📍 Gestión de Sucursales</div>
-    <div class="admin-panel-sub">Editar sucursales de cualquier marca (para soporte)</div>
-    <div class="admin-loading">
-      <div style="font-size:2rem;margin-bottom:10px">🚧</div>
-      <div style="font-size:.85rem;color:var(--t);font-weight:600;margin-bottom:6px">Panel de Sucursales — Sprint 2 B.5</div>
-      <div style="font-size:.72rem;color:var(--m)">Se implementa en el último sub-bloque de B.</div>
+    <div class="admin-panel-sub">Editar sucursales de cualquier marca (para soporte) · el cliente edita las suyas desde el nav "📍 Sucursales"</div>
+
+    <div class="admin-crud-toolbar">
+      <select class="admin-search-input" id="adminLocBrandSel" style="max-width:340px" onchange="onAdminBrandChange()">
+        <option value="">— Selecciona una marca —</option>
+        ${brandsOpts}
+      </select>
+      <button class="admin-btn-secondary" onclick="reloadAdminLocations()" ${!APP.adminSelectedBrandId ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''}>↻ Recargar</button>
+      <button class="admin-btn-primary" onclick="openAdminLocationCreate()" ${!APP.adminSelectedBrandId ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''}>➕ Nueva sucursal</button>
     </div>
-  `);
+
+    <div id="adminLocContainer">
+      ${!APP.adminSelectedBrandId
+        ? '<div class="admin-empty"><div class="icon">🏢</div><div class="title">Elige una marca</div><div class="sub">Selecciona una marca del dropdown para ver y editar sus sucursales</div></div>'
+        : '<div class="admin-loading"><div class="spinner"></div>Cargando sucursales...</div>'}
+    </div>
+  `;
+
+  if (APP.adminSelectedBrandId) {
+    await loadAdminLocations();
+  }
 }
+
+async function onAdminBrandChange() {
+  const sel = document.getElementById('adminLocBrandSel');
+  if (!sel) return;
+  APP.adminSelectedBrandId = sel.value || null;
+  await renderAdminLocations();
+}
+
+async function loadAdminLocations() {
+  const container = document.getElementById('adminLocContainer');
+  if (!container || !APP.adminSelectedBrandId) return;
+
+  const { data, error } = await APP.supabase
+    .from('locations')
+    .select('*')
+    .eq('brand_id', APP.adminSelectedBrandId)
+    .order('created_at', {ascending: true});
+
+  if (error) {
+    container.innerHTML = `<div class="admin-empty"><div class="icon">⚠️</div><div class="title">Error</div><div class="sub">${escapeHtmlAdmin(error.message)}</div></div>`;
+    return;
+  }
+
+  APP.adminLocationsCache = data || [];
+  renderAdminLocationsList();
+}
+
+function renderAdminLocationsList() {
+  const container = document.getElementById('adminLocContainer');
+  if (!container) return;
+
+  const locations = APP.adminLocationsCache;
+  const brand = APP.brandsCache.find(b => b.id === APP.adminSelectedBrandId);
+
+  if (locations.length === 0) {
+    container.innerHTML = `<div class="admin-empty"><div class="icon">📍</div><div class="title">Sin sucursales</div><div class="sub">${escapeHtmlAdmin(brand?.name || 'Esta marca')} aún no tiene sucursales registradas</div></div>`;
+    return;
+  }
+
+  const gridTemplate = 'grid-template-columns:2fr 1fr 1fr 1fr 160px';
+
+  let html = `<div class="admin-table">
+    <div class="admin-table-head" style="${gridTemplate}">
+      <div>Sucursal</div>
+      <div>Ciudad</div>
+      <div>Plataformas</div>
+      <div>Estado</div>
+      <div style="text-align:right">Acciones</div>
+    </div>`;
+
+  for (const loc of locations) {
+    const platforms = (loc.platforms_active || []).map(p =>
+      ({rappi:'🟠', peya:'🔵', didi:'🟡', glovo:'🟢', ubereats:'⚫', ifood:'🔴', justo:'🟣'}[p] || p)
+    ).join(' ');
+    const aliasCount = (loc.aliases || []).length;
+    const activeCls = loc.is_active ? '' : 'inactive';
+
+    html += `<div class="admin-table-row ${activeCls}" style="${gridTemplate}">
+      <div>
+        <div class="admin-row-primary">${escapeHtmlAdmin(loc.name)}</div>
+        <div class="admin-row-secondary">${aliasCount} ${aliasCount === 1 ? 'alias' : 'aliases'} · ${escapeHtmlAdmin(loc.address || 'sin dirección')}</div>
+      </div>
+      <div class="admin-row-secondary">${escapeHtmlAdmin(loc.city || '—')}</div>
+      <div class="admin-row-secondary">${platforms || '—'}</div>
+      <div>${loc.is_active
+        ? '<span class="admin-row-badge active">activa</span>'
+        : '<span class="admin-row-badge inactive">inactiva</span>'}</div>
+      <div class="admin-row-actions">
+        <button class="admin-row-btn" onclick="openAdminLocationEdit('${loc.id}')">Editar</button>
+        <button class="admin-row-btn danger" onclick="toggleAdminLocationActive('${loc.id}', ${loc.is_active})">${loc.is_active ? 'Desactivar' : 'Activar'}</button>
+      </div>
+    </div>`;
+  }
+
+  html += '</div>';
+  html += `<div style="margin-top:14px;font-size:.68rem;color:var(--m);text-align:right">${locations.length} sucursales de ${escapeHtmlAdmin(brand?.name || '')}</div>`;
+
+  container.innerHTML = html;
+}
+
+async function reloadAdminLocations() {
+  await loadAdminLocations();
+  showToast('Sucursales recargadas');
+}
+
+async function toggleAdminLocationActive(locId, currentActive) {
+  const loc = APP.adminLocationsCache.find(x => x.id === locId);
+  const action = currentActive ? 'desactivar' : 'activar';
+  if (!confirm(`¿${currentActive ? 'Desactivar' : 'Activar'} la sucursal "${loc?.name}"?`)) return;
+
+  const { error } = await APP.supabase
+    .from('locations')
+    .update({ is_active: !currentActive })
+    .eq('id', locId);
+
+  if (error) { showToast('Error: ' + error.message, 'err'); return; }
+  showToast(`Sucursal ${action}da`);
+  await loadAdminLocations();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  MODAL — Crear/Editar sucursal (admin)
+//  Reusa el modal del cliente pero apuntando a APP.adminSelectedBrandId
+// ═══════════════════════════════════════════════════════════════════════
+
+APP.adminLocationEditingId = null;
+
+function openAdminLocationCreate() {
+  if (!APP.adminSelectedBrandId) return;
+  APP.adminLocationEditingId = null;
+  const brand = APP.brandsCache.find(b => b.id === APP.adminSelectedBrandId);
+  document.getElementById('adminLocModalTitle').textContent = `➕ Nueva sucursal para ${brand?.name || 'marca'}`;
+  const empty = {
+    name:'', aliases:[], city:'', address:'', country: brand?.country || 'PE',
+    platforms_active:['rappi','peya'], hours:{}
+  };
+  renderAdminLocationForm(empty);
+  document.getElementById('adminLocModal').classList.add('on');
+  setTimeout(() => { const el = document.getElementById('adminLocFieldName'); if(el) el.focus(); }, 100);
+}
+
+function openAdminLocationEdit(locId) {
+  const loc = APP.adminLocationsCache.find(x => x.id === locId);
+  if (!loc) { showToast('Sucursal no encontrada', 'err'); return; }
+  APP.adminLocationEditingId = locId;
+  const brand = APP.brandsCache.find(b => b.id === APP.adminSelectedBrandId);
+  document.getElementById('adminLocModalTitle').textContent = `✏️ Editar sucursal · ${brand?.name || ''}`;
+  renderAdminLocationForm(loc);
+  document.getElementById('adminLocModal').classList.add('on');
+  setTimeout(() => { const el = document.getElementById('adminLocFieldName'); if(el) el.focus(); }, 100);
+}
+
+function closeAdminLocationModal() {
+  document.getElementById('adminLocModal').classList.remove('on');
+  APP.adminLocationEditingId = null;
+}
+
+function renderAdminLocationForm(loc) {
+  const body = document.getElementById('adminLocModalBody');
+  if (!body) return;
+
+  const platforms = loc.platforms_active || [];
+
+  body.innerHTML = `
+    <div class="admin-form-section">
+      <div class="admin-form-section-title">Ubicación</div>
+      <div class="admin-form-field" style="margin-bottom:12px">
+        <label>Nombre oficial <span class="req">*</span></label>
+        <input type="text" id="adminLocFieldName" value="${escapeAttr(loc.name)}" placeholder="Ej: Mr. Smash - Miraflores">
+        <div class="helper">Nombre único que identifica esta sucursal</div>
+      </div>
+      <div class="admin-form-row">
+        <div class="admin-form-field">
+          <label>Ciudad</label>
+          <input type="text" id="adminLocFieldCity" value="${escapeAttr(loc.city || '')}" placeholder="Ej: Lima">
+        </div>
+        <div class="admin-form-field">
+          <label>Dirección</label>
+          <input type="text" id="adminLocFieldAddress" value="${escapeAttr(loc.address || '')}" placeholder="Opcional">
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-form-section">
+      <div class="admin-form-section-title">Aliases (nombres alternos)</div>
+      <div class="admin-form-field">
+        <textarea id="adminLocFieldAliases" rows="3" placeholder="Un alias por línea. Ej:&#10;Mr Smash Miraflores&#10;Mr. Smash Burger - Miraflores">${escapeAttr((loc.aliases || []).join('\n'))}</textarea>
+        <div class="helper">Ayudan al sistema a reconocer esta sucursal cuando aparece con nombres ligeramente distintos en los reportes de Rappi/PedidosYa</div>
+      </div>
+    </div>
+
+    <div class="admin-form-section">
+      <div class="admin-form-section-title">Plataformas activas</div>
+      <div style="display:flex;gap:14px;font-size:.78rem;flex-wrap:wrap">
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer;font-weight:400"><input type="checkbox" id="adminLocFieldPlatRappi" ${platforms.includes('rappi') ? 'checked' : ''}> 🟠 Rappi</label>
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer;font-weight:400"><input type="checkbox" id="adminLocFieldPlatPeya" ${platforms.includes('peya') ? 'checked' : ''}> 🔵 PedidosYa</label>
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer;font-weight:400"><input type="checkbox" id="adminLocFieldPlatDidi" ${platforms.includes('didi') ? 'checked' : ''}> 🟡 Didi Food</label>
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer;font-weight:400"><input type="checkbox" id="adminLocFieldPlatGlovo" ${platforms.includes('glovo') ? 'checked' : ''}> 🟢 Glovo</label>
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer;font-weight:400"><input type="checkbox" id="adminLocFieldPlatUber" ${platforms.includes('ubereats') ? 'checked' : ''}> ⚫ UberEats</label>
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer;font-weight:400"><input type="checkbox" id="adminLocFieldPlatIfood" ${platforms.includes('ifood') ? 'checked' : ''}> 🔴 iFood</label>
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer;font-weight:400"><input type="checkbox" id="adminLocFieldPlatJusto" ${platforms.includes('justo') ? 'checked' : ''}> 🟣 Justo</label>
+      </div>
+    </div>
+  `;
+}
+
+async function saveAdminLocation() {
+  const saveBtn = document.getElementById('adminLocSaveBtn');
+  const name = document.getElementById('adminLocFieldName')?.value?.trim();
+  if (!name) { showToast('El nombre es obligatorio', 'err'); return; }
+
+  const platforms = [];
+  ['Rappi','Peya','Didi','Glovo','Uber','Ifood','Justo'].forEach(p => {
+    const el = document.getElementById('adminLocFieldPlat'+p);
+    if (el?.checked) {
+      const key = {Rappi:'rappi', Peya:'peya', Didi:'didi', Glovo:'glovo', Uber:'ubereats', Ifood:'ifood', Justo:'justo'}[p];
+      platforms.push(key);
+    }
+  });
+
+  const aliases = (document.getElementById('adminLocFieldAliases')?.value || '')
+    .split('\n')
+    .map(a => a.trim())
+    .filter(a => a.length > 0);
+
+  const brand = APP.brandsCache.find(b => b.id === APP.adminSelectedBrandId);
+
+  const payload = {
+    brand_id: APP.adminSelectedBrandId,
+    name,
+    aliases,
+    city: document.getElementById('adminLocFieldCity')?.value?.trim() || null,
+    address: document.getElementById('adminLocFieldAddress')?.value?.trim() || null,
+    country: brand?.country || 'PE',
+    platforms_active: platforms.length > 0 ? platforms : ['rappi','peya'],
+    is_active: true,
+  };
+
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
+
+  let result;
+  if (APP.adminLocationEditingId) {
+    const { data, error } = await APP.supabase
+      .from('locations')
+      .update(payload)
+      .eq('id', APP.adminLocationEditingId)
+      .select().single();
+    result = { data, error };
+  } else {
+    const { data, error } = await APP.supabase
+      .from('locations')
+      .insert(payload)
+      .select().single();
+    result = { data, error };
+  }
+
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
+
+  if (result.error) {
+    showToast('Error: ' + result.error.message, 'err');
+    return;
+  }
+
+  closeAdminLocationModal();
+  showToast(APP.adminLocationEditingId ? 'Sucursal actualizada' : 'Sucursal creada');
+  await loadAdminLocations();
+}
+
 
 // ═══════════════════════════════════════════════════════════════════════
 //  Helper para escapar HTML en admin panel
@@ -7968,6 +8254,26 @@ if(document.readyState === 'loading') {
     <div class="admin-modal-footer">
       <button class="btn-cancel" onclick="closePaymentModal()">Cancelar</button>
       <button class="btn-save" id="paymentSaveBtn" onclick="savePayment()">Registrar pago</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ═══ MODAL SUCURSAL ADMIN (Sprint 2 B.5) ═══════════════════════════ -->
+<div class="admin-modal-overlay" id="adminLocModal">
+  <div class="admin-modal-box" style="max-width:600px">
+    <div class="admin-modal-head">
+      <div>
+        <div class="admin-modal-h-title" id="adminLocModalTitle">Sucursal</div>
+        <div class="admin-modal-h-sub">Gestión de sucursales como admin</div>
+      </div>
+      <button class="admin-modal-close" onclick="closeAdminLocationModal()">×</button>
+    </div>
+    <div class="admin-modal-body" id="adminLocModalBody"></div>
+    <div class="admin-modal-footer">
+      <button class="btn-cancel" onclick="closeAdminLocationModal()">Cancelar</button>
+      <button class="btn-save" id="adminLocSaveBtn" onclick="saveAdminLocation()">Guardar</button>
     </div>
   </div>
 </div>
