@@ -931,6 +931,67 @@ input[type=file]{display:none;}
 .quick-extend-btn{padding:5px 10px;background:var(--w);border:1px solid var(--l);border-radius:3px;font-size:.65rem;font-weight:600;cursor:pointer;color:var(--t);text-transform:uppercase;letter-spacing:.5px;}
 .quick-extend-btn:hover{background:var(--r);color:#fff;border-color:var(--r);}
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SPRINT 3 — Módulo Costos Reales
+   ═══════════════════════════════════════════════════════════════ */
+.costos-hero{background:linear-gradient(135deg, var(--c) 0%, var(--w) 100%);border-radius:6px;padding:32px;margin-bottom:24px;border-top:4px solid var(--r);}
+.costos-hero-title{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:900;margin-bottom:8px;color:var(--t);}
+.costos-hero-sub{font-size:.85rem;color:var(--m);margin-bottom:24px;line-height:1.55;}
+
+.costos-summary-grid{display:grid;grid-template-columns:1fr 1.4fr;gap:32px;align-items:center;}
+.costos-donut-wrap{position:relative;width:100%;max-width:280px;margin:0 auto;}
+.costos-donut-wrap canvas{display:block;width:100%!important;height:auto!important;}
+.costos-donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
+.costos-donut-value{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:900;color:var(--r);line-height:1;}
+.costos-donut-label{font-size:.65rem;color:var(--m);text-transform:uppercase;letter-spacing:1.5px;margin-top:4px;font-weight:700;}
+
+.costos-headline{}
+.costos-headline-big{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--t);line-height:1.2;margin-bottom:14px;}
+.costos-headline-big .highlight{color:var(--r);}
+.costos-headline-desc{font-size:.9rem;color:var(--m);line-height:1.6;margin-bottom:14px;}
+.costos-comparison{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
+.costos-comp-item{background:#fff;border:1px solid var(--l);border-radius:4px;padding:14px;}
+.costos-comp-label{font-size:.62rem;color:var(--m);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:6px;}
+.costos-comp-val{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;color:var(--t);}
+.costos-comp-val.nominal{color:var(--m);}
+.costos-comp-val.real{color:var(--r);}
+.costos-comp-hint{font-size:.68rem;color:var(--m);margin-top:2px;}
+
+.costos-table{background:#fff;border:1px solid var(--l);border-radius:4px;overflow:hidden;margin-top:20px;}
+.costos-table-head{background:var(--d);color:#fff;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:12px 16px;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;gap:12px;}
+.costos-table-head div:not(:first-child){text-align:right;}
+.costos-table-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:12px 16px;gap:12px;border-top:1px solid var(--l);font-size:.82rem;align-items:center;}
+.costos-table-row:hover{background:var(--w);}
+.costos-table-row div:not(:first-child){text-align:right;}
+.costos-table-row.total{background:var(--w);font-weight:700;color:var(--t);border-top:2px solid var(--r);}
+.costos-cat-name{color:var(--t);}
+.costos-cat-hint{font-size:.65rem;color:var(--m);font-style:italic;margin-top:2px;}
+.costos-cat-value{font-family:'DM Mono',monospace;color:var(--r);}
+.costos-cat-pct{font-family:'DM Mono',monospace;color:var(--m);}
+.costos-cat-share{font-family:'DM Mono',monospace;color:var(--m);}
+
+.costos-insights{background:rgba(200,57,43,.05);border-left:3px solid var(--r);padding:16px 20px;border-radius:0 4px 4px 0;margin-top:20px;}
+.costos-insights-title{font-family:'Playfair Display',serif;font-weight:700;font-size:1rem;margin-bottom:10px;color:var(--r);}
+.costos-insight-item{display:flex;gap:10px;margin-bottom:8px;font-size:.82rem;color:var(--t);line-height:1.5;}
+.costos-insight-item .ico{flex-shrink:0;font-size:1rem;}
+.costos-insight-item strong{color:var(--r);}
+
+.costos-noData{background:#fff;border:2px dashed var(--l);border-radius:4px;padding:36px;text-align:center;color:var(--m);}
+.costos-noData-ico{font-size:2.5rem;margin-bottom:10px;}
+.costos-noData-title{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--t);margin-bottom:6px;}
+.costos-noData-desc{font-size:.85rem;line-height:1.6;max-width:520px;margin:0 auto;}
+.costos-noData-desc code{background:var(--w);padding:2px 6px;border-radius:2px;font-family:'DM Mono',monospace;font-size:.78rem;color:var(--r);}
+
+@media (max-width:900px){
+  .costos-summary-grid{grid-template-columns:1fr;gap:20px;}
+  .costos-headline-big{font-size:1.4rem;}
+  .costos-comparison{grid-template-columns:1fr;}
+  .costos-table-head, .costos-table-row{grid-template-columns:1.5fr 1fr 1fr;}
+  .costos-table-head div:nth-child(4), .costos-table-row div:nth-child(4){display:none;}
+}
+
 </style>
 </head>
 <body>
@@ -1410,6 +1471,20 @@ input[type=file]{display:none;}
     <div class="roadmap-grid" id="roadmapGrid"></div>
     <div id="narrativeBlock"></div>
   </div>
+
+      <!-- ── COSTOS REALES (Sprint 3) ── -->
+      <div class="panel" id="p-costos">
+        <div class="section-head">
+          <div class="section-ico">💸</div>
+          <div>
+            <div class="section-title">Costos reales de plataforma</div>
+            <div class="section-sub">Todos los cargos que pagas — comisión + cargos ocultos + IVAs</div>
+          </div>
+        </div>
+        <div id="costosBody">
+          <!-- Contenido dinámico -->
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1488,7 +1563,8 @@ const TAB_META = {
   adq:        { icon: '🚀', label: 'Adquisición' },
   ticket:     { icon: '💰', label: 'Ticket' },
   retencion:  { icon: '🔁', label: 'Retención' },
-  financiero: { icon: '💸', label: 'Financiero' },
+  costos:     { icon: '💸', label: 'Costos reales' },
+  financiero: { icon: '📊', label: 'Financiero' },
   roadmap:    { icon: '📋', label: 'Roadmap' },
 };
 
@@ -4231,16 +4307,30 @@ function parseRappiFinancial(rows, platOverride){
   const h=rows[hi].map(v=>String(v||'').toLowerCase().trim());
   const fi=(kw)=>h.findIndex(v=>kw.test(v));
   const ci={
-    fecha:   fi(/fecha de creaci.n/),
-    orden:   fi(/^id de la .rden$/),
-    tienda:  fi(/nombre de la tienda/),
-    metodo:  fi(/m.todo de pago/),
-    estado:  fi(/estado de la .rden/),
-    ventaB:  fi(/^venta bruta$/),
-    base:    fi(/ventas base por uso/),
-    comPlat: fi(/uso y alquiler de plataforma rappi$/),
-    descAli: fi(/descuento de producto asumido por el ali/),
-    prime:   fi(/^prime$/),
+    fecha:      fi(/fecha de creaci.n/),
+    orden:      fi(/^id de la .rden$/),
+    tienda:     fi(/nombre de la tienda/),
+    metodo:     fi(/m.todo de pago/),
+    estado:     fi(/estado de la .rden/),
+    ventaB:     fi(/^venta bruta$/),
+    base:       fi(/ventas base por uso/),
+    comPlat:    fi(/uso y alquiler de plataforma rappi$/),
+    descAli:    fi(/descuento de producto asumido por el ali/),
+    prime:      fi(/^prime$/),
+    // Sprint 3 - Cargos ocultos (extendido)
+    descDAR:    fi(/descuentos por inversi.n de rappi dar/),
+    domGratis:  fi(/descuento por domicilio gratis/),
+    integ:      fi(/tarifa de integration/),
+    demora:     fi(/tarifa por demora/),
+    transac:    fi(/tarifa transaccional/),
+    billetera:  fi(/comisi.n billetera virtual/),
+    rappiAds:   fi(/cuota de rappiads/),
+    servicio:   fi(/servicio de cargo|tarifa de servicio al usuario/),
+    ivaPlat:    fi(/iva uso y alquiler de plataforma rappi$/),
+    ivaCamp:    fi(/iva campa.as/),
+    ivaAds:     fi(/iva rappi ads/),
+    ivaServ:    fi(/iva servicio de cargo/),
+    retefuente: fi(/retefuente/),
   };
   const g=(row,k)=>ci[k]>=0&&row[ci[k]]!=null?row[ci[k]]:'';
   return rows.slice(hi+1).filter(r=>r.some(v=>v)).map(row=>{
@@ -4250,16 +4340,33 @@ function parseRappiFinancial(rows, platOverride){
     const base   = toFloat(g(row,'base'));
     const comPlat= Math.abs(toFloat(g(row,'comPlat')));
     const descAli= Math.abs(toFloat(g(row,'descAli')));
-    // Precio pagado por cliente = ventaB (es el precio cobrado al cliente)
-    // Precio base real = ventaB + descAli (precio antes del descuento del aliado)
     const basePrice = ventaB + descAli;
     const discPct   = basePrice > 0 ? descAli/basePrice : 0;
+
+    // Sprint 3: capturar cargos ocultos como monto absoluto (siempre positivo)
+    const costs = {
+      commission:    comPlat,                              // Comisión principal
+      darDiscount:   Math.abs(toFloat(g(row,'descDAR'))),  // Descuentos DAR (Rappi paga esto pero se descuenta del payout)
+      freeDelivery:  Math.abs(toFloat(g(row,'domGratis'))),// Envío gratis promo
+      integration:   Math.abs(toFloat(g(row,'integ'))),    // Tarifa integración POS
+      lateDelivery:  Math.abs(toFloat(g(row,'demora'))),   // Tarifa por demora
+      transactional: Math.abs(toFloat(g(row,'transac'))),  // Tarifa transaccional
+      walletFee:     Math.abs(toFloat(g(row,'billetera'))),// Comisión billetera virtual
+      adsSpend:      Math.abs(toFloat(g(row,'rappiAds'))), // Gasto en RappiAds
+      serviceCharge: Math.abs(toFloat(g(row,'servicio'))), // Servicio de cargo
+      taxCommission: Math.abs(toFloat(g(row,'ivaPlat'))),  // IVA sobre comisión
+      taxCampaigns:  Math.abs(toFloat(g(row,'ivaCamp'))),  // IVA sobre campañas
+      taxAds:        Math.abs(toFloat(g(row,'ivaAds'))),   // IVA sobre RappiAds
+      taxService:    Math.abs(toFloat(g(row,'ivaServ'))),  // IVA sobre servicio
+      taxWithheld:   Math.abs(toFloat(g(row,'retefuente'))),// Retención en fuente
+    };
+
     return {
       id:       String(g(row,'orden')||''),
       date:     parseDate(String(g(row,'fecha')||'')),
-      total:    ventaB,          // lo que pagó el cliente
-      basePrice,                  // precio lista (antes del descuento)
-      discAmt:  descAli,          // descuento asumido por el restaurante
+      total:    ventaB,
+      basePrice,
+      discAmt:  descAli,
       discPct,
       cancelled,
       sucursal: String(g(row,'tienda')||'Principal'),
@@ -4267,9 +4374,10 @@ function parseRappiFinancial(rows, platOverride){
       platform: platOverride||'rappi',
       estado:   String(g(row,'estado')||''),
       comision: comPlat,
-      ingreso:  base - comPlat,  // net al restaurante
+      ingreso:  base - comPlat,
       items:'',
       isPrime:  /true/i.test(String(g(row,'prime')||'')),
+      costs,  // Sprint 3: cargos desglosados
       _fmt:'rappi_financial',
     };
   }).filter(o=>o.total>0||o.cancelled);
@@ -4331,7 +4439,7 @@ function parsePeyaSummary(rows){
   const data=rows[hi+1];
   if(!data) return null;
   const gv=(kw)=>{ const i=h.findIndex(v=>kw.test(v)); return i>=0?toFloat(data[i]):0; };
-  const gs=(kw)=>{ const i=h.findIndex(v=>kw.test(v)); return i>=0?String(data[i]||''):''  ; };
+  const gs=(kw)=>{ const i=h.findIndex(v=>kw.test(v)); return i>=0?String(data[i]||''):''; };
   return {
     _type:      'peya_summary',
     period:     gs(/período abarcado/),
@@ -4342,6 +4450,16 @@ function parsePeyaSummary(rows){
     adSpend:    Math.abs(gv(/publicidad/)),
     credit:     Math.abs(gv(/crédito/)),
     descPeya:   gv(/descuento.*ped/),
+    // Sprint 3: cargos ocultos adicionales
+    posFee:       Math.abs(gv(/cargos por uso del pos|cargo pos/)),
+    platformFee:  Math.abs(gv(/plataform fee|platform fee/)),
+    plusPartnerFee: Math.abs(gv(/cargos por pedidos con plus|plus partner/)),
+    goldVip:      Math.abs(gv(/campa.a gold vip|gold vip/)),
+    fugaces:      Math.abs(gv(/descuentos fugaces/)),
+    ivaComis:     Math.abs(gv(/impuesto en comisiones|iva comisiones/)),
+    packagingFee: Math.abs(gv(/cargos por packaging/)),
+    shippingFee:  Math.abs(gv(/cargos por envío/)),
+    minOrderFee:  Math.abs(gv(/cargos por valor mínimo/)),
   };
 }
 
@@ -8115,6 +8233,380 @@ hydrateEngineConfig = async function() {
   await _hydrateConfigForPrev.apply(this, arguments);
   if (APP.user && APP.user.role !== 'sazon_admin') {
     loadPreviousAnalyses();
+  }
+};
+
+
+
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 3 — Módulo Costos Reales
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Calcula el desglose de todos los costos de plataforma
+ * a partir de los orders (Rappi con costs) + peyaSummary (PeYa summary)
+ */
+function computeCostos(orders, peyaSummary) {
+  const result = {
+    hasData: false,
+    hasRappi: false,
+    hasPeya: false,
+    gmv: 0,
+    categories: [],
+    totalCost: 0,
+    nominalRate: 0,   // Solo la comisión "declarada"
+    realRate: 0,       // Todo lo que sale del payout
+  };
+
+  const doneOrders = (orders || []).filter(o => !o.cancelled && o.total > 0);
+  if (doneOrders.length === 0 && !peyaSummary) return result;
+
+  // Agrupar por plataforma
+  const rappiOrders = doneOrders.filter(o => o.platform === 'rappi');
+  const peyaOrders = doneOrders.filter(o => o.platform === 'peya');
+
+  const rappiGmv = rappiOrders.reduce((s, o) => s + o.total, 0);
+  const peyaGmv = peyaOrders.reduce((s, o) => s + o.total, 0);
+
+  // ─── Rappi: sumar costs de cada orden ───
+  const rappiCosts = {
+    commission: 0,      // Uso y alquiler
+    darDiscount: 0,     // Descuentos DAR (Rappi paga esto pero descuenta del payout)
+    freeDelivery: 0,    // Envío gratis
+    integration: 0,     // Integración POS
+    lateDelivery: 0,    // Demora
+    transactional: 0,   // Transaccional
+    walletFee: 0,       // Billetera virtual
+    adsSpend: 0,        // RappiAds
+    serviceCharge: 0,   // Servicio de cargo
+    taxCommission: 0,   // IVA comisión
+    taxCampaigns: 0,    // IVA campañas
+    taxAds: 0,          // IVA ads
+    taxService: 0,      // IVA servicio
+    taxWithheld: 0,     // Retención
+  };
+
+  let rappiHasBreakdown = false;
+  rappiOrders.forEach(o => {
+    if (o.costs) {
+      rappiHasBreakdown = true;
+      Object.keys(rappiCosts).forEach(k => {
+        rappiCosts[k] += (o.costs[k] || 0);
+      });
+    } else if (o.comision) {
+      // Fallback: solo tenemos la comisión general
+      rappiCosts.commission += o.comision;
+    }
+  });
+
+  if (rappiOrders.length > 0) result.hasRappi = true;
+
+  // ─── PeYa: usar peyaSummary si está ───
+  const peya = peyaSummary || null;
+  if (peya) {
+    result.hasPeya = true;
+    // Si tenemos summary de PeYa, usamos su GMV en lugar del calculado de orders
+    // (más preciso porque el summary incluye todo)
+  }
+
+  const gmv = rappiGmv + peyaGmv;
+  result.gmv = gmv;
+
+  // ─── Construir categorías ───
+  const cats = [];
+
+  // Rappi categorías
+  if (result.hasRappi) {
+    if (rappiCosts.commission > 0)
+      cats.push({ platform: 'rappi', name: 'Comisión Rappi', hint: 'Uso y alquiler de plataforma (declarado)', kind: 'commission', amount: rappiCosts.commission, gmvBase: rappiGmv });
+    if (rappiCosts.darDiscount > 0)
+      cats.push({ platform: 'rappi', name: 'Descuentos DAR', hint: 'Rappi los paga pero se descuentan de tu payout', kind: 'discount', amount: rappiCosts.darDiscount, gmvBase: rappiGmv });
+    if (rappiCosts.freeDelivery > 0)
+      cats.push({ platform: 'rappi', name: 'Envío gratis promo', hint: 'Descuento por envío gratis financiado por ti', kind: 'discount', amount: rappiCosts.freeDelivery, gmvBase: rappiGmv });
+    if (rappiCosts.integration > 0)
+      cats.push({ platform: 'rappi', name: 'Tarifa integración', hint: 'Costo mensual por integración POS', kind: 'hidden', amount: rappiCosts.integration, gmvBase: rappiGmv });
+    if (rappiCosts.lateDelivery > 0)
+      cats.push({ platform: 'rappi', name: 'Tarifa por demora', hint: 'Penalizaciones por tiempo de preparación', kind: 'hidden', amount: rappiCosts.lateDelivery, gmvBase: rappiGmv });
+    if (rappiCosts.transactional > 0)
+      cats.push({ platform: 'rappi', name: 'Tarifa transaccional', hint: 'Cobro por procesamiento de cada orden', kind: 'hidden', amount: rappiCosts.transactional, gmvBase: rappiGmv });
+    if (rappiCosts.walletFee > 0)
+      cats.push({ platform: 'rappi', name: 'Comisión billetera virtual', hint: 'Cargo por pagos con billetera Rappi', kind: 'hidden', amount: rappiCosts.walletFee, gmvBase: rappiGmv });
+    if (rappiCosts.adsSpend > 0)
+      cats.push({ platform: 'rappi', name: 'RappiAds', hint: 'Gasto en campañas publicitarias', kind: 'ads', amount: rappiCosts.adsSpend, gmvBase: rappiGmv });
+    if (rappiCosts.serviceCharge > 0)
+      cats.push({ platform: 'rappi', name: 'Servicio de cargo', hint: 'Cargo por servicio adicional', kind: 'hidden', amount: rappiCosts.serviceCharge, gmvBase: rappiGmv });
+
+    // IVAs de Rappi (agrupar todos)
+    const ivaTotal = rappiCosts.taxCommission + rappiCosts.taxCampaigns + rappiCosts.taxAds + rappiCosts.taxService;
+    if (ivaTotal > 0)
+      cats.push({ platform: 'rappi', name: 'IVA sobre cargos Rappi', hint: 'Impuestos sobre comisión, campañas, ads y servicios', kind: 'tax', amount: ivaTotal, gmvBase: rappiGmv });
+
+    if (rappiCosts.taxWithheld > 0)
+      cats.push({ platform: 'rappi', name: 'Retención en fuente', hint: 'Retención impositiva', kind: 'tax', amount: rappiCosts.taxWithheld, gmvBase: rappiGmv });
+  }
+
+  // PeYa categorías (desde summary)
+  if (peya) {
+    if (peya.commission > 0)
+      cats.push({ platform: 'peya', name: 'Comisión PedidosYa', hint: 'Servicio por ventas (declarado)', kind: 'commission', amount: peya.commission, gmvBase: peyaGmv || peya.ventasNetas });
+    if (peya.plusPartnerFee > 0)
+      cats.push({ platform: 'peya', name: 'Plus Partner Fee', hint: 'Cargo por órdenes con Plus (a menudo desconocido)', kind: 'hidden', amount: peya.plusPartnerFee, gmvBase: peyaGmv || peya.ventasNetas });
+    if (peya.platformFee > 0)
+      cats.push({ platform: 'peya', name: 'Platform Fee', hint: 'Uso de plataforma PedidosYa', kind: 'hidden', amount: peya.platformFee, gmvBase: peyaGmv || peya.ventasNetas });
+    if (peya.posFee > 0)
+      cats.push({ platform: 'peya', name: 'Cargo POS', hint: 'Uso del terminal POS', kind: 'hidden', amount: peya.posFee, gmvBase: peyaGmv || peya.ventasNetas });
+    if (peya.fugaces > 0)
+      cats.push({ platform: 'peya', name: 'Descuentos Fugaces', hint: 'Promo automática (financiada por ti)', kind: 'ads', amount: peya.fugaces, gmvBase: peyaGmv || peya.ventasNetas });
+    if (peya.goldVip > 0)
+      cats.push({ platform: 'peya', name: 'Campaña Gold VIP', hint: 'Publicidad Gold VIP', kind: 'ads', amount: peya.goldVip, gmvBase: peyaGmv || peya.ventasNetas });
+    if (peya.ivaComis > 0)
+      cats.push({ platform: 'peya', name: 'IVA en comisiones', hint: 'Impuesto sobre comisión PedidosYa', kind: 'tax', amount: peya.ivaComis, gmvBase: peyaGmv || peya.ventasNetas });
+    if (peya.packagingFee > 0)
+      cats.push({ platform: 'peya', name: 'Cargo por packaging', hint: 'Cobro por packaging', kind: 'hidden', amount: peya.packagingFee, gmvBase: peyaGmv || peya.ventasNetas });
+    if (peya.minOrderFee > 0)
+      cats.push({ platform: 'peya', name: 'Valor mínimo de orden', hint: 'Cargo por bajo valor de orden', kind: 'hidden', amount: peya.minOrderFee, gmvBase: peyaGmv || peya.ventasNetas });
+  }
+
+  result.categories = cats.sort((a, b) => b.amount - a.amount);
+  result.totalCost = cats.reduce((s, c) => s + c.amount, 0);
+  result.hasData = result.totalCost > 0;
+
+  // Calcular tasas
+  const commissionOnly = cats.filter(c => c.kind === 'commission').reduce((s, c) => s + c.amount, 0);
+  result.nominalRate = gmv > 0 ? (commissionOnly / gmv) * 100 : 0;
+  result.realRate = gmv > 0 ? (result.totalCost / gmv) * 100 : 0;
+
+  return result;
+}
+
+/**
+ * Renderiza el módulo Costos reales en el panel #p-costos
+ */
+function renderCostos() {
+  const body = document.getElementById('costosBody');
+  if (!body) return;
+
+  const orders = APP.allOrders || [];
+  const peya = APP.D?._peyaSummary || null;
+  const costos = computeCostos(orders, peya);
+
+  if (!costos.hasData) {
+    body.innerHTML = `
+      <div class="costos-noData">
+        <div class="costos-noData-ico">📄</div>
+        <div class="costos-noData-title">Sin datos suficientes para este análisis</div>
+        <div class="costos-noData-desc">
+          Para desglosar tus costos reales necesitamos los <strong>reportes financieros completos</strong>:
+          <br><br>
+          • <strong>Rappi</strong>: descarga el <code>Reporte Financiero</code> desde Rappi Partners → Reportes → Detalle
+          <br>
+          • <strong>PedidosYa</strong>: descarga el <code>Earnings Summary</code> desde PeYa Partners → Finanzas
+          <br><br>
+          Los reportes de órdenes ligeros no incluyen el desglose de cargos ocultos.
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Formatters
+  const money = n => 'S/' + Math.round(n).toLocaleString('es-PE');
+  const moneyDec = n => 'S/' + n.toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const pct = n => n.toFixed(2) + '%';
+
+  // Diferencia entre tasa nominal y real
+  const diff = costos.realRate - costos.nominalRate;
+  const monthlyExtra = (diff / 100) * costos.gmv;
+
+  // Headline dinámico
+  const headlineHtml = costos.nominalRate > 0
+    ? `Crees que pagás <span class="highlight">${pct(costos.nominalRate)}</span>… pero en realidad pagás <span class="highlight">${pct(costos.realRate)}</span>`
+    : `Todos tus costos de plataforma en un solo lugar`;
+
+  // Build donut chart data
+  const donutData = costos.categories.map(c => ({
+    label: c.name,
+    value: c.amount,
+    color: c.kind === 'commission' ? '#c8392b'
+         : c.kind === 'ads' ? '#e88b3a'
+         : c.kind === 'tax' ? '#8a6000'
+         : c.kind === 'discount' ? '#a95849'
+         : '#5A4E3E'
+  }));
+
+  // Tabla
+  const rowsHtml = costos.categories.map(c => {
+    const pctGmv = c.gmvBase > 0 ? (c.amount / c.gmvBase) * 100 : 0;
+    const shareOfTotal = costos.totalCost > 0 ? (c.amount / costos.totalCost) * 100 : 0;
+    return `<div class="costos-table-row">
+      <div>
+        <div class="costos-cat-name">${c.name} <span style="font-size:.7rem;color:var(--m)">· ${c.platform.toUpperCase()}</span></div>
+        <div class="costos-cat-hint">${c.hint}</div>
+      </div>
+      <div class="costos-cat-value">${moneyDec(c.amount)}</div>
+      <div class="costos-cat-pct">${pct(pctGmv)}</div>
+      <div class="costos-cat-share">${pct(shareOfTotal)}</div>
+    </div>`;
+  }).join('');
+
+  // Insights
+  const insights = [];
+  const hiddenTotal = costos.categories.filter(c => c.kind === 'hidden').reduce((s,c)=>s+c.amount,0);
+  const adsTotal = costos.categories.filter(c => c.kind === 'ads').reduce((s,c)=>s+c.amount,0);
+  const taxTotal = costos.categories.filter(c => c.kind === 'tax').reduce((s,c)=>s+c.amount,0);
+  const discountTotal = costos.categories.filter(c => c.kind === 'discount').reduce((s,c)=>s+c.amount,0);
+
+  if (diff > 3) {
+    insights.push({
+      ico: '⚠️',
+      text: `Los cargos ocultos suman <strong>${pct(diff)}</strong> extra por encima de la comisión "declarada". En este período representa <strong>${money(monthlyExtra)}</strong> que no siempre se ve al planificar.`
+    });
+  }
+  if (hiddenTotal > 0 && costos.gmv > 0) {
+    const hiddenPct = (hiddenTotal / costos.gmv) * 100;
+    insights.push({
+      ico: '👻',
+      text: `Cargos ocultos (Platform fee, Plus Partner, integración POS, etc.): <strong>${money(hiddenTotal)}</strong> — <strong>${pct(hiddenPct)}</strong> del GMV. Estos son los que casi nadie contabiliza.`
+    });
+  }
+  if (adsTotal > 0 && costos.gmv > 0) {
+    const adsPct = (adsTotal / costos.gmv) * 100;
+    insights.push({
+      ico: '📣',
+      text: `Gastaste <strong>${money(adsTotal)}</strong> en publicidad y promos automáticas (${pct(adsPct)} del GMV). Vale la pena medir el ROAS en el módulo Ads (Sprint 3).`
+    });
+  }
+  if (discountTotal > 0) {
+    insights.push({
+      ico: '🎫',
+      text: `Descuentos financiados por vos: <strong>${money(discountTotal)}</strong>. Si podés negociar que la plataforma financie más, es plata directa a tu bolsillo.`
+    });
+  }
+  if (taxTotal > 0 && costos.gmv > 0) {
+    const taxPct = (taxTotal / costos.gmv) * 100;
+    insights.push({
+      ico: '🧾',
+      text: `IVA sobre cargos: <strong>${money(taxTotal)}</strong> (${pct(taxPct)}). Recordá que este IVA es crédito fiscal si estás en el régimen general.`
+    });
+  }
+
+  const insightsHtml = insights.length > 0
+    ? `<div class="costos-insights">
+        <div class="costos-insights-title">💡 Qué hacer con esto</div>
+        ${insights.map(i => `<div class="costos-insight-item"><span class="ico">${i.ico}</span><div>${i.text}</div></div>`).join('')}
+      </div>`
+    : '';
+
+  body.innerHTML = `
+    <div class="costos-hero">
+      <div class="costos-summary-grid">
+        <div>
+          <div class="costos-donut-wrap">
+            <canvas id="costosDonut"></canvas>
+            <div class="costos-donut-center">
+              <div class="costos-donut-value">${pct(costos.realRate)}</div>
+              <div class="costos-donut-label">Costo real</div>
+            </div>
+          </div>
+        </div>
+        <div class="costos-headline">
+          <div class="costos-headline-big">${headlineHtml}</div>
+          <div class="costos-headline-desc">De cada ${money(100)} vendidos, <strong>${money(costos.realRate)}</strong> son cargos de plataforma. Aquí el desglose completo, sin sorpresas.</div>
+          <div class="costos-comparison">
+            <div class="costos-comp-item">
+              <div class="costos-comp-label">Comisión "nominal"</div>
+              <div class="costos-comp-val nominal">${pct(costos.nominalRate)}</div>
+              <div class="costos-comp-hint">Lo que dice el contrato</div>
+            </div>
+            <div class="costos-comp-item">
+              <div class="costos-comp-label">Costo real total</div>
+              <div class="costos-comp-val real">${pct(costos.realRate)}</div>
+              <div class="costos-comp-hint">Todo incluido</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="costos-table">
+      <div class="costos-table-head">
+        <div>Concepto</div>
+        <div>Monto</div>
+        <div>% GMV</div>
+        <div>% del total</div>
+      </div>
+      ${rowsHtml}
+      <div class="costos-table-row total">
+        <div class="costos-cat-name">TOTAL de cargos</div>
+        <div class="costos-cat-value">${moneyDec(costos.totalCost)}</div>
+        <div class="costos-cat-pct">${pct(costos.realRate)}</div>
+        <div class="costos-cat-share">100%</div>
+      </div>
+    </div>
+
+    ${insightsHtml}
+  `;
+
+  // Dibujar el donut
+  setTimeout(() => drawCostosDonut(donutData), 50);
+}
+
+function drawCostosDonut(data) {
+  const canvas = document.getElementById('costosDonut');
+  if (!canvas || !data || data.length === 0) return;
+
+  // Destroy chart previo
+  if (APP.charts && APP.charts.costosDonut) {
+    try { APP.charts.costosDonut.destroy(); } catch(e){}
+  }
+
+  const total = data.reduce((s, d) => s + d.value, 0);
+
+  APP.charts = APP.charts || {};
+  APP.charts.costosDonut = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: data.map(d => d.label),
+      datasets: [{
+        data: data.map(d => d.value),
+        backgroundColor: data.map(d => d.color),
+        borderColor: '#EDE4CE',
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      cutout: '68%',
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const val = ctx.parsed;
+              const pct = total > 0 ? (val/total*100).toFixed(1) : 0;
+              return `${ctx.label}: S/${val.toFixed(0)} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Enganchar renderCostos al flujo de análisis
+// Cuando renderStage2 corra, también renderiza costos
+const _originalRenderStage2 = window.renderStage2;
+window.renderStage2 = function() {
+  if (typeof _originalRenderStage2 === 'function') {
+    _originalRenderStage2.apply(this, arguments);
+  }
+  try {
+    renderCostos();
+  } catch (err) {
+    console.error('[Costos] render error:', err);
   }
 };
 
