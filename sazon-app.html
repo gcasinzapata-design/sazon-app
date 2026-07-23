@@ -1020,6 +1020,58 @@ input[type=file]{display:none;}
   .costos-platform-grid{grid-template-columns:1fr;}
 }
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SPRINT 3 — Módulo ROAS (Publicidad)
+   ═══════════════════════════════════════════════════════════════ */
+.roas-hero{background:linear-gradient(135deg, var(--c) 0%, var(--w) 100%);border-radius:6px;padding:28px;margin-bottom:20px;border-top:4px solid #e88b3a;}
+.roas-hero-title{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:900;margin-bottom:8px;color:var(--t);}
+.roas-hero-desc{font-size:.88rem;color:var(--m);line-height:1.55;}
+
+.roas-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.roas-kpi{background:#fff;border:1px solid var(--l);border-radius:4px;padding:16px;text-align:center;}
+.roas-kpi.highlight{background:linear-gradient(135deg, rgba(232,139,58,.06), rgba(232,139,58,.02));border-color:rgba(232,139,58,.25);}
+.roas-kpi-label{font-size:.62rem;color:var(--m);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px;}
+.roas-kpi-val{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:900;color:var(--t);line-height:1;}
+.roas-kpi-val.money{color:#e88b3a;}
+.roas-kpi-hint{font-size:.65rem;color:var(--m);margin-top:6px;line-height:1.4;}
+
+.roas-channels{display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px;margin-top:20px;}
+.roas-channel-card{background:#fff;border:1px solid var(--l);border-radius:6px;padding:16px 18px;position:relative;overflow:hidden;}
+.roas-channel-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--channelColor, var(--m));}
+.roas-channel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.roas-channel-name{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;}
+.roas-channel-tag{font-size:.55rem;padding:2px 8px;border-radius:100px;background:var(--w);color:var(--m);text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+.roas-channel-tag.forced{background:rgba(232,139,58,.15);color:#8a4a0e;}
+.roas-channel-tag.optional{background:rgba(45,106,79,.15);color:var(--gr);}
+.roas-channel-amount{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:var(--t);margin-bottom:4px;}
+.roas-channel-share{font-size:.72rem;color:var(--m);}
+.roas-channel-share strong{color:#e88b3a;}
+
+.roas-comparison{background:var(--w);border-radius:4px;padding:16px 18px;margin-top:20px;}
+.roas-comparison-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--m);margin-bottom:12px;}
+.roas-bar-row{margin-bottom:12px;}
+.roas-bar-label{display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:4px;color:var(--t);}
+.roas-bar-label .amt{font-family:'DM Mono',monospace;color:#e88b3a;font-weight:600;}
+.roas-bar-track{height:8px;background:rgba(0,0,0,.06);border-radius:100px;overflow:hidden;}
+.roas-bar-fill{height:100%;background:#e88b3a;border-radius:100px;transition:width .3s;}
+
+.roas-insights{background:rgba(232,139,58,.05);border-left:3px solid #e88b3a;padding:16px 20px;border-radius:0 4px 4px 0;margin-top:20px;}
+.roas-insights-title{font-family:'Playfair Display',serif;font-weight:700;font-size:1rem;margin-bottom:10px;color:#8a4a0e;}
+.roas-insight-item{display:flex;gap:10px;margin-bottom:8px;font-size:.82rem;color:var(--t);line-height:1.5;}
+.roas-insight-item .ico{flex-shrink:0;font-size:1rem;}
+.roas-insight-item strong{color:#8a4a0e;}
+
+.roas-noData{background:#fff;border:2px dashed var(--l);border-radius:4px;padding:36px;text-align:center;color:var(--m);}
+.roas-noData-ico{font-size:2.5rem;margin-bottom:10px;}
+.roas-noData-title{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--t);margin-bottom:6px;}
+.roas-noData-desc{font-size:.85rem;line-height:1.6;max-width:520px;margin:0 auto;}
+
+@media (max-width:900px){
+  .roas-kpi-grid{grid-template-columns:repeat(2,1fr);}
+}
+
 </style>
 </head>
 <body>
@@ -1228,6 +1280,28 @@ input[type=file]{display:none;}
     <!-- ═══ PANELES DEL MOTOR (Sprint 2 A.2.1) ═══════════════════════════ -->
     <!-- Estos paneles están en el DOM pero .panel:not(.active) los oculta -->
     <div class="rpt" id="rptWrap" style="display:none">
+      <!-- ═══ FILTRO DE PERÍODO (Sprint 3 - Paso 3) ══════════════════════ -->
+      <div id="periodFilterBar" style="display:none;background:#fff;border-bottom:1px solid var(--l);padding:10px 24px;">
+        <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--m);">📅 Período:</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;" id="periodQuickBtns">
+            <button class="period-btn active" data-period="all" onclick="setPeriodFilter('all')">Todos</button>
+            <button class="period-btn" data-period="7" onclick="setPeriodFilter('7')">7 días</button>
+            <button class="period-btn" data-period="30" onclick="setPeriodFilter('30')">30 días</button>
+            <button class="period-btn" data-period="90" onclick="setPeriodFilter('90')">90 días</button>
+          </div>
+          <div style="flex:1;text-align:right;font-size:.72rem;color:var(--m);" id="periodInfo">
+            <!-- Info del período seleccionado y órdenes filtradas -->
+          </div>
+        </div>
+      </div>
+
+      <style>
+        .period-btn{background:transparent;border:1px solid var(--l);color:var(--m);padding:6px 14px;border-radius:100px;font-size:.7rem;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.8px;transition:all .15s;font-family:'DM Sans',sans-serif;}
+        .period-btn:hover{border-color:var(--r);color:var(--r);}
+        .period-btn.active{background:var(--r);color:#fff;border-color:var(--r);}
+      </style>
+
       <div class="acc-bar"></div>
 
       <!-- ── DASHBOARD ── -->
@@ -1514,6 +1588,21 @@ input[type=file]{display:none;}
           <!-- Contenido dinámico -->
         </div>
       </div>
+
+      <!-- ── ROAS PUBLICIDAD (Sprint 3 - Paso 2) ── -->
+      <div class="panel" id="p-roas">
+        <div class="section-head">
+          <div class="section-ico">📈</div>
+          <div>
+            <div class="section-title">Análisis de publicidad y promos</div>
+            <div class="section-sub">Cuánto gastas en ads · qué canal es más caro · costo por orden</div>
+          </div>
+        </div>
+        <div id="roasBody">
+          <!-- Contenido dinámico -->
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1593,6 +1682,7 @@ const TAB_META = {
   ticket:     { icon: '💰', label: 'Ticket' },
   retencion:  { icon: '🔁', label: 'Retención' },
   costos:     { icon: '💸', label: 'Costos reales' },
+  roas:       { icon: '📈', label: 'Publicidad' },
   financiero: { icon: '📊', label: 'Financiero' },
   roadmap:    { icon: '📋', label: 'Roadmap' },
 };
@@ -3809,7 +3899,7 @@ function renderTabBar(){
     ['patrones', 'precios'],
     ['menu', 'combos', 'promos'],
     ['adq', 'ticket', 'retencion'],
-    ['costos', 'financiero', 'roadmap'],
+    ['costos', 'roas', 'financiero', 'roadmap'],
   ];
   let html = '';
   groups.forEach((group, gi) => {
@@ -8851,6 +8941,433 @@ async function parsePeyaAccountStatementPDF(file) {
     return null;
   }
 }
+
+
+
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 3 — Módulo ROAS (Análisis de Publicidad)
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Calcula el análisis de publicidad y promos
+ * Combina datos de:
+ * - orders (Rappi): costs.adsSpend (RappiAds directo)
+ * - peyaSummary: fugaces + goldVip + adSpend
+ */
+function computeROAS(orders, peyaSummary) {
+  const result = {
+    hasData: false,
+    hasRappi: false,
+    hasPeya: false,
+
+    totalOrders: 0,
+    totalGmv: 0,
+    totalAdsSpend: 0,
+    adsRatio: 0,          // % del GMV en ads
+    costPerOrder: 0,      // gasto ads / total órdenes
+    apparentROAS: 0,      // GMV / gasto ads
+
+    // Por plataforma
+    rappi: { orders: 0, gmv: 0, adSpend: 0, ratio: 0 },
+    peya: { orders: 0, gmv: 0, adSpend: 0, ratio: 0 },
+
+    // Canales de ads (para el ranking)
+    channels: [],  // {name, platform, amount, type: 'forced'|'optional'}
+  };
+
+  const doneOrders = (orders || []).filter(o => !o.cancelled && o.total > 0);
+  if (doneOrders.length === 0 && !peyaSummary) return result;
+
+  const rappiOrders = doneOrders.filter(o => o.platform === 'rappi');
+  const peyaOrders = doneOrders.filter(o => o.platform === 'peya');
+
+  const rappiGmv = rappiOrders.reduce((s, o) => s + o.total, 0);
+  const peyaGmv = peyaOrders.reduce((s, o) => s + o.total, 0);
+
+  // ─── Rappi ───
+  let rappiAdsSpend = 0;
+  let rappiAdsTax = 0;
+  rappiOrders.forEach(o => {
+    if (o.costs) {
+      rappiAdsSpend += (o.costs.adsSpend || 0);
+      rappiAdsTax += (o.costs.taxAds || 0);
+    }
+  });
+
+  if (rappiOrders.length > 0) {
+    result.hasRappi = true;
+    result.rappi.orders = rappiOrders.length;
+    result.rappi.gmv = rappiGmv;
+    result.rappi.adSpend = rappiAdsSpend + rappiAdsTax;
+    result.rappi.ratio = rappiGmv > 0 ? (result.rappi.adSpend / rappiGmv) * 100 : 0;
+
+    if (rappiAdsSpend > 0) {
+      result.channels.push({
+        name: 'RappiAds',
+        platform: 'rappi',
+        amount: rappiAdsSpend + rappiAdsTax,
+        type: 'optional',
+        emoji: '🟠',
+        color: '#e88b3a',
+        note: 'Publicidad opcional que compraste para aparecer destacado'
+      });
+    }
+  }
+
+  // ─── PeYa ───
+  if (peyaSummary) {
+    result.hasPeya = true;
+    // GMV PeYa: usar ventasNetas si viene del summary/PDF
+    const effectivePeyaGmv = peyaSummary.ventasNetas > 0 ? peyaSummary.ventasNetas : peyaGmv;
+    result.peya.orders = peyaSummary.orders || peyaOrders.length;
+    result.peya.gmv = effectivePeyaGmv;
+
+    // Si tenemos desglose granular (fugaces + goldVip separados)
+    const hasGranular = peyaSummary.fugaces > 0 || peyaSummary.goldVip > 0;
+
+    if (hasGranular) {
+      const fugaces = peyaSummary.fugaces || 0;
+      const goldVip = peyaSummary.goldVip || 0;
+      result.peya.adSpend = fugaces + goldVip;
+
+      if (fugaces > 0) {
+        result.channels.push({
+          name: 'Descuentos Fugaces',
+          platform: 'peya',
+          amount: fugaces,
+          type: 'forced',
+          emoji: '🔵',
+          color: '#0064c8',
+          note: 'Promo automática (a menudo activada por default en PedidosYa)'
+        });
+      }
+      if (goldVip > 0) {
+        result.channels.push({
+          name: 'Campaña Gold VIP',
+          platform: 'peya',
+          amount: goldVip,
+          type: 'optional',
+          emoji: '⭐',
+          color: '#c8a045',
+          note: 'Publicidad premium en PedidosYa'
+        });
+      }
+    } else if (peyaSummary.adSpend > 0) {
+      // Solo tenemos el agregado
+      result.peya.adSpend = peyaSummary.adSpend;
+      result.channels.push({
+        name: 'Publicidad PedidosYa (total)',
+        platform: 'peya',
+        amount: peyaSummary.adSpend,
+        type: 'forced',
+        emoji: '🔵',
+        color: '#0064c8',
+        note: 'Agregado del reporte mensual (incluye Fugaces + Gold VIP + otros)'
+      });
+    }
+
+    result.peya.ratio = result.peya.gmv > 0 ? (result.peya.adSpend / result.peya.gmv) * 100 : 0;
+  }
+
+  // ─── Consolidado ───
+  result.totalOrders = result.rappi.orders + result.peya.orders;
+  result.totalGmv = result.rappi.gmv + result.peya.gmv;
+  result.totalAdsSpend = result.rappi.adSpend + result.peya.adSpend;
+  result.adsRatio = result.totalGmv > 0 ? (result.totalAdsSpend / result.totalGmv) * 100 : 0;
+  result.costPerOrder = result.totalOrders > 0 ? result.totalAdsSpend / result.totalOrders : 0;
+  result.apparentROAS = result.totalAdsSpend > 0 ? result.totalGmv / result.totalAdsSpend : 0;
+
+  // Ordenar canales por gasto descendente
+  result.channels.sort((a, b) => b.amount - a.amount);
+
+  result.hasData = result.totalAdsSpend > 0;
+  return result;
+}
+
+/**
+ * Renderiza el módulo ROAS en el panel #p-roas
+ */
+function renderROAS() {
+  const body = document.getElementById('roasBody');
+  if (!body) return;
+
+  const orders = APP.allOrders || [];
+  const peya = APP.D?.peyaSummary
+            || APP.D?._peyaSummary
+            || APP.allOrders?._peyaSummary
+            || null;
+  const roas = computeROAS(orders, peya);
+
+  if (!roas.hasData) {
+    body.innerHTML = `
+      <div class="roas-noData">
+        <div class="roas-noData-ico">📈</div>
+        <div class="roas-noData-title">Sin datos de publicidad</div>
+        <div class="roas-noData-desc">
+          No detectamos gastos en publicidad o promos en tus reportes.<br><br>
+          Si estás corriendo campañas en Rappi Ads, Descuentos Fugaces o Gold VIP, sube:
+          <br>• <strong>Rappi</strong>: Reporte Financiero completo
+          <br>• <strong>PedidosYa</strong>: Estado de cuenta semanal en PDF (granular)
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const money = n => 'S/' + Math.round(n).toLocaleString('es-PE');
+  const moneyDec = n => 'S/' + n.toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const pct = n => n.toFixed(2) + '%';
+
+  // Insights automáticos
+  const insights = [];
+
+  if (roas.adsRatio > 20) {
+    insights.push({
+      ico: '⚠️',
+      text: `Estás gastando <strong>${pct(roas.adsRatio)}</strong> del GMV en publicidad — más de 20% es alto. Considera revisar qué campañas están activas y desactivar las menos rentables.`
+    });
+  } else if (roas.adsRatio > 10) {
+    insights.push({
+      ico: '💰',
+      text: `Gastas <strong>${pct(roas.adsRatio)}</strong> del GMV en ads. Está en el rango típico, pero vale la pena verificar si cada canal aporta valor.`
+    });
+  } else {
+    insights.push({
+      ico: '✓',
+      text: `Gasto en publicidad de <strong>${pct(roas.adsRatio)}</strong> del GMV — está en un rango saludable.`
+    });
+  }
+
+  if (roas.totalOrders > 0) {
+    insights.push({
+      ico: '📊',
+      text: `Cada orden te "cuesta" <strong>${moneyDec(roas.costPerOrder)}</strong> en publicidad. Compará esto con el margen bruto que sacás por orden para saber si conviene seguir invirtiendo.`
+    });
+  }
+
+  // Análisis por canal - identificar el más costoso
+  if (roas.channels.length > 1) {
+    const topChannel = roas.channels[0];
+    const topShare = (topChannel.amount / roas.totalAdsSpend) * 100;
+    insights.push({
+      ico: '🎯',
+      text: `<strong>${topChannel.name}</strong> es tu canal más costoso: representa el <strong>${pct(topShare)}</strong> de tu gasto total en ads (${moneyDec(topChannel.amount)}).`
+    });
+  }
+
+  // Fugaces: mensaje específico si está activo (muchos restaurantes ni saben que lo tienen)
+  const fugacesChannel = roas.channels.find(c => c.name === 'Descuentos Fugaces');
+  if (fugacesChannel && fugacesChannel.amount > 100) {
+    insights.push({
+      ico: '🔍',
+      text: `Descuentos Fugaces te cobra <strong>${moneyDec(fugacesChannel.amount)}</strong>. Es una promo que PedidosYa suele activar por default. Verificá si está prendida en tu panel — se puede pausar.`
+    });
+  }
+
+  // Comparativa Rappi vs PeYa en % de ads
+  if (roas.hasRappi && roas.hasPeya) {
+    if (roas.peya.ratio > roas.rappi.ratio * 1.5) {
+      insights.push({
+        ico: '⚖️',
+        text: `PedidosYa te consume ${pct(roas.peya.ratio)} en ads vs ${pct(roas.rappi.ratio)} en Rappi. La brecha sugiere que PedidosYa tiene más gasto forzado (Fugaces).`
+      });
+    } else if (roas.rappi.ratio > roas.peya.ratio * 1.5) {
+      insights.push({
+        ico: '⚖️',
+        text: `Rappi te consume ${pct(roas.rappi.ratio)} en ads vs ${pct(roas.peya.ratio)} en PedidosYa. Está desbalanceado — considera reducir RappiAds.`
+      });
+    }
+  }
+
+  const insightsHtml = insights.length > 0
+    ? `<div class="roas-insights">
+        <div class="roas-insights-title">💡 Qué hacer con esto</div>
+        ${insights.map(i => `<div class="roas-insight-item"><span class="ico">${i.ico}</span><div>${i.text}</div></div>`).join('')}
+      </div>`
+    : '';
+
+  // Renderizar canales
+  const channelsHtml = roas.channels.map(c => `
+    <div class="roas-channel-card" style="--channelColor: ${c.color}">
+      <div class="roas-channel-head">
+        <div class="roas-channel-name">${c.emoji} ${c.name}</div>
+        <div class="roas-channel-tag ${c.type}">${c.type === 'forced' ? 'Forzado' : 'Opcional'}</div>
+      </div>
+      <div class="roas-channel-amount">${moneyDec(c.amount)}</div>
+      <div class="roas-channel-share">
+        <strong>${pct(roas.totalAdsSpend > 0 ? (c.amount / roas.totalAdsSpend * 100) : 0)}</strong> del gasto total en ads<br>
+        <span style="color:var(--m);font-size:.68rem">${c.note}</span>
+      </div>
+    </div>
+  `).join('');
+
+  // Barra comparativa
+  const maxChannelAmount = Math.max(...roas.channels.map(c => c.amount), 1);
+  const barsHtml = roas.channels.map(c => `
+    <div class="roas-bar-row">
+      <div class="roas-bar-label">
+        <span>${c.emoji} ${c.name}</span>
+        <span class="amt">${moneyDec(c.amount)}</span>
+      </div>
+      <div class="roas-bar-track">
+        <div class="roas-bar-fill" style="width: ${(c.amount / maxChannelAmount * 100).toFixed(1)}%; background: ${c.color};"></div>
+      </div>
+    </div>
+  `).join('');
+
+  body.innerHTML = `
+    <div class="roas-hero">
+      <div class="roas-hero-title">📈 Tu inversión en publicidad</div>
+      <div class="roas-hero-desc">Este módulo muestra cuánto gastas realmente en publicidad y promos automáticas. Los "ROAS" que ves son aparentes (GMV / gasto ads) — para el ROAS real necesitarías A/B testing.</div>
+    </div>
+
+    <div class="roas-kpi-grid">
+      <div class="roas-kpi highlight">
+        <div class="roas-kpi-label">Total gastado en ads</div>
+        <div class="roas-kpi-val money">${money(roas.totalAdsSpend)}</div>
+        <div class="roas-kpi-hint">${pct(roas.adsRatio)} del GMV total</div>
+      </div>
+      <div class="roas-kpi">
+        <div class="roas-kpi-label">Costo por orden</div>
+        <div class="roas-kpi-val">${moneyDec(roas.costPerOrder)}</div>
+        <div class="roas-kpi-hint">Gasto ads / ${roas.totalOrders} órdenes</div>
+      </div>
+      <div class="roas-kpi">
+        <div class="roas-kpi-label">ROAS aparente</div>
+        <div class="roas-kpi-val">${roas.apparentROAS.toFixed(2)}x</div>
+        <div class="roas-kpi-hint">S/${roas.apparentROAS.toFixed(2)} vendidos por cada S/1 de ads</div>
+      </div>
+      <div class="roas-kpi">
+        <div class="roas-kpi-label">Canales activos</div>
+        <div class="roas-kpi-val">${roas.channels.length}</div>
+        <div class="roas-kpi-hint">Tipos de publicidad detectados</div>
+      </div>
+    </div>
+
+    <div class="roas-channels">
+      ${channelsHtml}
+    </div>
+
+    <div class="roas-comparison">
+      <div class="roas-comparison-title">📊 Ranking de canales por gasto</div>
+      ${barsHtml}
+    </div>
+
+    ${insightsHtml}
+  `;
+}
+
+// Enganchar al flujo de análisis
+const _renderStage2Prev = window.renderStage2;
+window.renderStage2 = function() {
+  if (typeof _renderStage2Prev === 'function') {
+    _renderStage2Prev.apply(this, arguments);
+  }
+  try {
+    renderROAS();
+  } catch (err) {
+    console.error('[ROAS] render error:', err);
+  }
+};
+
+
+
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 3 — Filtro global de período
+// ═══════════════════════════════════════════════════════════════════════
+
+APP.currentPeriodFilter = 'all';
+APP._unfilteredOrders = null;
+
+function setPeriodFilter(period) {
+  APP.currentPeriodFilter = period;
+
+  // Actualizar UI de botones
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  const active = document.querySelector(`.period-btn[data-period="${period}"]`);
+  if (active) active.classList.add('active');
+
+  applyPeriodFilter();
+}
+
+function applyPeriodFilter() {
+  if (!APP.allOrders || APP.allOrders.length === 0) return;
+
+  // Guardar orders originales la primera vez
+  if (!APP._unfilteredOrders) {
+    APP._unfilteredOrders = APP.allOrders;
+  }
+
+  const period = APP.currentPeriodFilter;
+
+  if (period === 'all') {
+    APP.allOrders = APP._unfilteredOrders;
+  } else {
+    const daysBack = parseInt(period, 10);
+    if (isNaN(daysBack)) return;
+
+    // Encontrar la fecha más reciente en los orders
+    const withDate = APP._unfilteredOrders.filter(o => o.date instanceof Date);
+    if (withDate.length === 0) return;
+
+    const latestDate = new Date(Math.max(...withDate.map(o => o.date.getTime())));
+    const cutoff = new Date(latestDate.getTime() - daysBack * 86400000);
+
+    APP.allOrders = APP._unfilteredOrders.filter(o => {
+      if (!o.date) return false;
+      return o.date >= cutoff;
+    });
+
+    // Copiar propiedades especiales del array
+    APP.allOrders._peyaSummary = APP._unfilteredOrders._peyaSummary;
+    APP.allOrders._parseLog = APP._unfilteredOrders._parseLog;
+  }
+
+  // Actualizar info visible
+  const info = document.getElementById('periodInfo');
+  if (info) {
+    const orig = APP._unfilteredOrders?.length || 0;
+    const filtered = APP.allOrders?.length || 0;
+    if (period === 'all') {
+      info.textContent = `${filtered} órdenes en total`;
+    } else {
+      info.textContent = `Últimos ${period} días: ${filtered} de ${orig} órdenes`;
+    }
+  }
+
+  // Re-computar análisis y re-renderizar todos los módulos
+  try {
+    APP.D = analyze(APP.allOrders);
+    if (typeof window.renderStage2 === 'function') {
+      window.renderStage2();
+    }
+  } catch (err) {
+    console.error('[PeriodFilter] Re-analyze error:', err);
+  }
+}
+
+// Mostrar filtro de período cuando entramos al reporte
+const _originalShowReport = window.showReport;
+window.showReport = function() {
+  if (typeof _originalShowReport === 'function') {
+    _originalShowReport.apply(this, arguments);
+  }
+  const bar = document.getElementById('periodFilterBar');
+  if (bar) bar.style.display = 'block';
+
+  // Reset del filtro cuando se carga un nuevo análisis
+  APP.currentPeriodFilter = 'all';
+  APP._unfilteredOrders = APP.allOrders;
+
+  const info = document.getElementById('periodInfo');
+  if (info && APP.allOrders) {
+    info.textContent = `${APP.allOrders.length} órdenes en total`;
+  }
+};
 
 
 
