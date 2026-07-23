@@ -1072,6 +1072,51 @@ input[type=file]{display:none;}
   .roas-kpi-grid{grid-template-columns:repeat(2,1fr);}
 }
 
+
+/* SPRINT 3 - Módulos Tendencias/Tiempos/Reclamos */
+.mod-hero{background:linear-gradient(135deg, var(--c) 0%, var(--w) 100%);border-radius:6px;padding:24px;margin-bottom:20px;}
+.mod-hero.tendencias{border-top:4px solid #2d6a4f;}
+.mod-hero.tiempos{border-top:4px solid #0064c8;}
+.mod-hero.reclamos{border-top:4px solid #c8392b;}
+.mod-hero-title{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;margin-bottom:6px;color:var(--t);}
+.mod-hero-desc{font-size:.85rem;color:var(--m);line-height:1.55;}
+.mod-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.mod-kpi{background:#fff;border:1px solid var(--l);border-radius:4px;padding:16px;text-align:center;}
+.mod-kpi-label{font-size:.62rem;color:var(--m);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px;}
+.mod-kpi-val{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--t);line-height:1;}
+.mod-kpi-val.up{color:#2d6a4f;}
+.mod-kpi-val.dn{color:#c8392b;}
+.mod-kpi-val.warn{color:#8a6000;}
+.mod-kpi-hint{font-size:.65rem;color:var(--m);margin-top:6px;}
+.mod-chart-wrap{background:#fff;border:1px solid var(--l);border-radius:4px;padding:18px;margin-bottom:16px;}
+.mod-chart-title{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;margin-bottom:12px;color:var(--t);}
+.mod-chart-canvas{height:280px;position:relative;}
+.mod-table{background:#fff;border:1px solid var(--l);border-radius:4px;overflow:hidden;margin-top:16px;}
+.mod-table-head{background:var(--d);color:#fff;display:grid;padding:10px 14px;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;gap:12px;}
+.mod-table-row{display:grid;padding:12px 14px;gap:12px;border-top:1px solid var(--l);font-size:.78rem;align-items:center;}
+.mod-table-row:hover{background:var(--w);}
+.mod-insights{background:rgba(45,106,79,.05);border-left:3px solid var(--gr);padding:16px 20px;border-radius:0 4px 4px 0;margin-top:20px;}
+.mod-insights.tiempos{background:rgba(0,100,200,.05);border-left-color:#0064c8;}
+.mod-insights.reclamos{background:rgba(200,57,43,.05);border-left-color:var(--r);}
+.mod-insights-title{font-family:'Playfair Display',serif;font-weight:700;font-size:1rem;margin-bottom:10px;color:var(--gr);}
+.mod-insights.tiempos .mod-insights-title{color:#0064c8;}
+.mod-insights.reclamos .mod-insights-title{color:var(--r);}
+.mod-insight-item{display:flex;gap:10px;margin-bottom:8px;font-size:.82rem;color:var(--t);line-height:1.5;}
+.mod-insight-item .ico{flex-shrink:0;font-size:1rem;}
+.mod-insight-item strong{color:var(--gr);}
+.mod-insights.tiempos .mod-insight-item strong{color:#0064c8;}
+.mod-insights.reclamos .mod-insight-item strong{color:var(--r);}
+.mod-noData{background:#fff;border:2px dashed var(--l);border-radius:4px;padding:36px;text-align:center;color:var(--m);}
+.mod-noData-ico{font-size:2.5rem;margin-bottom:10px;}
+.mod-noData-title{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--t);margin-bottom:6px;}
+.mod-noData-desc{font-size:.85rem;line-height:1.6;max-width:520px;margin:0 auto;}
+.mod-noData-desc code{background:var(--w);padding:2px 6px;border-radius:2px;font-family:'DM Mono',monospace;font-size:.78rem;color:var(--r);}
+.trend-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:.6rem;font-weight:700;}
+.trend-badge.up{background:rgba(45,106,79,.15);color:#2d6a4f;}
+.trend-badge.dn{background:rgba(200,57,43,.12);color:#c8392b;}
+.trend-badge.flat{background:rgba(0,0,0,.06);color:var(--m);}
+@media (max-width:900px){.mod-kpi-grid{grid-template-columns:repeat(2,1fr);}}
+
 </style>
 </head>
 <body>
@@ -1635,6 +1680,42 @@ input[type=file]{display:none;}
         </div>
       </div>
 
+      <!-- ── TENDENCIAS ── -->
+      <div class="panel" id="p-tendencias">
+        <div class="section-head">
+          <div class="section-ico">📈</div>
+          <div>
+            <div class="section-title">Tendencias mes a mes</div>
+            <div class="section-sub">Evolución histórica de ventas, pedidos y ticket promedio</div>
+          </div>
+        </div>
+        <div id="tendenciasBody"></div>
+      </div>
+
+      <!-- ── TIEMPOS ── -->
+      <div class="panel" id="p-tiempos">
+        <div class="section-head">
+          <div class="section-ico">⏱️</div>
+          <div>
+            <div class="section-title">Tiempos operativos</div>
+            <div class="section-sub">Tiempo de preparación · demoras · distribución</div>
+          </div>
+        </div>
+        <div id="tiemposBody"></div>
+      </div>
+
+      <!-- ── RECLAMOS ── -->
+      <div class="panel" id="p-reclamos">
+        <div class="section-head">
+          <div class="section-ico">⚠️</div>
+          <div>
+            <div class="section-title">Reclamos y cancelaciones</div>
+            <div class="section-sub">% de órdenes con problemas · causas más comunes</div>
+          </div>
+        </div>
+        <div id="reclamosBody"></div>
+      </div>
+
     </div>
 
     <!-- ═══ MIS ANÁLISIS PREVIOS (Sprint 2 A.2.3) - Movido debajo (Sprint 3) ══════════════════════ -->
@@ -1727,7 +1808,9 @@ const TAB_META = {
   retencion:  { icon: '🔁', label: 'Retención' },
   costos:     { icon: '💸', label: 'Costos reales' },
   roas:       { icon: '📈', label: 'Publicidad' },
-  financiero: { icon: '📊', label: 'Financiero' },
+  tendencias: { icon: '📈', label: 'Tendencias' },
+  tiempos:    { icon: '⏱️', label: 'Tiempos' },
+  reclamos:   { icon: '⚠️', label: 'Reclamos' },
   roadmap:    { icon: '📋', label: 'Roadmap' },
 };
 
@@ -3943,7 +4026,8 @@ function renderTabBar(){
     ['patrones', 'precios'],
     ['menu', 'combos', 'promos'],
     ['adq', 'ticket', 'retencion'],
-    ['costos', 'roas', 'financiero', 'roadmap'],
+    ['tendencias', 'tiempos', 'reclamos'],
+    ['costos', 'roas', 'roadmap'],
   ];
   let html = '';
   groups.forEach((group, gi) => {
@@ -4472,6 +4556,7 @@ function parseRappiFinancial(rows, platOverride){
   const ci={
     fecha:      fi(/fecha de creaci.n/),
     orden:      fi(/^id de la .rden$/),
+    prepTime:   fi(/tiempo de preparaci.n/),
     tienda:     fi(/nombre de la tienda/),
     metodo:     fi(/m.todo de pago/),
     estado:     fi(/estado de la .rden/),
@@ -4540,6 +4625,7 @@ function parseRappiFinancial(rows, platOverride){
       ingreso:  base - comPlat,
       items:'',
       isPrime:  /true/i.test(String(g(row,'prime')||'')),
+      prepTime: toFloat(g(row,'prepTime')),
       costs,  // Sprint 3: cargos desglosados
       _fmt:'rappi_financial',
     };
@@ -4693,6 +4779,80 @@ function parseSheet(rows, pl, logEntry){
   return { summary: null, orders: parsed, fmt };
 }
 
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 3 — Parser ordersPerMonth (histórico PeYa)
+// ═══════════════════════════════════════════════════════════════════════
+
+function parsePeyaMonthlyHistory(rows) {
+  if (!rows || rows.length < 2) return null;
+  const headers = rows[0];
+  if (!headers) return null;
+
+  const hasMonth = headers.some(h => /^mes$/i.test(String(h || '')));
+  const hasOrders = headers.some(h => /^pedidos$/i.test(String(h || '')));
+  const hasSales = headers.some(h => /^ventas$/i.test(String(h || '')));
+  if (!hasMonth || !hasOrders || !hasSales) return null;
+
+  const fi = (kw) => headers.findIndex(h => kw.test(String(h || '')));
+  const ci = {
+    month:       fi(/^mes$/i),
+    orders:      fi(/^pedidos$/i),
+    rejected:    fi(/^rechazados$/i),
+    sales:       fi(/^ventas$/i),
+    ordersDelivery: fi(/pedidos con delivery/i),
+    ordersPickup:   fi(/pedidos con pickup/i),
+    salesDelivery:  fi(/ventas con delivery/i),
+    salesPickup:    fi(/ventas con pickup/i),
+    ordersOnline:   fi(/pedidos con pago online/i),
+  };
+
+  const parsePeyaNum = (v) => {
+    if (!v && v !== 0) return 0;
+    let s = String(v).trim();
+    if (/^\d{1,3}(\.\d{3})*(,\d+)?$/.test(s)) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      s = s.replace(/,/g, '.');
+    }
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
+
+  const months = [];
+  for (const row of rows.slice(1)) {
+    const monthStr = String(row[ci.month] || '').trim();
+    if (!monthStr || !/^\d{4}-\d{2}$/.test(monthStr)) continue;
+
+    const orders = parsePeyaNum(row[ci.orders]);
+    const rejected = parsePeyaNum(row[ci.rejected]);
+    const sales = parsePeyaNum(row[ci.sales]);
+    if (orders === 0 && sales === 0) continue;
+
+    months.push({
+      month: monthStr,
+      orders, rejected, sales,
+      avgTicket: orders > 0 ? sales / orders : 0,
+      rejectionRate: (orders + rejected) > 0 ? (rejected / (orders + rejected)) * 100 : 0,
+      ordersDelivery: parsePeyaNum(row[ci.ordersDelivery]),
+      ordersPickup: parsePeyaNum(row[ci.ordersPickup]),
+      salesDelivery: parsePeyaNum(row[ci.salesDelivery]),
+      salesPickup: parsePeyaNum(row[ci.salesPickup]),
+      ordersOnline: parsePeyaNum(row[ci.ordersOnline]),
+    });
+  }
+
+  if (months.length === 0) return null;
+  months.sort((a, b) => a.month.localeCompare(b.month));
+  return {
+    _type: 'peya_monthly_history',
+    months,
+    monthCount: months.length,
+  };
+}
+
+
 async function parseAllFiles(files){
   const orders = [];
   orders._peyaSummary = null;
@@ -4758,6 +4918,18 @@ async function parseAllFiles(files){
         const rows = XLSX.utils.sheet_to_json(ws, { raw:false, defval:'', header:1 });
         if(!rows || rows.length < 2) continue;
         logEntry.rows += rows.length;
+
+        // Sprint 3: intentar como historial mensual PeYa primero
+        const monthlyHist = parsePeyaMonthlyHistory(rows);
+        if (monthlyHist) {
+          orders._peyaMonthlyHistory = monthlyHist;
+          logEntry.fmt = 'peya_monthly_history';
+          logEntry.orders = monthlyHist.months.length;
+          logEntry.sheets.push({ name: sn, fmt: 'peya_monthly_history', orders: monthlyHist.months.length });
+          fileOrders += monthlyHist.months.length;
+          console.log('[Parser] Detectado ordersPerMonth:', file.name, '·', monthlyHist.months.length, 'meses');
+          continue;
+        }
 
         const res = parseSheet(rows, pl, logEntry);
         logEntry.sheets.push({ name: sn, fmt: res.fmt, orders: res.orders.length });
@@ -7560,7 +7732,7 @@ function renderTabContent(tabId) {
       else if (tabId === 'tiempos' && typeof renderTiempos === 'function') renderTiempos();
       else if (tabId === 'reclamos' && typeof renderReclamos === 'function') renderReclamos();
     } catch (err) {
-      console.error('[renderTabContent] Error renderizando tab', tabId, err);
+      console.error('[renderTabContent] Error tab', tabId, err);
     }
   }
 }
@@ -8183,7 +8355,6 @@ async function persistCurrentAnalysis(processingMs) {
     return { success: false, error: 'Viewing historical - not saving again' };
   }
 
-  // Extraer los módulos del state actual (APP.D contiene los resultados de analyze())
   const modules = {
     dashboard: { generated: true },
     patrones: APP.D.patterns || {},
@@ -8198,7 +8369,7 @@ async function persistCurrentAnalysis(processingMs) {
     roadmap: APP.D.roadmap || {},
   };
 
-  // Sprint 3: snapshot completo para poder restaurar todo al re-abrir
+  // Sprint 3: guardar orders serializados + metadata para restore completo
   const ordersSerialized = (APP.allOrders || []).map(o => ({
     ...o,
     date: o.date instanceof Date ? o.date.toISOString() : o.date
@@ -8248,69 +8419,11 @@ async function loadAnalysisFromHistory(analysisId) {
 
   const a = result.analysis;
   const meta = a.metadata || {};
-  const modules = meta.modules || {};
-  const sprint3 = modules._sprint3;
 
-  // Sprint 3: Si tenemos snapshot completo, restaurar TODO
-  if (sprint3 && sprint3.orders && sprint3.orders.length > 0) {
-    console.log('[loadHistory] Sprint 3 snapshot detectado -', sprint3.orders.length, 'órdenes');
+  // Reconstruir APP.D desde los datos guardados
+  // Para el Sprint 2 A.2.3: mostramos los KPIs top-level + un mensaje "análisis histórico"
+  // La reconstrucción completa de módulos con re-render viene en A.2.4 (opcional Sprint 3)
 
-    // Deserializar fechas
-    const orders = sprint3.orders.map(o => ({
-      ...o,
-      date: o.date ? new Date(o.date) : null
-    }));
-
-    // Reasignar metadata al array
-    orders._peyaSummary = sprint3.peyaSummary || null;
-    orders._peyaMonthlyHistory = sprint3.peyaMonthlyHistory || null;
-
-    APP.allOrders = orders;
-    APP._unfilteredOrders = orders.slice();
-    APP._unfilteredOrders._peyaSummary = orders._peyaSummary;
-    APP._unfilteredOrders._peyaMonthlyHistory = orders._peyaMonthlyHistory;
-
-    APP.D = analyze(APP.allOrders);
-    if (orders._peyaSummary) APP.D.peyaSummary = orders._peyaSummary;
-    if (orders._peyaSummary) APP.D._peyaSummary = orders._peyaSummary;
-    if (orders._peyaMonthlyHistory) APP.D._peyaMonthlyHistory = orders._peyaMonthlyHistory;
-
-    APP.currentAnalysisId = a.id;
-    APP.viewingHistorical = true;
-
-    // Reset filtros
-    APP.currentPeriodFilter = 'all';
-    APP.currentPlatformFilter = 'all';
-    APP.customRange = null;
-
-    // Render completo
-    hideUploadFlow();
-    setStyle('welcomeEmpty', 'display', 'none');
-    setStyle('rptWrap', 'display', 'block');
-
-    if (typeof renderDashboard === 'function') {
-      renderDashboard(APP.D, APP.allOrders);
-    }
-    if (typeof window.renderStage2 === 'function') {
-      window.renderStage2();
-    }
-    if (typeof renderCharts === 'function') {
-      setTimeout(() => renderCharts(APP.D), 80);
-    }
-
-    // Mostrar filtros
-    const filterBar = document.getElementById('periodFilterBar');
-    if (filterBar) filterBar.style.display = 'block';
-
-    // Botón nuevo análisis
-    const btnNew = document.getElementById('btnNewAnalysis');
-    if (btnNew) btnNew.style.display = 'inline-block';
-
-    showToast('Análisis "' + (a.custom_name || a.name || 'histórico') + '" restaurado completamente');
-    return;
-  }
-
-  // Fallback para análisis viejos sin snapshot Sprint 3
   const kpis = meta.kpis || {};
   APP.D = {
     total_n: kpis.orders_total || a.orders_count || 0,
@@ -8327,14 +8440,45 @@ async function loadAnalysisFromHistory(analysisId) {
   APP.currentAnalysisId = a.id;
   APP.viewingHistorical = true;
 
+  // Mostrar los tabs y el badge "Viendo histórico"
   hideUploadFlow();
   setStyle('welcomeEmpty', 'display', 'none');
   setStyle('rptWrap', 'display', 'block');
 
+  // Mostrar botón "Nuevo análisis"
   const btnNew = document.getElementById('btnNewAnalysis');
   if (btnNew) btnNew.style.display = 'inline-block';
 
-  showToast('Análisis histórico cargado en modo básico. Para ver módulos completos, genera un nuevo análisis.', 'info');
+  // Activar el tab dashboard si tiene esa opción, sino el primero disponible
+  const allowedTabs = new Set(APP.tier?.tabs || ['dashboard']);
+  let targetTab = 'dashboard';
+  if (!allowedTabs.has('dashboard')) {
+    targetTab = Array.from(allowedTabs)[0] || 'dashboard';
+  }
+
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const targetTabEl = document.querySelector('[data-tab="'+targetTab+'"]');
+  if (targetTabEl) targetTabEl.classList.add('active');
+
+  document.querySelectorAll('#rptWrap .panel').forEach(p => p.classList.remove('active'));
+  const targetPanel = document.getElementById('p-' + targetTab);
+  if (targetPanel) {
+    targetPanel.classList.add('active');
+    targetPanel.querySelectorAll('.no-analysis-yet, .engine-placeholder').forEach(el => el.remove());
+
+    // Insertar el badge "viendo histórico" al principio del panel
+    const oldBadge = targetPanel.querySelector('.viewing-historical-badge');
+    if (oldBadge) oldBadge.remove();
+    const badge = document.createElement('div');
+    badge.className = 'viewing-historical-badge';
+    badge.innerHTML = `📚 Estás viendo un análisis histórico: <strong>${escapeHtml(a.custom_name || a.name)}</strong> · ${formatDate(a.created_at)}`;
+    targetPanel.insertBefore(badge, targetPanel.firstChild);
+  }
+
+  APP.currentTab = targetTab;
+
+  // Nota importante para el usuario
+  showToast('Análisis histórico cargado. Los datos son de solo lectura.', 'ok');
 }
 
 /**
@@ -9569,7 +9713,17 @@ window.showReport = function() {
   APP.currentPeriodFilter = 'all';
   APP.currentPlatformFilter = 'all';
   APP.customRange = null;
-  APP._unfilteredOrders = APP.allOrders;
+
+  // Copia con metadata preservada
+  const orig = APP.allOrders;
+  APP._unfilteredOrders = orig.slice();
+  APP._unfilteredOrders._peyaSummary = orig._peyaSummary;
+  APP._unfilteredOrders._peyaMonthlyHistory = orig._peyaMonthlyHistory;
+  APP._unfilteredOrders._parseLog = orig._parseLog;
+
+  // También en APP.D
+  if (APP.D && orig._peyaMonthlyHistory) APP.D._peyaMonthlyHistory = orig._peyaMonthlyHistory;
+  if (APP.D && orig._peyaSummary) { APP.D.peyaSummary = orig._peyaSummary; APP.D._peyaSummary = orig._peyaSummary; }
 
   // Reset UI de botones
   document.querySelectorAll('#periodQuickBtns .filter-btn').forEach(b => {
@@ -9585,6 +9739,487 @@ window.showReport = function() {
   }
 };
 
+
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 3 - 3 ANÁLISIS NUEVOS + Función unificada
+// ═══════════════════════════════════════════════════════════════════════
+
+// ─── TENDENCIAS ─────────────────────────────────────────────
+function renderTendencias() {
+  const body = document.getElementById('tendenciasBody');
+  if (!body) return;
+
+  const history = APP.allOrders?._peyaMonthlyHistory
+                || APP._unfilteredOrders?._peyaMonthlyHistory
+                || APP.D?._peyaMonthlyHistory
+                || null;
+
+  console.log('[Tendencias] history=', history ? 'presente (' + history.months?.length + ' meses)' : 'AUSENTE',
+              'allOrders._peyaMonthlyHistory=', !!APP.allOrders?._peyaMonthlyHistory,
+              'unfiltered=', !!APP._unfilteredOrders?._peyaMonthlyHistory,
+              'D=', !!APP.D?._peyaMonthlyHistory);
+
+  if (!history || !history.months || history.months.length < 2) {
+    body.innerHTML = '<div class="mod-noData"><div class="mod-noData-ico">📈</div>' +
+      '<div class="mod-noData-title">Necesitamos el reporte "Pedidos por mes" de PedidosYa</div>' +
+      '<div class="mod-noData-desc">' +
+      '<div style="text-align:left;background:var(--w);padding:16px;border-radius:4px;margin:16px 0;border-left:3px solid var(--gr);">' +
+      '<div style="font-weight:700;color:var(--t);margin-bottom:8px;">📥 Cómo descargar:</div>' +
+      '<ol style="text-align:left;margin:0 0 0 20px;line-height:1.7;font-size:.82rem;">' +
+      '<li>Entra a <strong>PedidosYa Hub</strong></li>' +
+      '<li>Menú → <strong>Finanzas</strong> → <strong>Reportes</strong></li>' +
+      '<li>Busca <strong>"Pedidos por mes"</strong></li>' +
+      '<li>Descargar → archivo tipo <code>ordersPerMonth_YYYYMMDD.xlsx</code></li>' +
+      '</ol></div>' +
+      '<div style="font-size:.75rem;color:var(--m);">Nota: <code>orders-XXX.xlsx</code> NO sirve (no tiene datos mensuales).</div>' +
+      '</div></div>';
+    return;
+  }
+
+  const months = history.months;
+  const money = n => 'S/' + Math.round(n).toLocaleString('es-PE');
+  const moneyDec = n => 'S/' + n.toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const pct = n => n.toFixed(2) + '%';
+  const num = n => Math.round(n).toLocaleString('es-PE');
+
+  const lastMonth = months[months.length - 1];
+  const prevMonth = months[months.length - 2];
+
+  const salesChange = prevMonth.sales > 0 ? ((lastMonth.sales - prevMonth.sales) / prevMonth.sales) * 100 : 0;
+  const ordersChange = prevMonth.orders > 0 ? ((lastMonth.orders - prevMonth.orders) / prevMonth.orders) * 100 : 0;
+  const ticketChange = prevMonth.avgTicket > 0 ? ((lastMonth.avgTicket - prevMonth.avgTicket) / prevMonth.avgTicket) * 100 : 0;
+
+  const clsCh = (v) => Math.abs(v) < 1 ? 'flat' : (v > 0 ? 'up' : 'dn');
+  const signCh = v => (v >= 0 ? '↑ +' : '↓ ') + Math.abs(v).toFixed(1);
+
+  const totalSales = months.reduce((s,m) => s + m.sales, 0);
+  const totalOrders = months.reduce((s,m) => s + m.orders, 0);
+  const avgMonthlySales = totalSales / months.length;
+
+  const fmtMonth = (m) => {
+    const [year, mo] = m.split('-');
+    const monthNames = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    return monthNames[parseInt(mo) - 1] + ' ' + year;
+  };
+
+  const rowsHtml = months.slice().reverse().map((m, i) => {
+    const isLast = i === 0;
+    let deltaVal = '';
+    if (i < months.length - 1) {
+      const prev = months.slice().reverse()[i + 1];
+      if (prev.sales > 0) {
+        const ch = ((m.sales - prev.sales) / prev.sales) * 100;
+        deltaVal = ' <span class="trend-badge ' + clsCh(ch) + '">' + signCh(ch) + '%</span>';
+      }
+    }
+    return '<div class="mod-table-row" style="grid-template-columns:1.2fr 1fr 1fr 1fr 1fr 1fr;">' +
+      '<div><strong>' + fmtMonth(m.month) + '</strong>' + (isLast ? ' <span style="font-size:.62rem;color:var(--m)">(último)</span>' : '') + '</div>' +
+      '<div>' + moneyDec(m.sales) + deltaVal + '</div>' +
+      '<div>' + num(m.orders) + '</div>' +
+      '<div>' + moneyDec(m.avgTicket) + '</div>' +
+      '<div>' + num(m.rejected) + '</div>' +
+      '<div>' + pct(m.rejectionRate) + '</div>' +
+    '</div>';
+  }).join('');
+
+  const insights = [];
+  if (Math.abs(salesChange) >= 15) {
+    insights.push({
+      ico: salesChange > 0 ? '🚀' : '⚠️',
+      text: 'Las ventas del último mes ' + (salesChange > 0 ? 'crecieron' : 'cayeron') +
+            ' <strong>' + Math.abs(salesChange).toFixed(1) + '%</strong> vs mes anterior.'
+    });
+  }
+  if (lastMonth.rejectionRate > 5) {
+    insights.push({
+      ico: '❌',
+      text: 'Tasa de rechazo del <strong>' + pct(lastMonth.rejectionRate) + '</strong> — sobre benchmark saludable (<5%).'
+    });
+  }
+  const sortedByS = [...months].sort((a,b) => b.sales - a.sales);
+  const bestM = sortedByS[0];
+  const worstM = sortedByS[sortedByS.length - 1];
+  if (bestM.month !== worstM.month) {
+    const range = ((bestM.sales - worstM.sales) / worstM.sales) * 100;
+    insights.push({
+      ico: '📊',
+      text: 'Mejor mes: <strong>' + fmtMonth(bestM.month) + ' (' + money(bestM.sales) + ')</strong>, ' +
+            'peor: <strong>' + fmtMonth(worstM.month) + ' (' + money(worstM.sales) + ')</strong>. Brecha ' + range.toFixed(0) + '%.'
+    });
+  }
+
+  const insightsHtml = insights.length > 0
+    ? '<div class="mod-insights"><div class="mod-insights-title">💡 Qué hacer con esto</div>' +
+      insights.map(i => '<div class="mod-insight-item"><span class="ico">' + i.ico + '</span><div>' + i.text + '</div></div>').join('') +
+      '</div>'
+    : '';
+
+  body.innerHTML =
+    '<div class="mod-hero tendencias">' +
+    '<div class="mod-hero-title">📈 Evolución de los últimos ' + months.length + ' meses</div>' +
+    '<div class="mod-hero-desc">Desde ' + fmtMonth(months[0].month) + ' hasta ' + fmtMonth(months[months.length-1].month) + ' · datos agregados de PedidosYa</div>' +
+    '</div>' +
+    '<div class="mod-kpi-grid">' +
+      '<div class="mod-kpi"><div class="mod-kpi-label">Ventas último mes</div>' +
+      '<div class="mod-kpi-val ' + clsCh(salesChange) + '">' + money(lastMonth.sales) + '</div>' +
+      '<div class="mod-kpi-hint">' + signCh(salesChange) + '% vs mes anterior</div></div>' +
+      '<div class="mod-kpi"><div class="mod-kpi-label">Órdenes último mes</div>' +
+      '<div class="mod-kpi-val ' + clsCh(ordersChange) + '">' + num(lastMonth.orders) + '</div>' +
+      '<div class="mod-kpi-hint">' + signCh(ordersChange) + '% vs mes anterior</div></div>' +
+      '<div class="mod-kpi"><div class="mod-kpi-label">Ticket promedio</div>' +
+      '<div class="mod-kpi-val ' + clsCh(ticketChange) + '">' + moneyDec(lastMonth.avgTicket) + '</div>' +
+      '<div class="mod-kpi-hint">' + signCh(ticketChange) + '% vs mes anterior</div></div>' +
+      '<div class="mod-kpi"><div class="mod-kpi-label">Ventas promedio mensual</div>' +
+      '<div class="mod-kpi-val">' + money(avgMonthlySales) + '</div>' +
+      '<div class="mod-kpi-hint">' + months.length + ' meses de historia</div></div>' +
+    '</div>' +
+    '<div class="mod-chart-wrap"><div class="mod-chart-title">📈 Ventas y órdenes mensuales</div>' +
+    '<div class="mod-chart-canvas"><canvas id="tendChart"></canvas></div></div>' +
+    '<div class="mod-table">' +
+    '<div class="mod-table-head" style="grid-template-columns:1.2fr 1fr 1fr 1fr 1fr 1fr;">' +
+    '<div>Mes</div><div>Ventas</div><div>Órdenes</div><div>Ticket</div><div>Rechazadas</div><div>% rechazo</div>' +
+    '</div>' + rowsHtml + '</div>' +
+    insightsHtml;
+
+  setTimeout(() => drawTendChart(months, fmtMonth), 60);
+}
+
+function drawTendChart(months, fmtMonth) {
+  const canvas = document.getElementById('tendChart');
+  if (!canvas || !window.Chart) return;
+  APP.charts = APP.charts || {};
+  if (APP.charts.tendChart) { try { APP.charts.tendChart.destroy(); } catch(e){} }
+
+  APP.charts.tendChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: months.map(m => fmtMonth(m.month)),
+      datasets: [
+        {
+          type: 'bar', label: 'Ventas (S/)',
+          data: months.map(m => m.sales),
+          backgroundColor: 'rgba(45,106,79,.6)', borderColor: '#2d6a4f', borderWidth: 1,
+          yAxisID: 'y', order: 2,
+        },
+        {
+          type: 'line', label: 'Órdenes',
+          data: months.map(m => m.orders),
+          borderColor: '#c8392b', backgroundColor: 'rgba(200,57,43,.15)',
+          borderWidth: 2, tension: 0.3, fill: false, yAxisID: 'y1', order: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
+      scales: {
+        y: { position: 'left', ticks: { callback: v => 'S/' + v.toLocaleString('es-PE'), font: { size: 10 } }, grid: { color: 'rgba(0,0,0,.05)' } },
+        y1: { position: 'right', ticks: { font: { size: 10 } }, grid: { display: false } },
+      },
+    },
+  });
+}
+
+// ─── TIEMPOS ─────────────────────────────────────────────
+function renderTiempos() {
+  const body = document.getElementById('tiemposBody');
+  if (!body) return;
+
+  const orders = APP.allOrders || [];
+  const withPrep = orders.filter(o => !o.cancelled && o.total > 0 && o.prepTime && o.prepTime > 0);
+
+  console.log('[Tiempos] total orders:', orders.length, '· con prepTime:', withPrep.length);
+
+  if (withPrep.length < 5) {
+    const isFiltered = APP.currentPlatformFilter !== 'all' || APP.currentPeriodFilter !== 'all';
+    const platMsg = APP.currentPlatformFilter === 'peya'
+      ? '<div style="background:rgba(200,160,69,.1);border-left:3px solid #c8a045;padding:12px 14px;border-radius:0 3px 3px 0;margin:14px 0;font-size:.78rem;text-align:left;"><strong>ℹ️ Filtro activo: PedidosYa</strong><br>Los tiempos de preparación vienen del reporte de Rappi. PedidosYa no incluye este dato. Cambia el filtro a "Todas" o "🟠 Rappi".</div>'
+      : '';
+    body.innerHTML = '<div class="mod-noData"><div class="mod-noData-ico">⏱️</div>' +
+      '<div class="mod-noData-title">' + (isFiltered ? 'Sin datos para el filtro actual' : 'Sin datos de tiempos') + '</div>' +
+      '<div class="mod-noData-desc">' + platMsg +
+      'Para tiempos operativos necesitamos:<br><br>' +
+      '<strong>Rappi</strong>: Reporte Financiero (columna "Tiempo de preparación")<br>' +
+      '<strong>PedidosYa</strong>: No soportado — exports de PeYa no incluyen tiempos por orden<br><br>' +
+      '<div style="font-size:.75rem;color:var(--m)">Órdenes con tiempo: ' + withPrep.length + ' (mín 5)</div>' +
+      '</div></div>';
+    return;
+  }
+
+  const num = n => Math.round(n).toLocaleString('es-PE');
+  const prepTimes = withPrep.map(o => o.prepTime).sort((a,b) => a - b);
+  const total = prepTimes.length;
+  const avg = prepTimes.reduce((s,v) => s+v, 0) / total;
+  const median = prepTimes[Math.floor(total/2)];
+  const p90 = prepTimes[Math.floor(total*0.9)];
+  const min = prepTimes[0];
+  const max = prepTimes[total-1];
+
+  const bands = [
+    { min: 0, max: 10, lbl: '<10 min' },
+    { min: 10, max: 15, lbl: '10-15 min' },
+    { min: 15, max: 20, lbl: '15-20 min' },
+    { min: 20, max: 30, lbl: '20-30 min' },
+    { min: 30, max: 45, lbl: '30-45 min' },
+    { min: 45, max: 9999, lbl: '>45 min' },
+  ];
+  const dist = bands.map(b => ({
+    ...b,
+    count: withPrep.filter(o => o.prepTime >= b.min && o.prepTime < b.max).length,
+  }));
+  dist.forEach(d => d.pct = (d.count / total) * 100);
+
+  const bySucursal = {};
+  withPrep.forEach(o => {
+    const s = o.sucursal || 'Principal';
+    if (!bySucursal[s]) bySucursal[s] = { orders: 0, totalTime: 0 };
+    bySucursal[s].orders++;
+    bySucursal[s].totalTime += o.prepTime;
+  });
+  const sucursales = Object.entries(bySucursal)
+    .map(([name, v]) => ({ name, orders: v.orders, avgTime: v.totalTime / v.orders }))
+    .sort((a,b) => b.avgTime - a.avgTime);
+
+  const clsAvg = avg < 15 ? 'up' : avg < 25 ? 'warn' : 'dn';
+
+  const insights = [];
+  if (avg > 25) insights.push({ ico: '🐢', text: 'Promedio: <strong>' + num(avg) + ' min</strong> — sobre benchmark saludable (<20 min).' });
+  else if (avg < 15) insights.push({ ico: '⚡', text: 'Excelente promedio de <strong>' + num(avg) + ' min</strong> — favorece tu ranking.' });
+
+  const slowPct = withPrep.filter(o => o.prepTime > 30).length / total * 100;
+  if (slowPct > 10) insights.push({ ico: '⚠️', text: '<strong>' + slowPct.toFixed(0) + '%</strong> de órdenes tomaron más de 30 min.' });
+  if (p90 > 45) insights.push({ ico: '📊', text: 'El 10% más lento tomó más de <strong>' + num(p90) + ' min</strong>. Genera reclamos.' });
+
+  if (sucursales.length > 1) {
+    const best = sucursales[sucursales.length - 1];
+    const worst = sucursales[0];
+    if (worst.avgTime - best.avgTime > 5) {
+      insights.push({ ico: '🏢', text: 'Diferencia: <strong>' + worst.name + '</strong> ' + num(worst.avgTime) + ' min vs <strong>' + best.name + '</strong> ' + num(best.avgTime) + ' min.' });
+    }
+  }
+
+  const insightsHtml = insights.length > 0
+    ? '<div class="mod-insights tiempos"><div class="mod-insights-title">💡 Qué hacer con esto</div>' +
+      insights.map(i => '<div class="mod-insight-item"><span class="ico">' + i.ico + '</span><div>' + i.text + '</div></div>').join('') +
+      '</div>'
+    : '';
+
+  const maxCount = Math.max(...dist.map(d => d.count));
+  const distHtml = dist.map(b => 
+    '<div style="display:grid;grid-template-columns:100px 1fr 60px 50px;gap:12px;align-items:center;padding:8px 0;font-size:.78rem;">' +
+    '<div style="font-weight:600">' + b.lbl + '</div>' +
+    '<div style="background:rgba(0,100,200,.08);border-radius:100px;height:16px;overflow:hidden;">' +
+    '<div style="height:100%;background:#0064c8;width:' + (maxCount > 0 ? (b.count/maxCount*100) : 0) + '%;"></div></div>' +
+    '<div style="text-align:right;font-family:monospace;">' + b.count + '</div>' +
+    '<div style="text-align:right;color:var(--m);font-size:.7rem;">' + b.pct.toFixed(1) + '%</div>' +
+    '</div>'
+  ).join('');
+
+  const sucursalRows = sucursales.map(s => {
+    const clsS = s.avgTime < 15 ? 'up' : s.avgTime < 25 ? 'warn' : 'dn';
+    return '<div class="mod-table-row" style="grid-template-columns:2fr 1fr 1fr;">' +
+      '<div><strong>' + s.name + '</strong></div>' +
+      '<div>' + s.orders + ' órdenes</div>' +
+      '<div><span class="mod-kpi-val ' + clsS + '" style="font-size:.95rem">' + num(s.avgTime) + ' min</span></div>' +
+      '</div>';
+  }).join('');
+
+  body.innerHTML =
+    '<div class="mod-hero tiempos">' +
+    '<div class="mod-hero-title">⏱️ Análisis de tiempos operativos</div>' +
+    '<div class="mod-hero-desc">Basado en ' + total + ' órdenes con datos de tiempo</div></div>' +
+    '<div class="mod-kpi-grid">' +
+    '<div class="mod-kpi"><div class="mod-kpi-label">Promedio</div>' +
+    '<div class="mod-kpi-val ' + clsAvg + '">' + num(avg) + ' min</div>' +
+    '<div class="mod-kpi-hint">Benchmark: <20 min</div></div>' +
+    '<div class="mod-kpi"><div class="mod-kpi-label">Mediana</div>' +
+    '<div class="mod-kpi-val">' + num(median) + ' min</div>' +
+    '<div class="mod-kpi-hint">50% bajo este tiempo</div></div>' +
+    '<div class="mod-kpi"><div class="mod-kpi-label">P90</div>' +
+    '<div class="mod-kpi-val ' + (p90 > 45 ? 'dn' : p90 > 30 ? 'warn' : '') + '">' + num(p90) + ' min</div>' +
+    '<div class="mod-kpi-hint">10% más lento</div></div>' +
+    '<div class="mod-kpi"><div class="mod-kpi-label">Rango</div>' +
+    '<div class="mod-kpi-val">' + num(min) + '-' + num(max) + '</div>' +
+    '<div class="mod-kpi-hint">Min-Max</div></div>' +
+    '</div>' +
+    '<div class="mod-chart-wrap"><div class="mod-chart-title">📊 Distribución de tiempos</div>' + distHtml + '</div>' +
+    (sucursales.length > 1
+      ? '<div class="mod-chart-wrap"><div class="mod-chart-title">🏢 Por sucursal</div>' +
+        '<div class="mod-table"><div class="mod-table-head" style="grid-template-columns:2fr 1fr 1fr;">' +
+        '<div>Sucursal</div><div>Volumen</div><div>Promedio</div></div>' + sucursalRows + '</div></div>'
+      : '') +
+    insightsHtml;
+}
+
+// ─── RECLAMOS ─────────────────────────────────────────────
+function renderReclamos() {
+  const body = document.getElementById('reclamosBody');
+  if (!body) return;
+
+  const orders = APP.allOrders || [];
+  const totalOrders = orders.length;
+
+  console.log('[Reclamos] total orders:', totalOrders);
+
+  if (totalOrders === 0) {
+    const isFiltered = APP.currentPlatformFilter !== 'all' || APP.currentPeriodFilter !== 'all';
+    body.innerHTML = '<div class="mod-noData"><div class="mod-noData-ico">⚠️</div>' +
+      '<div class="mod-noData-title">' + (isFiltered ? 'Sin órdenes para el filtro actual' : 'Sin datos') + '</div>' +
+      '<div class="mod-noData-desc">' + (isFiltered ? 'Prueba cambiar el filtro.' : 'Sube tus reportes.') + '</div></div>';
+    return;
+  }
+
+  const num = n => Math.round(n).toLocaleString('es-PE');
+  const pct = n => n.toFixed(2) + '%';
+  const money = n => 'S/' + Math.round(n).toLocaleString('es-PE');
+
+  const cancelled = orders.filter(o => o.cancelled);
+  const done = orders.filter(o => !o.cancelled && o.total > 0);
+  const cancelledPct = totalOrders > 0 ? (cancelled.length / totalOrders) * 100 : 0;
+
+  const cancByReason = {};
+  cancelled.forEach(o => {
+    const reason = String(o.estado || 'cancelada').toLowerCase();
+    let cat;
+    if (/timeout|tiempo|expir/.test(reason)) cat = 'Timeout / no aceptada a tiempo';
+    else if (/rider|driver|repartidor/.test(reason)) cat = 'Sin rider disponible';
+    else if (/cliente|customer|user|usuario/.test(reason)) cat = 'Cancelada por cliente';
+    else if (/tienda|store|restaurant|comercio|aliado/.test(reason)) cat = 'Cancelada por restaurante';
+    else if (/rechaz|reject/.test(reason)) cat = 'Rechazada';
+    else cat = 'Otras cancelaciones';
+    cancByReason[cat] = (cancByReason[cat] || 0) + 1;
+  });
+
+  const sortedReasons = Object.entries(cancByReason).sort((a,b) => b[1] - a[1]);
+
+  const cancByPlat = {};
+  orders.forEach(o => {
+    const p = o.platform || 'unknown';
+    if (!cancByPlat[p]) cancByPlat[p] = { total: 0, canc: 0 };
+    cancByPlat[p].total++;
+    if (o.cancelled) cancByPlat[p].canc++;
+  });
+
+  const avgTicket = done.length > 0 ? done.reduce((s,o) => s+o.total, 0) / done.length : 0;
+  const estLoss = cancelled.length * avgTicket;
+
+  const cancByHour = new Array(24).fill(0);
+  cancelled.forEach(o => {
+    if (o.date instanceof Date) cancByHour[o.date.getHours()]++;
+  });
+  const maxHourCanc = Math.max(...cancByHour);
+  const worstHour = cancByHour.indexOf(maxHourCanc);
+
+  const clsCanc = cancelledPct < 5 ? 'up' : cancelledPct < 10 ? 'warn' : 'dn';
+
+  const insights = [];
+  if (cancelledPct > 10) insights.push({ ico: '🚨', text: 'Cancelaciones al <strong>' + pct(cancelledPct) + '</strong> — muy sobre benchmark (<5%).' });
+  else if (cancelledPct > 5) insights.push({ ico: '⚠️', text: 'Cancelaciones al <strong>' + pct(cancelledPct) + '</strong> — sobre benchmark (<5%).' });
+
+  if (sortedReasons.length > 0) {
+    const [topReason, topCount] = sortedReasons[0];
+    const topPct = (topCount / cancelled.length) * 100;
+    insights.push({ ico: '🎯', text: 'Causa principal: <strong>"' + topReason + '"</strong> con ' + topCount + ' órdenes (' + pct(topPct) + ').' });
+  }
+  if (estLoss > 0) insights.push({ ico: '💸', text: 'Pérdida estimada: <strong>' + money(estLoss) + '</strong> en ventas.' });
+  if (maxHourCanc > 0) insights.push({ ico: '🕐', text: 'Hora crítica: <strong>' + worstHour + ':00 hs</strong> (' + maxHourCanc + ' órdenes).' });
+
+  const platEntries = Object.entries(cancByPlat).filter(([,v]) => v.total > 0);
+  if (platEntries.length > 1) {
+    platEntries.sort((a,b) => (b[1].canc/b[1].total) - (a[1].canc/a[1].total));
+    const [worstPlat, worstV] = platEntries[0];
+    const worstPct2 = (worstV.canc / worstV.total) * 100;
+    const [bestPlat, bestV] = platEntries[platEntries.length - 1];
+    const bestPct2 = (bestV.canc / bestV.total) * 100;
+    if (worstPct2 - bestPct2 > 3) {
+      insights.push({ ico: '⚖️', text: '<strong>' + worstPlat.toUpperCase() + '</strong> ' + pct(worstPct2) + ' vs <strong>' + bestPlat.toUpperCase() + '</strong> ' + pct(bestPct2) + '.' });
+    }
+  }
+
+  const insightsHtml = insights.length > 0
+    ? '<div class="mod-insights reclamos"><div class="mod-insights-title">💡 Qué hacer con esto</div>' +
+      insights.map(i => '<div class="mod-insight-item"><span class="ico">' + i.ico + '</span><div>' + i.text + '</div></div>').join('') +
+      '</div>'
+    : '';
+
+  const maxReason = sortedReasons[0]?.[1] || 1;
+  const reasonsHtml = sortedReasons.map(([reason, count]) => {
+    const p = (count / cancelled.length) * 100;
+    return '<div style="display:grid;grid-template-columns:2fr 1fr 60px 60px;gap:12px;align-items:center;padding:10px 0;font-size:.78rem;">' +
+      '<div><strong>' + reason + '</strong></div>' +
+      '<div style="background:rgba(200,57,43,.08);border-radius:100px;height:16px;overflow:hidden;">' +
+      '<div style="height:100%;background:#c8392b;width:' + (count/maxReason*100).toFixed(1) + '%;"></div></div>' +
+      '<div style="text-align:right;font-family:monospace;">' + count + '</div>' +
+      '<div style="text-align:right;color:var(--m);">' + p.toFixed(1) + '%</div>' +
+      '</div>';
+  }).join('');
+
+  const platRows = platEntries.sort((a,b) => (b[1].canc/b[1].total) - (a[1].canc/a[1].total)).map(([p, v]) => {
+    const rate = v.total > 0 ? (v.canc/v.total)*100 : 0;
+    const clsRate = rate < 5 ? 'up' : rate < 10 ? 'warn' : 'dn';
+    return '<div class="mod-table-row" style="grid-template-columns:1fr 1fr 1fr 1fr;">' +
+      '<div><strong>' + p.toUpperCase() + '</strong></div>' +
+      '<div>' + num(v.total) + '</div>' +
+      '<div>' + num(v.canc) + '</div>' +
+      '<div><span class="mod-kpi-val ' + clsRate + '" style="font-size:.95rem">' + pct(rate) + '</span></div>' +
+      '</div>';
+  }).join('');
+
+  body.innerHTML =
+    '<div class="mod-hero reclamos">' +
+    '<div class="mod-hero-title">⚠️ Análisis de cancelaciones</div>' +
+    '<div class="mod-hero-desc">Basado en ' + num(totalOrders) + ' órdenes del período</div></div>' +
+    '<div class="mod-kpi-grid">' +
+    '<div class="mod-kpi"><div class="mod-kpi-label">Canceladas</div>' +
+    '<div class="mod-kpi-val ' + clsCanc + '">' + num(cancelled.length) + '</div>' +
+    '<div class="mod-kpi-hint">' + pct(cancelledPct) + ' del total</div></div>' +
+    '<div class="mod-kpi"><div class="mod-kpi-label">Pérdida estimada</div>' +
+    '<div class="mod-kpi-val dn">' + money(estLoss) + '</div>' +
+    '<div class="mod-kpi-hint">Canceladas × ticket</div></div>' +
+    '<div class="mod-kpi"><div class="mod-kpi-label">Causa principal</div>' +
+    '<div class="mod-kpi-val" style="font-size:.9rem">' + (sortedReasons[0] ? sortedReasons[0][0].substring(0, 20) : '—') + '</div>' +
+    '<div class="mod-kpi-hint">' + (sortedReasons[0] ? num(sortedReasons[0][1]) + ' órdenes' : '') + '</div></div>' +
+    '<div class="mod-kpi"><div class="mod-kpi-label">Hora crítica</div>' +
+    '<div class="mod-kpi-val">' + (maxHourCanc > 0 ? worstHour + ':00' : '—') + '</div>' +
+    '<div class="mod-kpi-hint">' + (maxHourCanc > 0 ? maxHourCanc + ' cancelaciones' : 'Sin patrón') + '</div></div>' +
+    '</div>' +
+    (sortedReasons.length > 0
+      ? '<div class="mod-chart-wrap"><div class="mod-chart-title">🎯 Causas de cancelación</div>' + reasonsHtml + '</div>'
+      : '') +
+    (platEntries.length > 1
+      ? '<div class="mod-chart-wrap"><div class="mod-chart-title">🏢 Por plataforma</div>' +
+        '<div class="mod-table"><div class="mod-table-head" style="grid-template-columns:1fr 1fr 1fr 1fr;">' +
+        '<div>Plataforma</div><div>Órdenes</div><div>Canceladas</div><div>Tasa</div></div>' + platRows + '</div></div>'
+      : '') +
+    insightsHtml;
+}
+
+// ─── Función unificada Sprint 3 ─────────────────────────────
+function renderAllSprint3Modules() {
+  const mods = [
+    { name: 'Costos', fn: typeof renderCostos === 'function' ? renderCostos : null },
+    { name: 'ROAS', fn: typeof renderROAS === 'function' ? renderROAS : null },
+    { name: 'Tendencias', fn: typeof renderTendencias === 'function' ? renderTendencias : null },
+    { name: 'Tiempos', fn: typeof renderTiempos === 'function' ? renderTiempos : null },
+    { name: 'Reclamos', fn: typeof renderReclamos === 'function' ? renderReclamos : null },
+  ];
+  mods.forEach(m => {
+    if (m.fn) { try { m.fn(); } catch (err) { console.error('[' + m.name + '] error:', err); } }
+  });
+}
+
+// Hook a renderStage2 (una sola vez, limpio)
+if (!window._sprint3HookInstalled) {
+  window._sprint3HookInstalled = true;
+  const _origStage2 = window.renderStage2;
+  window.renderStage2 = function() {
+    if (typeof _origStage2 === 'function') { _origStage2.apply(this, arguments); }
+    renderAllSprint3Modules();
+  };
+}
 
 
 if(document.readyState === 'loading') {
