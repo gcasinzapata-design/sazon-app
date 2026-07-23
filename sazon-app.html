@@ -5307,6 +5307,7 @@ async function runAnalysis(){
         deduped.push(o);
       }
       deduped._peyaSummary = APP.allOrders._peyaSummary;
+      deduped._peyaMonthlyHistory = APP.allOrders._peyaMonthlyHistory;
       deduped._parseLog    = APP.allOrders._parseLog;
       APP.allOrders = deduped;
     }
@@ -9759,7 +9760,19 @@ function applyPeriodFilter() {
   filtered._parseLog = APP._unfilteredOrders._parseLog;
 
   APP.allOrders = filtered;
+
+  // Diagnóstico exhaustivo del filtro
+  const rappiCount = filtered.filter(o => o.platform === 'rappi').length;
+  const rappiPrepCount = filtered.filter(o => o.platform === 'rappi' && o.prepTime > 0).length;
+  const rappiValid = filtered.filter(o => o.platform === 'rappi' && o.prepTime > 0 && !o.cancelled && o.total > 0).length;
   console.log('[Filter] filtered.length =', filtered.length, 'de', APP._unfilteredOrders.length);
+  console.log('[Filter] En filtered: Rappi total:', rappiCount, '· Rappi con prepTime:', rappiPrepCount, '· Rappi válidos (no canc, total>0):', rappiValid);
+  if (rappiCount > 0 && rappiPrepCount === 0) {
+    const sample = filtered.filter(o => o.platform === 'rappi').slice(0, 3);
+    console.log('[Filter] Muestra Rappi sin prepTime:', sample.map(o => ({
+      id: o.id, cancelled: o.cancelled, total: o.total, prepTime: o.prepTime, keys: Object.keys(o).length
+    })));
+  }
 
   // Actualizar info visible
   const info = document.getElementById('periodInfo');
@@ -10074,7 +10087,18 @@ function renderTiempos() {
   const orders = APP.allOrders || [];
   const withPrep = orders.filter(o => !o.cancelled && o.total > 0 && o.prepTime && o.prepTime > 0);
 
-  console.log('[Tiempos] total orders:', orders.length, '· con prepTime:', withPrep.length);
+  // Diagnóstico exhaustivo
+  const rappiOrders = orders.filter(o => o.platform === 'rappi');
+  const rappiWithPrep = rappiOrders.filter(o => o.prepTime && o.prepTime > 0);
+  const rappiValid = rappiOrders.filter(o => !o.cancelled && o.total > 0 && o.prepTime && o.prepTime > 0);
+  console.log('[Tiempos] total orders:', orders.length, '· con prepTime válido:', withPrep.length);
+  console.log('[Tiempos] Rappi total:', rappiOrders.length, '· con prepTime>0:', rappiWithPrep.length, '· válidos (no cancel, total>0):', rappiValid.length);
+  if (rappiOrders.length > 0 && rappiValid.length === 0) {
+    const sample = rappiOrders.slice(0, 3);
+    console.log('[Tiempos] Muestra de órdenes Rappi:', sample.map(o => ({
+      id: o.id, platform: o.platform, cancelled: o.cancelled, total: o.total, prepTime: o.prepTime, estado: o.estado
+    })));
+  }
 
   if (withPrep.length < 5) {
     const isFiltered = APP.currentPlatformFilter !== 'all' || APP.currentPeriodFilter !== 'all';
