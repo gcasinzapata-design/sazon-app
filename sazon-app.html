@@ -4948,7 +4948,10 @@ async function parseAllFiles(files){
           logEntry.orders = monthlyHist.months.length;
           logEntry.sheets.push({ name: sn, fmt: 'peya_monthly_history', orders: monthlyHist.months.length });
           fileOrders += monthlyHist.months.length;
+          console.log('[Parser] Detectado ordersPerMonth:', file.name, '·', monthlyHist.months.length, 'meses');
           continue;
+        } else if (rows[0] && rows[0].some(v => /^mes$/i.test(String(v || '')))) {
+          console.warn('[Parser] Archivo parece ordersPerMonth pero no matchea:', file.name, 'headers:', rows[0].slice(0,5));
         }
 
         const res = parseSheet(rows, pl, logEntry);
@@ -5344,6 +5347,9 @@ async function runAnalysis(){
     }
     ld(`Analizando ${APP.allOrders.length} registros...`); await sleep(300);
     APP.D = analyze(APP.allOrders);
+    // Sprint 3: propagar metadata que analyze() no incluye
+    if (APP.allOrders._peyaMonthlyHistory) APP.D._peyaMonthlyHistory = APP.allOrders._peyaMonthlyHistory;
+    if (APP.allOrders._peyaSummary && !APP.D.peyaSummary) APP.D.peyaSummary = APP.allOrders._peyaSummary;
     ld('Generando Dashboard...'); await sleep(200);
     showReport();
     renderDashboard(APP.D, APP.allOrders);
@@ -5417,6 +5423,9 @@ async function runDemo(){
   await sleep(500);
   APP.allOrders = generateDemoOrders();
   APP.D = analyze(APP.allOrders);
+    // Sprint 3: propagar metadata que analyze() no incluye
+    if (APP.allOrders._peyaMonthlyHistory) APP.D._peyaMonthlyHistory = APP.allOrders._peyaMonthlyHistory;
+    if (APP.allOrders._peyaSummary && !APP.D.peyaSummary) APP.D.peyaSummary = APP.allOrders._peyaSummary;
   document.getElementById('ldTxt').textContent='Renderizando Dashboard...';
   await sleep(300);
   // Force demo brand name
@@ -5721,6 +5730,7 @@ function projectedOrderDelta(state, dNew, dBase, type){
   return pp * k; // fracción: 0.32 = +32% órdenes
 }
 function basePriceFor(item, plat){
+  if(!item) return 0;  // Sprint 3 fix: guard contra item undefined
   const b = item.base||{};
   if(b[plat] > 0) return b[plat];
   // fallback: cualquier base disponible, o inferir de pagado
@@ -9673,6 +9683,9 @@ function applyPeriodFilter() {
     }
 
     APP.D = analyze(APP.allOrders);
+    // Sprint 3: propagar metadata que analyze() no incluye
+    if (APP.allOrders._peyaMonthlyHistory) APP.D._peyaMonthlyHistory = APP.allOrders._peyaMonthlyHistory;
+    if (APP.allOrders._peyaSummary && !APP.D.peyaSummary) APP.D.peyaSummary = APP.allOrders._peyaSummary;
     // El motor pierde estos en analyze(), reasignar
     if (savedPeyaSummary) {
       APP.D.peyaSummary = savedPeyaSummary;
