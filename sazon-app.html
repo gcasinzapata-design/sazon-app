@@ -8295,6 +8295,8 @@ function computeCostos(orders, peyaSummary) {
       commissionPct: 0,
       totalCostAmt: 0,
       totalCostPct: 0,
+      period: '',
+      hasGranular: false,
     },
     consolidatedCostPct: 0,
   };
@@ -8379,33 +8381,57 @@ function computeCostos(orders, peyaSummary) {
 
   if (peya) {
     const peyaBase = effectivePeyaGmv;
+
+    // Detectar si tenemos desglose granular o solo agregados
+    const hasGranularBreakdown = (peya.posFee > 0) || (peya.platformFee > 0) ||
+                                  (peya.plusPartnerFee > 0) || (peya.goldVip > 0) ||
+                                  (peya.fugaces > 0) || (peya.packagingFee > 0);
+
     if (peya.commission > 0)
       cats.push({ platform: 'peya', name: 'Comisión PedidosYa', hint: 'Servicio por ventas', kind: 'commission', amount: peya.commission, gmvBase: peyaBase });
-    if (peya.plusPartnerFee > 0)
-      cats.push({ platform: 'peya', name: 'Plus Partner Fee', hint: 'Cargo por órdenes con Plus (a menudo desconocido)', kind: 'hidden', amount: peya.plusPartnerFee, gmvBase: peyaBase });
-    if (peya.platformFee > 0)
-      cats.push({ platform: 'peya', name: 'Platform Fee', hint: 'Uso de plataforma PedidosYa', kind: 'hidden', amount: peya.platformFee, gmvBase: peyaBase });
-    if (peya.posFee > 0)
-      cats.push({ platform: 'peya', name: 'Cargo POS', hint: 'Uso del terminal POS', kind: 'hidden', amount: peya.posFee, gmvBase: peyaBase });
-    if (peya.fugaces > 0)
-      cats.push({ platform: 'peya', name: 'Descuentos Fugaces', hint: 'Promo automática (financiada por ti)', kind: 'ads', amount: peya.fugaces, gmvBase: peyaBase });
-    if (peya.goldVip > 0)
-      cats.push({ platform: 'peya', name: 'Campaña Gold VIP', hint: 'Publicidad Gold VIP', kind: 'ads', amount: peya.goldVip, gmvBase: peyaBase });
+
+    if (hasGranularBreakdown) {
+      // Tenemos desglose detallado (típicamente del account_statement)
+      if (peya.plusPartnerFee > 0)
+        cats.push({ platform: 'peya', name: 'Plus Partner Fee', hint: 'Cargo por órdenes con Plus (a menudo desconocido)', kind: 'hidden', amount: peya.plusPartnerFee, gmvBase: peyaBase });
+      if (peya.platformFee > 0)
+        cats.push({ platform: 'peya', name: 'Platform Fee', hint: 'Uso de plataforma PedidosYa', kind: 'hidden', amount: peya.platformFee, gmvBase: peyaBase });
+      if (peya.posFee > 0)
+        cats.push({ platform: 'peya', name: 'Cargo POS', hint: 'Uso del terminal POS', kind: 'hidden', amount: peya.posFee, gmvBase: peyaBase });
+      if (peya.fugaces > 0)
+        cats.push({ platform: 'peya', name: 'Descuentos Fugaces', hint: 'Promo automática (financiada por ti)', kind: 'ads', amount: peya.fugaces, gmvBase: peyaBase });
+      if (peya.goldVip > 0)
+        cats.push({ platform: 'peya', name: 'Campaña Gold VIP', hint: 'Publicidad Gold VIP', kind: 'ads', amount: peya.goldVip, gmvBase: peyaBase });
+      if (peya.packagingFee > 0)
+        cats.push({ platform: 'peya', name: 'Cargo por packaging', hint: 'Cobro por packaging', kind: 'hidden', amount: peya.packagingFee, gmvBase: peyaBase });
+      if (peya.minOrderFee > 0)
+        cats.push({ platform: 'peya', name: 'Valor mínimo de orden', hint: 'Cargo por bajo valor de orden', kind: 'hidden', amount: peya.minOrderFee, gmvBase: peyaBase });
+    } else {
+      // Solo tenemos agregados (típicamente del earnings-summary)
+      // adSpend es el TOTAL de "Cargos por publicidad dentro de la aplicación"
+      // que ya incluye Fugaces + Gold VIP + otros
+      if (peya.adSpend > 0)
+        cats.push({ platform: 'peya', name: 'Publicidad total PedidosYa', hint: 'Incluye Descuentos Fugaces, Gold VIP y otras campañas (agregado del reporte)', kind: 'ads', amount: peya.adSpend, gmvBase: peyaBase });
+    }
+
     if (peya.ivaComis > 0)
       cats.push({ platform: 'peya', name: 'IVA en comisiones', hint: 'Impuesto sobre comisión PedidosYa', kind: 'tax', amount: peya.ivaComis, gmvBase: peyaBase });
-    if (peya.packagingFee > 0)
-      cats.push({ platform: 'peya', name: 'Cargo por packaging', hint: 'Cobro por packaging', kind: 'hidden', amount: peya.packagingFee, gmvBase: peyaBase });
-    if (peya.minOrderFee > 0)
-      cats.push({ platform: 'peya', name: 'Valor mínimo de orden', hint: 'Cargo por bajo valor de orden', kind: 'hidden', amount: peya.minOrderFee, gmvBase: peyaBase });
 
-    // Resumen PeYa
-    const peyaTotal = (peya.commission || 0) + (peya.plusPartnerFee || 0) + (peya.platformFee || 0) +
-                      (peya.posFee || 0) + (peya.fugaces || 0) + (peya.goldVip || 0) + (peya.ivaComis || 0) +
-                      (peya.packagingFee || 0) + (peya.minOrderFee || 0);
+    // Resumen PeYa: incluir adSpend en el total si no hay granular
+    const peyaTotal = (peya.commission || 0) +
+                      (hasGranularBreakdown
+                        ? ((peya.plusPartnerFee || 0) + (peya.platformFee || 0) + (peya.posFee || 0) +
+                           (peya.fugaces || 0) + (peya.goldVip || 0) + (peya.packagingFee || 0) +
+                           (peya.minOrderFee || 0))
+                        : (peya.adSpend || 0)) +
+                      (peya.ivaComis || 0);
+
     result.peyaSummary.commissionAmt = peya.commission || 0;
     result.peyaSummary.commissionPct = peyaBase > 0 ? ((peya.commission || 0) / peyaBase) * 100 : 0;
     result.peyaSummary.totalCostAmt = peyaTotal;
     result.peyaSummary.totalCostPct = peyaBase > 0 ? (peyaTotal / peyaBase) * 100 : 0;
+    result.peyaSummary.period = peya.period || '';
+    result.peyaSummary.hasGranular = hasGranularBreakdown;
   }
 
   result.categories = cats.sort((a, b) => b.amount - a.amount);
@@ -8522,12 +8548,12 @@ function renderCostos() {
           <span class="costos-platform-emoji">🔵</span>
           <div>
             <div class="costos-platform-title">PedidosYa</div>
-            <div class="costos-platform-sub">Ventas netas del período: <strong>${money(costos.gmvPeya)}</strong></div>
+            <div class="costos-platform-sub">Ventas netas del período: <strong>${money(costos.gmvPeya)}</strong>${p.period ? ' · <em>' + p.period + '</em>' : ''}</div>
           </div>
         </div>
         <div class="costos-platform-grid">
           <div class="costos-platform-metric">
-            <div class="costos-metric-label">Comisión declarada</div>
+            <div class="costos-metric-label">Comisión efectiva</div>
             <div class="costos-metric-val">${pct(p.commissionPct)}</div>
             <div class="costos-metric-hint">${moneyDec(p.commissionAmt)}</div>
           </div>
@@ -8537,13 +8563,15 @@ function renderCostos() {
             <div class="costos-metric-hint">${moneyDec(p.totalCostAmt)} de cargos totales</div>
           </div>
           <div class="costos-platform-metric">
-            <div class="costos-metric-label">Cargos ocultos + IVAs</div>
+            <div class="costos-metric-label">Cargos ocultos + Publicidad</div>
             <div class="costos-metric-val gap">+${pct(gap)}</div>
             <div class="costos-metric-hint">${moneyDec(p.totalCostAmt - p.commissionAmt)} extra</div>
           </div>
         </div>
         <div class="costos-platform-note">
-          <strong>ℹ️ Nota:</strong> Además de la comisión, PedidosYa cobra Platform Fee, Plus Partner, POS y otros cargos que salen del payout semanal. Estos son los "cargos ocultos" que casi nadie contabiliza al calcular sus márgenes.
+          <strong>ℹ️ Nota:</strong> ${p.hasGranular
+            ? 'Datos con desglose granular desde tu estado de cuenta semanal. Incluye Platform Fee, Plus Partner, POS, Fugaces, Gold VIP y otros cargos que salen de tu payout.'
+            : 'Datos agregados del resumen mensual. La categoría "Publicidad total" incluye Descuentos Fugaces + Gold VIP + otros. Para desglose detallado, descarga tu <em>estado de cuenta semanal</em>.'}
         </div>
       </div>`;
   }
