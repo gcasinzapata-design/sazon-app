@@ -28,7 +28,7 @@ window.SAZON_CONFIG = {
       maxLocations: 2,
       historyMonths: 3,
       analysesPerMonth: 5,
-      tabs: ['dashboard', 'patrones', 'menu', 'financiero'],
+      tabs: ['dashboard', 'patrones', 'menu', 'costos', 'financiero'],
     },
     growth: {
       label:  'Growth',
@@ -37,7 +37,7 @@ window.SAZON_CONFIG = {
       maxLocations: 5,
       historyMonths: 6,
       analysesPerMonth: 20,
-      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'financiero'],
+      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'financiero'],
     },
     partner: {
       label:  'Partner',
@@ -46,7 +46,7 @@ window.SAZON_CONFIG = {
       maxLocations: 999,
       historyMonths: 12,
       analysesPerMonth: 999,
-      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'financiero', 'roadmap'],
+      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'financiero', 'roadmap'],
     },
     enterprise: {
       label:  'Enterprise',
@@ -55,7 +55,7 @@ window.SAZON_CONFIG = {
       maxLocations: 999,
       historyMonths: 24,
       analysesPerMonth: 999,
-      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'financiero', 'roadmap'],
+      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'financiero', 'roadmap'],
     },
   },
 
