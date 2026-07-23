@@ -4879,7 +4879,9 @@ function parsePeyaMonthlyHistory(rows) {
 async function parseAllFiles(files){
   const orders = [];
   orders._peyaSummary = null;
+  orders._peyaMonthlyHistory = null;
   orders._parseLog    = [];
+  console.log('[parseAllFiles] Procesando', files.length, 'archivos:', Array.from(files).map(f => f.name));
 
   for(const file of files){
     const logEntry = { name: file.name, fmt: 'unknown', rows: 0, orders: 0, error: null, sheets: [] };
@@ -4978,6 +4980,10 @@ async function parseAllFiles(files){
     }
     orders._parseLog.push(logEntry);
   }
+  console.log('[parseAllFiles] FIN - órdenes:', orders.length,
+              '· _peyaSummary:', !!orders._peyaSummary,
+              '· _peyaMonthlyHistory:', !!orders._peyaMonthlyHistory,
+              orders._peyaMonthlyHistory ? '(' + orders._peyaMonthlyHistory.monthCount + ' meses)' : '');
   return orders;
 }
 
@@ -10044,16 +10050,25 @@ function renderTiempos() {
   // El motor ya captura o.prepTime en Rappi (columna "Tiempo de preparación")
   const withPrep = orders.filter(o => !o.cancelled && o.total > 0 && o.prepTime && o.prepTime > 0);
 
+  console.log('[Tiempos] total orders:', orders.length, '· con prepTime:', withPrep.length);
+
   if (withPrep.length < 5) {
+    // Detectar si el filtro es la razón (o simplemente no hay datos)
+    const isFiltered = APP.currentPlatformFilter !== 'all' || APP.currentPeriodFilter !== 'all';
+    const platMsg = APP.currentPlatformFilter === 'peya'
+      ? '<div style="background:rgba(200,160,69,.1);border-left:3px solid #c8a045;padding:12px 14px;border-radius:0 3px 3px 0;margin:14px 0;font-size:.78rem;text-align:left;"><strong>ℹ️ Filtro activo: PedidosYa</strong><br>Los tiempos de preparación se extraen del reporte de Rappi. PedidosYa no incluye este dato en sus exports. Cambia el filtro a "Todas" o "🟠 Rappi" para ver el análisis.</div>'
+      : '';
+
     body.innerHTML = `
       <div class="mod-noData">
         <div class="mod-noData-ico">⏱️</div>
-        <div class="mod-noData-title">Sin datos suficientes de tiempos</div>
+        <div class="mod-noData-title">${isFiltered ? 'Sin datos de tiempos para el filtro actual' : 'Sin datos de tiempos'}</div>
         <div class="mod-noData-desc">
+          ${platMsg}
           Para analizar tiempos operativos necesitamos el reporte con timestamps:<br><br>
           <strong>Rappi</strong>: Reporte Financiero completo (columna "Tiempo de preparación")<br>
-          <strong>PedidosYa</strong>: Order Details XLSX (timestamps de cada estado)<br><br>
-          Se necesitan al menos 5 órdenes con datos de tiempo.
+          <strong>PedidosYa</strong>: Aún no soportado (los exports de PeYa no incluyen tiempos de preparación por orden)<br><br>
+          <div style="font-size:.75rem;color:var(--m)">Se necesitan al menos 5 órdenes con datos de tiempo. Actual: ${withPrep.length}.</div>
         </div>
       </div>
     `;
@@ -10235,8 +10250,15 @@ function renderReclamos() {
   const orders = APP.allOrders || [];
   const totalOrders = orders.length;
 
+  console.log('[Reclamos] total orders:', totalOrders);
+
   if (totalOrders === 0) {
-    body.innerHTML = `<div class="mod-noData"><div class="mod-noData-ico">⚠️</div><div class="mod-noData-title">Sin datos</div><div class="mod-noData-desc">Sube tus reportes para analizar reclamos y cancelaciones.</div></div>`;
+    const isFiltered = APP.currentPlatformFilter !== 'all' || APP.currentPeriodFilter !== 'all';
+    body.innerHTML = `<div class="mod-noData">
+      <div class="mod-noData-ico">⚠️</div>
+      <div class="mod-noData-title">${isFiltered ? 'Sin órdenes para el filtro actual' : 'Sin datos'}</div>
+      <div class="mod-noData-desc">${isFiltered ? 'Prueba cambiar el filtro de plataforma o período.' : 'Sube tus reportes para analizar reclamos y cancelaciones.'}</div>
+    </div>`;
     return;
   }
 
