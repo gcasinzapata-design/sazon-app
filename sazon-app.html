@@ -6,6 +6,8 @@
 <title>Sazón · Growth Engine</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";}</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Supabase JS SDK v2 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1152,14 +1154,14 @@ input[type=file]{display:none;}
       <div class="up-card">
         <div class="up-head">
           <div class="up-h">Reportes de órdenes</div>
-          <div class="up-sub">Rappi y/o PedidosYa · uno o varios archivos XLSX</div>
+          <div class="up-sub">Rappi y/o PedidosYa · Excel (XLSX) o PDF (estados de cuenta)</div>
         </div>
         <div class="up-body">
           <div class="drop" id="ordersDrop">
-            <input type="file" id="ordersFile" multiple accept=".xlsx,.xls,.csv" onchange="handleOrderFiles(event)">
+            <input type="file" id="ordersFile" multiple accept=".xlsx,.xls,.csv,.pdf" onchange="handleOrderFiles(event)">
             <div class="drop-ico">📊</div>
             <div class="drop-title">Arrastra los reportes aquí</div>
-            <div class="drop-sub">Acepta exports de Rappi Partners y PedidosYa Hub</div>
+            <div class="drop-sub">Excel de Rappi Partners y PedidosYa Hub · PDF de estados de cuenta semanal</div>
             <button class="pick-btn" onclick="document.getElementById('ordersFile').click()">Seleccionar archivos</button>
           </div>
           <div id="orderFileList"></div>
@@ -1176,6 +1178,7 @@ input[type=file]{display:none;}
               <div class="fmt-name" style="color:#0064C8">🔵 PedidosYa</div>
               <div class="fmt-hint">
                 <strong>Órdenes:</strong> Finanzas → Reportes → Descargar<br>
+                <strong>Cargos ocultos (PDF):</strong> Finanzas → Estado de cuenta semanal → PDF<br>
                 <strong>Resumen:</strong> Earnings Summary CSV
               </div>
             </div>
@@ -4564,6 +4567,36 @@ async function parseAllFiles(files){
   for(const file of files){
     const logEntry = { name: file.name, fmt: 'unknown', rows: 0, orders: 0, error: null, sheets: [] };
     try{
+      // Sprint 3: si es PDF, usar el parser específico
+      if (/\.pdf$/i.test(file.name)) {
+        const pdfResult = await parsePeyaAccountStatementPDF(file);
+        if (pdfResult) {
+          if (!orders._peyaSummary) {
+            orders._peyaSummary = pdfResult;
+            logEntry.fmt = 'peya_pdf_statement';
+            logEntry.orders = 1;
+            logEntry.rows = 1;
+            orders._parseLog.push(logEntry);
+          } else {
+            // Ya tenemos un summary, mergear (sumar granulares del nuevo con existente)
+            const existing = orders._peyaSummary;
+            const merged = { ...existing };
+            const numFields = ['ventasNetas','commission','adSpend','posFee','platformFee','plusPartnerFee','goldVip','fugaces','ivaComis','packagingFee','shippingFee','minOrderFee'];
+            numFields.forEach(k => { merged[k] = (existing[k]||0) + (pdfResult[k]||0); });
+            merged.period = (existing.period || '') + ' + ' + (pdfResult.period || '');
+            orders._peyaSummary = merged;
+            logEntry.fmt = 'peya_pdf_statement_merged';
+            logEntry.orders = 1;
+            logEntry.rows = 1;
+            orders._parseLog.push(logEntry);
+          }
+        } else {
+          logEntry.error = 'No se pudo parsear el PDF como estado de cuenta PedidosYa';
+          orders._parseLog.push(logEntry);
+        }
+        continue;
+      }
+
       const bin = await readBinary(file);
       let wb;
       try{
@@ -8449,7 +8482,11 @@ function renderCostos() {
   if (!body) return;
 
   const orders = APP.allOrders || [];
-  const peya = APP.D?._peyaSummary || null;
+  // Sprint 3 FIX: buscar peyaSummary en múltiples ubicaciones posibles
+  const peya = APP.D?.peyaSummary  // el motor lo guarda sin underscore
+            || APP.D?._peyaSummary // fallback
+            || APP.allOrders?._peyaSummary // ubicación en el array
+            || null;
   const costos = computeCostos(orders, peya);
 
   if (!costos.hasData) {
@@ -8718,6 +8755,93 @@ window.renderStage2 = function() {
     console.error('[Costos] render error:', err);
   }
 };
+
+
+
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 3 — Parser de PDF: Estado de cuenta semanal PedidosYa
+// ═══════════════════════════════════════════════════════════════════════
+
+async function parsePeyaAccountStatementPDF(file) {
+  if (!window.pdfjsLib) {
+    console.error('[PDF] pdf.js no cargado');
+    return null;
+  }
+
+  try {
+    // Leer PDF como ArrayBuffer
+    const arrayBuffer = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    // Extraer todo el texto de todas las páginas
+    let fullText = '';
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page = await pdf.getPage(p);
+      const textContent = await page.getTextContent();
+      const strings = textContent.items.map(item => item.str);
+      fullText += strings.join('\n') + '\n';
+    }
+
+    // Verificar que sea un estado de cuenta de PedidosYa
+    if (!/pedidosya/i.test(fullText) && !/estado de cuenta/i.test(fullText)) {
+      console.warn('[PDF] No parece un estado de cuenta PedidosYa');
+      return null;
+    }
+
+    // Helpers de extracción
+    // El PDF muestra "Concepto\nS/ monto" con formato variable
+    const extractAmount = (label) => {
+      // Buscar el label, luego el próximo "S/ X.XX" que aparezca
+      const regex = new RegExp(label + '\\s*[\\s\\S]{0,80}?S/\\s*(-?[\\d,]+\\.?\\d*)', 'i');
+      const m = fullText.match(regex);
+      if (!m) return 0;
+      // Limpiar formato: "1,053.20" → 1053.20
+      const num = parseFloat(m[1].replace(/,/g, ''));
+      return isNaN(num) ? 0 : num;
+    };
+
+    // Extraer período
+    const periodMatch = fullText.match(/Per.odo del\s+(\d{2}\/\d{2}\/\d{4})\s+al\s+(\d{2}\/\d{2}\/\d{4})/i);
+    const period = periodMatch ? `${periodMatch[1]} - ${periodMatch[2]}` : '';
+
+    // Extraer todos los campos
+    const result = {
+      _type: 'peya_summary',
+      _source: 'pdf_account_statement',
+      period,
+      orders: 0, // el PDF de estado no tiene cantidad de órdenes
+      ventasNetas: Math.abs(extractAmount('Ventas netas')),
+      commission: Math.abs(extractAmount('Servicio por ventas en PedidosYa')),
+      adSpend: Math.abs(extractAmount('Publicidad dentro de la aplicaci.n')),
+      posFee: Math.abs(extractAmount('Cargos por uso del pos')),
+      platformFee: Math.abs(extractAmount('Plataform fee|Platform fee')),
+      plusPartnerFee: Math.abs(extractAmount('Cargos por pedidos con plus')),
+      goldVip: Math.abs(extractAmount('Campa.a gold vip|Campana gold vip')),
+      fugaces: Math.abs(extractAmount('Descuentos fugaces')),
+      ivaComis: Math.abs(extractAmount('Impuesto en comisiones')),
+      packagingFee: Math.abs(extractAmount('Cargos por packaging')),
+      shippingFee: Math.abs(extractAmount('Cargos por env.o')),
+      minOrderFee: Math.abs(extractAmount('Cargos por valor m.nimo')),
+      credit: 0,
+      descPeya: 0,
+      payTotal: 0,
+    };
+
+    console.log('[PDF] Estado de cuenta PeYa parseado:', result);
+    return result;
+  } catch (err) {
+    console.error('[PDF] Error parseando:', err);
+    return null;
+  }
+}
 
 
 
