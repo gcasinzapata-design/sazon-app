@@ -28,7 +28,7 @@ window.SAZON_CONFIG = {
       maxLocations: 2,
       historyMonths: 3,
       analysesPerMonth: 5,
-      tabs: ['dashboard', 'patrones', 'menu', 'costos', 'financiero'],
+      tabs: ['dashboard', 'patrones', 'menu', 'costos', 'roas', 'financiero'],
     },
     growth: {
       label:  'Growth',
@@ -37,7 +37,7 @@ window.SAZON_CONFIG = {
       maxLocations: 5,
       historyMonths: 6,
       analysesPerMonth: 20,
-      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'financiero'],
+      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'roas', 'financiero'],
     },
     partner: {
       label:  'Partner',
@@ -46,7 +46,7 @@ window.SAZON_CONFIG = {
       maxLocations: 999,
       historyMonths: 12,
       analysesPerMonth: 999,
-      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'financiero', 'roadmap'],
+      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'roas', 'financiero', 'roadmap'],
     },
     enterprise: {
       label:  'Enterprise',
@@ -55,18 +55,18 @@ window.SAZON_CONFIG = {
       maxLocations: 999,
       historyMonths: 24,
       analysesPerMonth: 999,
-      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'financiero', 'roadmap'],
+      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'roas', 'financiero', 'roadmap'],
     },
   },
 
   // ─── Estado de suscripción → comportamiento ───────────────────────
   subscriptionBehavior: {
-    trial:     { access: 'full',     banner: 'trial'    },   // acceso completo, banner "Estás en trial"
-    active:    { access: 'full',     banner: null       },   // sin restricciones
-    grace:     { access: 'full',     banner: 'grace'    },   // banner amarillo "actualiza método de pago"
-    past_due:  { access: 'readonly', banner: 'past_due' },   // solo lectura, banner rojo
-    suspended: { access: 'blocked',  banner: 'suspended'},   // login bloqueado
-    cancelled: { access: 'blocked',  banner: 'cancelled'},   // login bloqueado
+    trial:     { access: 'full',     banner: 'trial'    },
+    active:    { access: 'full',     banner: null       },
+    grace:     { access: 'full',     banner: 'grace'    },
+    past_due:  { access: 'readonly', banner: 'past_due' },
+    suspended: { access: 'blocked',  banner: 'suspended'},
+    cancelled: { access: 'blocked',  banner: 'cancelled'},
   },
 
   // ─── Países soportados ────────────────────────────────────────────
