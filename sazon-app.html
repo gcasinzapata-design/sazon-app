@@ -8400,6 +8400,11 @@ async function persistCurrentAnalysis(processingMs) {
 
   if (result.success) {
     APP.currentAnalysisId = result.analysisId;
+    // Sprint 3: recordar el último análisis para auto-restaurar en refresh
+    try {
+      const key = 'sazon_last_analysis_' + (APP.brand?.id || 'default');
+      localStorage.setItem(key, result.analysisId);
+    } catch(e) { console.warn('LocalStorage no disponible:', e); }
     // Refrescar el listado en background
     loadPreviousAnalyses();
   }
@@ -8504,6 +8509,13 @@ async function deleteAnalysisFromHistory(analysisId) {
   }
 
   showToast('Análisis eliminado');
+  // Sprint 3: si eliminamos el análisis actualmente guardado como "último", limpiar
+  try {
+    const key = 'sazon_last_analysis_' + (APP.brand?.id || 'default');
+    if (localStorage.getItem(key) === analysisId) {
+      localStorage.removeItem(key);
+    }
+  } catch(e) {}
   loadPreviousAnalyses();
 }
 
@@ -8637,7 +8649,26 @@ hydrateEngineConfig = async function() {
   }
 
   if (APP.user && APP.user.role !== 'sazon_admin') {
-    loadPreviousAnalyses();
+    await loadPreviousAnalyses();
+
+    // Sprint 3: auto-restaurar el último análisis en refresh
+    try {
+      const key = 'sazon_last_analysis_' + (APP.brand?.id || 'default');
+      const lastId = localStorage.getItem(key);
+      if (lastId && !APP.D && typeof loadAnalysisFromHistory === 'function') {
+        // Verificar que el análisis existe en la lista actual (no fue eliminado)
+        const exists = APP.previousAnalyses?.some(a => a.id === lastId);
+        if (exists) {
+          console.log('[AutoRestore] Restaurando último análisis:', lastId);
+          setTimeout(() => loadAnalysisFromHistory(lastId), 300);
+        } else {
+          console.log('[AutoRestore] ID guardado no existe, limpiando');
+          localStorage.removeItem(key);
+        }
+      }
+    } catch (e) {
+      console.warn('[AutoRestore] Error:', e);
+    }
   }
 };
 
@@ -9099,19 +9130,7 @@ function drawCostosDonut(data) {
   });
 }
 
-// Enganchar renderCostos al flujo de análisis
-// Cuando renderStage2 corra, también renderiza costos
-const _originalRenderStage2 = window.renderStage2;
-window.renderStage2 = function() {
-  if (typeof _originalRenderStage2 === 'function') {
-    _originalRenderStage2.apply(this, arguments);
-  }
-  try {
-    renderCostos();
-  } catch (err) {
-    console.error('[Costos] render error:', err);
-  }
-};
+// Sprint 3: renderCostos se llama desde renderAllSprint3Modules() vía hook único
 
 
 
@@ -9534,18 +9553,7 @@ function renderROAS() {
   `;
 }
 
-// Enganchar al flujo de análisis
-const _renderStage2Prev = window.renderStage2;
-window.renderStage2 = function() {
-  if (typeof _renderStage2Prev === 'function') {
-    _renderStage2Prev.apply(this, arguments);
-  }
-  try {
-    renderROAS();
-  } catch (err) {
-    console.error('[ROAS] render error:', err);
-  }
-};
+// Sprint 3: renderROAS se llama desde renderAllSprint3Modules() vía hook único
 
 
 
