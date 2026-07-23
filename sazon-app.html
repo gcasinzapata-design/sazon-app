@@ -9465,14 +9465,26 @@ function applyPeriodFilter() {
     info.innerHTML = `<strong>${filt}</strong> de ${orig} órdenes · ${periodTxt}${platTxt}`;
   }
 
-  // Re-computar y re-renderizar
+  // Re-computar y re-renderizar TODOS los módulos
   try {
     APP.D = analyze(APP.allOrders);
+
+    // Dashboard principal
+    if (typeof renderDashboard === 'function') {
+      renderDashboard(APP.D, APP.allOrders);
+    }
+
+    // Todos los otros módulos (Patrones, Precios, Menú, Combos, Promos, Adq, Ticket, Retención, Financiero, Roadmap)
     if (typeof window.renderStage2 === 'function') {
       window.renderStage2();
     }
+
+    // Gráficos del Dashboard
+    if (typeof renderCharts === 'function') {
+      setTimeout(() => renderCharts(APP.D), 80);
+    }
   } catch (err) {
-    console.error('[Filter] Re-analyze error:', err);
+    console.error('[Filter] Re-render error:', err);
   }
 }
 
