@@ -9677,17 +9677,24 @@ function applyPeriodFilter() {
     // para que no interfiera con nuestro filtro global
     APP.platFilter = 'all';
 
-    // Preservar peyaSummary
+    // Preservar peyaSummary y peyaMonthlyHistory
     const savedPeyaSummary = APP._unfilteredOrders._peyaSummary;
+    const savedMonthlyHist = APP._unfilteredOrders._peyaMonthlyHistory;
     if (savedPeyaSummary) {
       APP.allOrders._peyaSummary = savedPeyaSummary;
     }
+    if (savedMonthlyHist) {
+      APP.allOrders._peyaMonthlyHistory = savedMonthlyHist;
+    }
 
     APP.D = analyze(APP.allOrders);
-    // El motor pierde peyaSummary en analyze(), reasignar
+    // El motor pierde estos en analyze(), reasignar
     if (savedPeyaSummary) {
       APP.D.peyaSummary = savedPeyaSummary;
       APP.D._peyaSummary = savedPeyaSummary;
+    }
+    if (savedMonthlyHist) {
+      APP.D._peyaMonthlyHistory = savedMonthlyHist;
     }
 
     // Dashboard principal (recrea chips, KPIs, alerts, tabla plataformas)
@@ -9705,12 +9712,21 @@ function applyPeriodFilter() {
       setTimeout(() => renderCharts(APP.D), 80);
     }
 
-    // Módulos Sprint 3
+    // Módulos Sprint 3 - llamar TODOS explícitamente
     if (typeof renderCostos === 'function') {
       try { renderCostos(); } catch(e) { console.warn('[Filter] renderCostos error:', e); }
     }
     if (typeof renderROAS === 'function') {
       try { renderROAS(); } catch(e) { console.warn('[Filter] renderROAS error:', e); }
+    }
+    if (typeof renderTendencias === 'function') {
+      try { renderTendencias(); } catch(e) { console.warn('[Filter] renderTendencias error:', e); }
+    }
+    if (typeof renderTiempos === 'function') {
+      try { renderTiempos(); } catch(e) { console.warn('[Filter] renderTiempos error:', e); }
+    }
+    if (typeof renderReclamos === 'function') {
+      try { renderReclamos(); } catch(e) { console.warn('[Filter] renderReclamos error:', e); }
     }
   } catch (err) {
     console.error('[Filter] Re-render error:', err);
@@ -9758,10 +9774,17 @@ function renderTendencias() {
   const body = document.getElementById('tendenciasBody');
   if (!body) return;
 
-  // Datos del histórico mensual PeYa
+  // Datos del histórico mensual PeYa - buscar en 3 ubicaciones
   const history = APP.allOrders?._peyaMonthlyHistory
                 || APP._unfilteredOrders?._peyaMonthlyHistory
+                || APP.D?._peyaMonthlyHistory
                 || null;
+
+  // DEBUG: log del estado
+  console.log('[Tendencias] history=', history ? 'presente (' + history.months?.length + ' meses)' : 'AUSENTE',
+              'allOrders._peyaMonthlyHistory=', !!APP.allOrders?._peyaMonthlyHistory,
+              'unfiltered=', !!APP._unfilteredOrders?._peyaMonthlyHistory,
+              'D=', !!APP.D?._peyaMonthlyHistory);
 
   if (!history || !history.months || history.months.length < 2) {
     body.innerHTML = `
