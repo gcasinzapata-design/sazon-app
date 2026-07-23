@@ -1243,17 +1243,6 @@ input[type=file]{display:none;}
         </div>
       </div>
     </div>
-    <!-- ═══ MIS ANÁLISIS PREVIOS (Sprint 2 A.2.3) ══════════════════════ -->
-    <div class="prev-analyses" id="prevAnalyses" style="display:none">
-      <div class="prev-analyses-head">
-        <div class="prev-analyses-title">📁 Mis análisis previos</div>
-        <div class="prev-analyses-count" id="prevAnalysesCount">—</div>
-      </div>
-      <div id="prevAnalysesList">
-        <!-- Se renderiza dinámicamente -->
-      </div>
-    </div>
-
     <div class="welcome-empty" id="welcomeEmpty">
       <h2>Bienvenido a Sazón Growth Engine</h2>
       <p>Aquí analizarás el desempeño de tu marca en las plataformas de delivery. Los módulos se activan según tu tier — click en cualquier tab para empezar.</p>
@@ -1280,27 +1269,70 @@ input[type=file]{display:none;}
     <!-- ═══ PANELES DEL MOTOR (Sprint 2 A.2.1) ═══════════════════════════ -->
     <!-- Estos paneles están en el DOM pero .panel:not(.active) los oculta -->
     <div class="rpt" id="rptWrap" style="display:none">
-      <!-- ═══ FILTRO DE PERÍODO (Sprint 3 - Paso 3) ══════════════════════ -->
-      <div id="periodFilterBar" style="display:none;background:#fff;border-bottom:1px solid var(--l);padding:10px 24px;">
-        <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--m);">📅 Período:</div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;" id="periodQuickBtns">
-            <button class="period-btn active" data-period="all" onclick="setPeriodFilter('all')">Todos</button>
-            <button class="period-btn" data-period="7" onclick="setPeriodFilter('7')">7 días</button>
-            <button class="period-btn" data-period="30" onclick="setPeriodFilter('30')">30 días</button>
-            <button class="period-btn" data-period="90" onclick="setPeriodFilter('90')">90 días</button>
+      <!-- ═══ BARRA DE FILTROS (Sprint 3 - Paso 3 + mejoras) ══════════════════════ -->
+      <div id="periodFilterBar" style="display:none;background:#fff;border-bottom:1px solid var(--l);padding:12px 24px;">
+        <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <!-- Filtro Plataforma -->
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--m);">🍽️ Plataforma:</div>
+            <div style="display:flex;gap:4px;" id="platformQuickBtns">
+              <button class="filter-btn active" data-plat="all" onclick="setPlatformFilter('all')">Todas</button>
+              <button class="filter-btn" data-plat="rappi" onclick="setPlatformFilter('rappi')">🟠 Rappi</button>
+              <button class="filter-btn" data-plat="peya" onclick="setPlatformFilter('peya')">🔵 PeYa</button>
+            </div>
           </div>
-          <div style="flex:1;text-align:right;font-size:.72rem;color:var(--m);" id="periodInfo">
-            <!-- Info del período seleccionado y órdenes filtradas -->
+
+          <div style="width:1px;height:24px;background:var(--l);"></div>
+
+          <!-- Filtro Período -->
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--m);">📅 Período:</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;" id="periodQuickBtns">
+              <button class="filter-btn active" data-period="all" onclick="setPeriodFilter('all')">Todos</button>
+              <button class="filter-btn" data-period="7" onclick="setPeriodFilter('7')">7d</button>
+              <button class="filter-btn" data-period="30" onclick="setPeriodFilter('30')">30d</button>
+              <button class="filter-btn" data-period="90" onclick="setPeriodFilter('90')">90d</button>
+              <button class="filter-btn" data-period="custom" onclick="openDateRangeModal()">📆 Rango custom</button>
+            </div>
+          </div>
+
+          <div style="flex:1;text-align:right;font-size:.7rem;color:var(--m);" id="periodInfo">
+            <!-- Info del filtro activo -->
           </div>
         </div>
       </div>
 
       <style>
+        .filter-btn{background:transparent;border:1px solid var(--l);color:var(--m);padding:5px 12px;border-radius:100px;font-size:.68rem;font-weight:600;cursor:pointer;letter-spacing:.5px;transition:all .15s;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+        .filter-btn:hover{border-color:var(--r);color:var(--r);}
+        .filter-btn.active{background:var(--r);color:#fff;border-color:var(--r);}
+        /* Compat con período-btn viejo */
         .period-btn{background:transparent;border:1px solid var(--l);color:var(--m);padding:6px 14px;border-radius:100px;font-size:.7rem;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.8px;transition:all .15s;font-family:'DM Sans',sans-serif;}
         .period-btn:hover{border-color:var(--r);color:var(--r);}
         .period-btn.active{background:var(--r);color:#fff;border-color:var(--r);}
       </style>
+
+      <!-- Modal de rango custom -->
+      <div id="dateRangeModal" style="display:none;position:fixed;inset:0;background:rgba(15,15,13,.75);z-index:900;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:var(--c);border-radius:4px;width:100%;max-width:440px;padding:24px;">
+          <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:900;margin-bottom:5px;">📆 Rango de fechas</div>
+          <div style="font-size:.72rem;color:var(--m);margin-bottom:14px;">Selecciona fechas exactas para filtrar el análisis</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div>
+              <label style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--m);margin-bottom:4px;display:block;">Desde</label>
+              <input type="date" id="dateRangeFrom" style="width:100%;padding:9px 12px;border:1px solid var(--l);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:.85rem;background:#fff;">
+            </div>
+            <div>
+              <label style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--m);margin-bottom:4px;display:block;">Hasta</label>
+              <input type="date" id="dateRangeTo" style="width:100%;padding:9px 12px;border:1px solid var(--l);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:.85rem;background:#fff;">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;">
+            <button onclick="closeDateRangeModal()" style="padding:9px 18px;border-radius:3px;border:1px solid var(--l);background:transparent;color:var(--m);font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px;">Cancelar</button>
+            <button onclick="applyDateRange()" style="padding:9px 18px;border-radius:3px;border:none;background:var(--r);color:#fff;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px;">Aplicar</button>
+          </div>
+        </div>
+      </div>
 
       <div class="acc-bar"></div>
 
@@ -1604,6 +1636,18 @@ input[type=file]{display:none;}
       </div>
 
     </div>
+
+    <!-- ═══ MIS ANÁLISIS PREVIOS (Sprint 2 A.2.3) - Movido debajo (Sprint 3) ══════════════════════ -->
+    <div class="prev-analyses" id="prevAnalyses" style="display:none">
+      <div class="prev-analyses-head">
+        <div class="prev-analyses-title">📁 Mis análisis previos</div>
+        <div class="prev-analyses-count" id="prevAnalysesCount">—</div>
+      </div>
+      <div id="prevAnalysesList">
+        <!-- Se renderiza dinámicamente -->
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -5196,8 +5240,8 @@ function showReport(isDemo=false){
   // Ocultar también welcomeEmpty explícitamente
   const welcome = document.getElementById('welcomeEmpty');
   if(welcome) welcome.style.display = 'none';
-  const prevAnalyses = document.getElementById('prevAnalyses');
-  if(prevAnalyses) prevAnalyses.style.display = 'none';
+  // Sprint 3: NO ocultar prevAnalyses - ahora va debajo del reporte
+  // Se mostrará automáticamente si tiene contenido
 
   showPanel('rptWrap');
 
@@ -8046,7 +8090,8 @@ async function loadPreviousAnalyses() {
 
   renderPreviousAnalysesList();
 
-  // Solo mostrar la sección si hay al menos 1 análisis
+  // Sprint 3: Mostrar la sección si hay al menos 1 análisis
+  // Ahora aparece siempre debajo del reporte cuando hay contenido
   if (container) {
     container.style.display = APP.previousAnalyses.length > 0 ? 'block' : 'none';
   }
@@ -9277,80 +9322,161 @@ window.renderStage2 = function() {
 
 
 // ═══════════════════════════════════════════════════════════════════════
-//  SPRINT 3 — Filtro global de período
+//  SPRINT 3 — Filtros globales (período + plataforma + rango custom)
 // ═══════════════════════════════════════════════════════════════════════
 
 APP.currentPeriodFilter = 'all';
+APP.currentPlatformFilter = 'all';
+APP.customRange = null;  // { from: Date, to: Date }
 APP._unfilteredOrders = null;
 
 function setPeriodFilter(period) {
   APP.currentPeriodFilter = period;
+  APP.customRange = null;  // Reset custom range al usar quick button
 
-  // Actualizar UI de botones
-  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-  const active = document.querySelector(`.period-btn[data-period="${period}"]`);
+  // Actualizar UI de botones de período
+  document.querySelectorAll('#periodQuickBtns .filter-btn').forEach(b => b.classList.remove('active'));
+  const active = document.querySelector(`#periodQuickBtns .filter-btn[data-period="${period}"]`);
   if (active) active.classList.add('active');
 
   applyPeriodFilter();
 }
 
-function applyPeriodFilter() {
-  if (!APP.allOrders || APP.allOrders.length === 0) return;
+function setPlatformFilter(platform) {
+  APP.currentPlatformFilter = platform;
 
-  // Guardar orders originales la primera vez
-  if (!APP._unfilteredOrders) {
-    APP._unfilteredOrders = APP.allOrders;
+  // Actualizar UI de botones de plataforma
+  document.querySelectorAll('#platformQuickBtns .filter-btn').forEach(b => b.classList.remove('active'));
+  const active = document.querySelector(`#platformQuickBtns .filter-btn[data-plat="${platform}"]`);
+  if (active) active.classList.add('active');
+
+  applyPeriodFilter();
+}
+
+function openDateRangeModal() {
+  const modal = document.getElementById('dateRangeModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  // Pre-cargar fechas del custom range actual si existe, o del rango de datos
+  const fromInput = document.getElementById('dateRangeFrom');
+  const toInput = document.getElementById('dateRangeTo');
+
+  if (APP.customRange) {
+    fromInput.value = APP.customRange.from.toISOString().slice(0, 10);
+    toInput.value = APP.customRange.to.toISOString().slice(0, 10);
+  } else if (APP._unfilteredOrders) {
+    const withDate = APP._unfilteredOrders.filter(o => o.date instanceof Date);
+    if (withDate.length > 0) {
+      const earliest = new Date(Math.min(...withDate.map(o => o.date.getTime())));
+      const latest = new Date(Math.max(...withDate.map(o => o.date.getTime())));
+      fromInput.value = earliest.toISOString().slice(0, 10);
+      toInput.value = latest.toISOString().slice(0, 10);
+    }
   }
+}
+
+function closeDateRangeModal() {
+  const modal = document.getElementById('dateRangeModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function applyDateRange() {
+  const fromStr = document.getElementById('dateRangeFrom').value;
+  const toStr = document.getElementById('dateRangeTo').value;
+
+  if (!fromStr || !toStr) {
+    alert('Selecciona ambas fechas');
+    return;
+  }
+
+  const from = new Date(fromStr + 'T00:00:00');
+  const to = new Date(toStr + 'T23:59:59');
+
+  if (from > to) {
+    alert('La fecha "Desde" debe ser anterior a "Hasta"');
+    return;
+  }
+
+  APP.customRange = { from, to };
+  APP.currentPeriodFilter = 'custom';
+
+  // Actualizar UI de botones
+  document.querySelectorAll('#periodQuickBtns .filter-btn').forEach(b => b.classList.remove('active'));
+  const customBtn = document.querySelector('#periodQuickBtns .filter-btn[data-period="custom"]');
+  if (customBtn) customBtn.classList.add('active');
+
+  closeDateRangeModal();
+  applyPeriodFilter();
+}
+
+function applyPeriodFilter() {
+  if (!APP._unfilteredOrders || APP._unfilteredOrders.length === 0) return;
 
   const period = APP.currentPeriodFilter;
+  const plat = APP.currentPlatformFilter;
+  let filtered = APP._unfilteredOrders;
 
-  if (period === 'all') {
-    APP.allOrders = APP._unfilteredOrders;
-  } else {
-    const daysBack = parseInt(period, 10);
-    if (isNaN(daysBack)) return;
-
-    // Encontrar la fecha más reciente en los orders
-    const withDate = APP._unfilteredOrders.filter(o => o.date instanceof Date);
-    if (withDate.length === 0) return;
-
-    const latestDate = new Date(Math.max(...withDate.map(o => o.date.getTime())));
-    const cutoff = new Date(latestDate.getTime() - daysBack * 86400000);
-
-    APP.allOrders = APP._unfilteredOrders.filter(o => {
-      if (!o.date) return false;
-      return o.date >= cutoff;
-    });
-
-    // Copiar propiedades especiales del array
-    APP.allOrders._peyaSummary = APP._unfilteredOrders._peyaSummary;
-    APP.allOrders._parseLog = APP._unfilteredOrders._parseLog;
+  // Filtrar por período
+  if (period !== 'all') {
+    if (period === 'custom' && APP.customRange) {
+      filtered = filtered.filter(o => {
+        if (!o.date) return false;
+        return o.date >= APP.customRange.from && o.date <= APP.customRange.to;
+      });
+    } else {
+      const daysBack = parseInt(period, 10);
+      if (!isNaN(daysBack)) {
+        const withDate = APP._unfilteredOrders.filter(o => o.date instanceof Date);
+        if (withDate.length > 0) {
+          const latestDate = new Date(Math.max(...withDate.map(o => o.date.getTime())));
+          const cutoff = new Date(latestDate.getTime() - daysBack * 86400000);
+          filtered = filtered.filter(o => o.date && o.date >= cutoff);
+        }
+      }
+    }
   }
+
+  // Filtrar por plataforma
+  if (plat !== 'all') {
+    filtered = filtered.filter(o => o.platform === plat);
+  }
+
+  // Reasignar
+  APP.allOrders = filtered;
+  APP.allOrders._peyaSummary = APP._unfilteredOrders._peyaSummary;
+  APP.allOrders._parseLog = APP._unfilteredOrders._parseLog;
 
   // Actualizar info visible
   const info = document.getElementById('periodInfo');
   if (info) {
-    const orig = APP._unfilteredOrders?.length || 0;
-    const filtered = APP.allOrders?.length || 0;
-    if (period === 'all') {
-      info.textContent = `${filtered} órdenes en total`;
-    } else {
-      info.textContent = `Últimos ${period} días: ${filtered} de ${orig} órdenes`;
+    const orig = APP._unfilteredOrders.length;
+    const filt = APP.allOrders.length;
+    let periodTxt = '';
+    if (period === 'all') periodTxt = 'todos los datos';
+    else if (period === 'custom' && APP.customRange) {
+      const from = APP.customRange.from.toLocaleDateString('es-PE', {day:'numeric', month:'short'});
+      const to = APP.customRange.to.toLocaleDateString('es-PE', {day:'numeric', month:'short'});
+      periodTxt = `${from} → ${to}`;
     }
+    else periodTxt = `últimos ${period} días`;
+
+    let platTxt = plat === 'all' ? '' : ` · ${plat.toUpperCase()}`;
+    info.innerHTML = `<strong>${filt}</strong> de ${orig} órdenes · ${periodTxt}${platTxt}`;
   }
 
-  // Re-computar análisis y re-renderizar todos los módulos
+  // Re-computar y re-renderizar
   try {
     APP.D = analyze(APP.allOrders);
     if (typeof window.renderStage2 === 'function') {
       window.renderStage2();
     }
   } catch (err) {
-    console.error('[PeriodFilter] Re-analyze error:', err);
+    console.error('[Filter] Re-analyze error:', err);
   }
 }
 
-// Mostrar filtro de período cuando entramos al reporte
+// Mostrar filtros cuando entramos al reporte
 const _originalShowReport = window.showReport;
 window.showReport = function() {
   if (typeof _originalShowReport === 'function') {
@@ -9359,13 +9485,23 @@ window.showReport = function() {
   const bar = document.getElementById('periodFilterBar');
   if (bar) bar.style.display = 'block';
 
-  // Reset del filtro cuando se carga un nuevo análisis
+  // Reset de filtros cuando se carga un nuevo análisis
   APP.currentPeriodFilter = 'all';
+  APP.currentPlatformFilter = 'all';
+  APP.customRange = null;
   APP._unfilteredOrders = APP.allOrders;
+
+  // Reset UI de botones
+  document.querySelectorAll('#periodQuickBtns .filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.period === 'all');
+  });
+  document.querySelectorAll('#platformQuickBtns .filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.plat === 'all');
+  });
 
   const info = document.getElementById('periodInfo');
   if (info && APP.allOrders) {
-    info.textContent = `${APP.allOrders.length} órdenes en total`;
+    info.innerHTML = `<strong>${APP.allOrders.length}</strong> órdenes en total`;
   }
 };
 
