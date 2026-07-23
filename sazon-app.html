@@ -6029,6 +6029,10 @@ function renderStage2(){
   renderFinancial();
   // Etapa 7
   renderRoadmap();
+  // Sprint 3: renderizar los 5 módulos nuevos SIEMPRE que se re-renderiza todo
+  if (typeof renderAllSprint3Modules === 'function') {
+    renderAllSprint3Modules();
+  }
 }
 
 
@@ -8425,11 +8429,73 @@ async function loadAnalysisFromHistory(analysisId) {
 
   const a = result.analysis;
   const meta = a.metadata || {};
+  const modules = meta.modules || {};
+  const sprint3 = modules._sprint3;
 
-  // Reconstruir APP.D desde los datos guardados
-  // Para el Sprint 2 A.2.3: mostramos los KPIs top-level + un mensaje "análisis histórico"
-  // La reconstrucción completa de módulos con re-render viene en A.2.4 (opcional Sprint 3)
+  // Sprint 3: si hay snapshot completo, restaurar TODO
+  if (sprint3 && sprint3.orders && sprint3.orders.length > 0) {
+    console.log('[loadHistory] Restaurando snapshot Sprint 3:', sprint3.orders.length, 'órdenes');
 
+    // Deserializar fechas
+    const orders = sprint3.orders.map(o => ({
+      ...o,
+      date: o.date ? new Date(o.date) : null
+    }));
+
+    orders._peyaSummary = sprint3.peyaSummary || null;
+    orders._peyaMonthlyHistory = sprint3.peyaMonthlyHistory || null;
+
+    APP.allOrders = orders;
+    APP._unfilteredOrders = orders.slice();
+    APP._unfilteredOrders._peyaSummary = orders._peyaSummary;
+    APP._unfilteredOrders._peyaMonthlyHistory = orders._peyaMonthlyHistory;
+
+    APP.D = analyze(APP.allOrders);
+    if (orders._peyaSummary) { APP.D.peyaSummary = orders._peyaSummary; APP.D._peyaSummary = orders._peyaSummary; }
+    if (orders._peyaMonthlyHistory) APP.D._peyaMonthlyHistory = orders._peyaMonthlyHistory;
+
+    APP.currentAnalysisId = a.id;
+    APP.viewingHistorical = true;
+
+    // Reset filtros
+    APP.currentPeriodFilter = 'all';
+    APP.currentPlatformFilter = 'all';
+    APP.customRange = null;
+
+    // Renderizar todo
+    hideUploadFlow();
+    setStyle('welcomeEmpty', 'display', 'none');
+    setStyle('rptWrap', 'display', 'block');
+
+    if (typeof renderDashboard === 'function') renderDashboard(APP.D, APP.allOrders);
+    if (typeof renderStage2 === 'function') renderStage2();
+    if (typeof renderCharts === 'function') setTimeout(() => renderCharts(APP.D), 80);
+
+    // Mostrar barra de filtros
+    const filterBar = document.getElementById('periodFilterBar');
+    if (filterBar) filterBar.style.display = 'block';
+
+    // Reset UI de botones de filtros
+    document.querySelectorAll('#periodQuickBtns .filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.period === 'all');
+    });
+    document.querySelectorAll('#platformQuickBtns .filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.plat === 'all');
+    });
+    const info = document.getElementById('periodInfo');
+    if (info && APP.allOrders) {
+      info.innerHTML = '<strong>' + APP.allOrders.length + '</strong> órdenes en total';
+    }
+
+    // Botón nuevo análisis
+    const btnNew = document.getElementById('btnNewAnalysis');
+    if (btnNew) btnNew.style.display = 'inline-block';
+
+    showToast('Análisis "' + (a.custom_name || a.name || 'histórico') + '" restaurado');
+    return;
+  }
+
+  // Fallback legacy: análisis viejos sin snapshot Sprint 3
   const kpis = meta.kpis || {};
   APP.D = {
     total_n: kpis.orders_total || a.orders_count || 0,
@@ -9736,8 +9802,8 @@ function applyPeriodFilter() {
 }
 
 // Mostrar filtros cuando entramos al reporte
-const _originalShowReport = window.showReport;
-window.showReport = function() {
+const _originalShowReport = showReport;
+showReport = function() {
   if (typeof _originalShowReport === 'function') {
     _originalShowReport.apply(this, arguments);
   }
@@ -10288,15 +10354,8 @@ function renderAllSprint3Modules() {
   });
 }
 
-// Hook a renderStage2 (una sola vez, limpio)
-if (!window._sprint3HookInstalled) {
-  window._sprint3HookInstalled = true;
-  const _origStage2 = window.renderStage2;
-  window.renderStage2 = function() {
-    if (typeof _origStage2 === 'function') { _origStage2.apply(this, arguments); }
-    renderAllSprint3Modules();
-  };
-}
+// Sprint 3: renderAllSprint3Modules se llama directamente desde renderStage2
+// (el hook a window.renderStage2 NO funcionaba por strict mode + function declaration binding)
 
 
 if(document.readyState === 'loading') {
