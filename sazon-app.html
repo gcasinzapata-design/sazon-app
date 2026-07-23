@@ -8798,14 +8798,23 @@ async function parsePeyaAccountStatementPDF(file) {
 
     // Helpers de extracción
     // El PDF muestra "Concepto\nS/ monto" con formato variable
+    // Búsqueda con ventana amplia (250 chars) y también look-behind (100 chars antes)
     const extractAmount = (label) => {
-      // Buscar el label, luego el próximo "S/ X.XX" que aparezca
-      const regex = new RegExp(label + '\\s*[\\s\\S]{0,80}?S/\\s*(-?[\\d,]+\\.?\\d*)', 'i');
-      const m = fullText.match(regex);
-      if (!m) return 0;
-      // Limpiar formato: "1,053.20" → 1053.20
-      const num = parseFloat(m[1].replace(/,/g, ''));
-      return isNaN(num) ? 0 : num;
+      // Estrategia 1: buscar el label y luego el próximo S/ en los siguientes 250 chars
+      let regex = new RegExp('(?:' + label + ')\\s*[\\s\\S]{0,250}?S/\\s*(-?[\\d,]+\\.?\\d*)', 'i');
+      let m = fullText.match(regex);
+      if (m && m[1]) {
+        const num = parseFloat(m[1].replace(/,/g, ''));
+        if (!isNaN(num)) return num;
+      }
+      // Estrategia 2: buscar el S/ que está ANTES del label (formato 2-column donde monto va primero)
+      regex = new RegExp('S/\\s*(-?[\\d,]+\\.?\\d*)[\\s\\S]{0,100}?(?:' + label + ')', 'i');
+      m = fullText.match(regex);
+      if (m && m[1]) {
+        const num = parseFloat(m[1].replace(/,/g, ''));
+        if (!isNaN(num)) return num;
+      }
+      return 0;
     };
 
     // Extraer período
@@ -8826,7 +8835,7 @@ async function parsePeyaAccountStatementPDF(file) {
       plusPartnerFee: Math.abs(extractAmount('Cargos por pedidos con plus')),
       goldVip: Math.abs(extractAmount('Campa.a gold vip|Campana gold vip')),
       fugaces: Math.abs(extractAmount('Descuentos fugaces')),
-      ivaComis: Math.abs(extractAmount('Impuesto en comisiones')),
+      ivaComis: Math.abs(extractAmount('\\bImpuestos\\b')),
       packagingFee: Math.abs(extractAmount('Cargos por packaging')),
       shippingFee: Math.abs(extractAmount('Cargos por env.o')),
       minOrderFee: Math.abs(extractAmount('Cargos por valor m.nimo')),
