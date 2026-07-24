@@ -5675,9 +5675,9 @@ async function parseAllFiles(files){
       if (isCSV) {
         try {
           const txt = await file.text();
-          const detected = detectFileType(file, null);
+          const detected = typeof detectFileType === 'function' ? detectFileType(file, null) : 'unknown';
 
-          if (detected === 'rappi_reviews') {
+          if (detected === 'rappi_reviews' && typeof parseRappiReviews === 'function') {
             const rv = parseRappiReviews(txt);
             orders._rappiReviews = rv;
             orders._filesDetected.push({ name: file.name, type: 'rappi_reviews', summary: rv.reviews.length + ' reviews' });
@@ -5688,7 +5688,7 @@ async function parseAllFiles(files){
             continue;
           }
 
-          if (detected === 'peya_customers_summary') {
+          if (detected === 'peya_customers_summary' && typeof parsePeyaCustomersSummary === 'function') {
             // Convertir CSV a rows
             const rows = txt.split(/\r?\n/).filter(l => l.trim()).map(l => l.split(','));
             const cs = parsePeyaCustomersSummary(rows);
@@ -5757,13 +5757,24 @@ async function parseAllFiles(files){
       let fileOrders = 0;
 
       // ═══ Sprint 4: DETECCIÓN de tipos nuevos XLSX antes del loop ═══
-      const allSheets = wb.SheetNames.map(sn => ({
-        name: sn,
-        rows: XLSX.utils.sheet_to_json(wb.Sheets[sn], { raw:false, defval:'', header:1 }),
-      }));
-      const detected = detectFileType(file, allSheets);
-      console.log('[Parser Sprint 4] Detectado:', file.name, '=>', detected);
+      let allSheets = [];
+      let detected = 'unknown';
+      try {
+        allSheets = wb.SheetNames.map(sn => ({
+          name: sn,
+          rows: XLSX.utils.sheet_to_json(wb.Sheets[sn], { raw:false, defval:'', header:1 }),
+        }));
+        if (typeof detectFileType === 'function') {
+          detected = detectFileType(file, allSheets);
+        }
+        console.log('[Parser Sprint 4] Detectado:', file.name, '=>', detected);
+      } catch (detErr) {
+        console.warn('[Parser Sprint 4] Error detección (continuamos con motor v1):', detErr.message);
+        detected = 'unknown';
+      }
 
+      // ═══ Sprint 4: TRY para todos los handlers ═══
+      try {
       // Rappi Service Level
       if (detected === 'rappi_service_level') {
         const sl = parseRappiServiceLevel(allSheets);
@@ -5880,6 +5891,10 @@ async function parseAllFiles(files){
           orders._parseLog.push(logEntry);
           continue;
         }
+      }
+
+      } catch (sprint4Err) {
+        console.warn('[Parser Sprint 4] Error en handler (caemos a motor v1):', sprint4Err.message, sprint4Err);
       }
 
       // Process EACH SHEET independently (fallback: motor v1 original)
