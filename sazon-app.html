@@ -1117,6 +1117,27 @@ input[type=file]{display:none;}
 .trend-badge.flat{background:rgba(0,0,0,.06);color:var(--m);}
 @media (max-width:900px){.mod-kpi-grid{grid-template-columns:repeat(2,1fr);}}
 
+
+/* Sprint 4 - Marca / Productos / Reviews */
+.channels-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px;margin-bottom:20px;}
+.channel-card{background:#fff;border:1px solid var(--l);border-radius:6px;padding:20px;}
+.channel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.channel-name{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:var(--t);}
+.channel-share{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--m);background:var(--w);padding:4px 10px;border-radius:100px;}
+.channel-roles{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;min-height:24px;}
+.role-badge{padding:4px 10px;border-radius:100px;font-size:.62rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.role-badge.role-neutral{background:rgba(0,0,0,.06);color:var(--m);}
+.channel-kpi-grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:12px;padding-top:14px;border-top:1px solid var(--l);}
+.channel-kpi-label{font-size:.58rem;color:var(--m);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:4px;}
+.channel-kpi-val{font-family:'Playfair Display',serif;font-size:1rem;font-weight:900;color:var(--t);}
+.channel-kpi-val.up{color:#2d6a4f;}
+.channel-kpi-val.warn{color:#8a6000;}
+.channel-kpi-val.dn{color:#c8392b;}
+
+@media (max-width:900px){
+  .channels-grid{grid-template-columns:1fr;}
+}
+
 </style>
 </head>
 <body>
@@ -1265,20 +1286,33 @@ input[type=file]{display:none;}
 
           <div class="fmt-guide">
             <div class="fmt-card">
-              <div class="fmt-name" style="color:#FF6900">🟠 Rappi</div>
+              <div class="fmt-name" style="color:#FF6900">🟠 Rappi — Partners Portal</div>
               <div class="fmt-hint">
-                <strong>Órdenes:</strong> Historial → Exportar Excel<br>
-                <strong>Financiero:</strong> Reportes → Detalle → Excel
+                <strong>Rappi_Report:</strong> Reportes → Financiero → Excel<br>
+                <strong>Service_Level:</strong> Reportes → Nivel de Servicio → Excel<br>
+                <strong>Reviews:</strong> Reportes → Reseñas → CSV
               </div>
             </div>
             <div class="fmt-card">
-              <div class="fmt-name" style="color:#0064C8">🔵 PedidosYa</div>
+              <div class="fmt-name" style="color:#0064C8">🔵 PedidosYa Hub</div>
               <div class="fmt-hint">
-                <strong>Órdenes:</strong> Finanzas → Reportes → Descargar<br>
-                <strong>Cargos ocultos (PDF):</strong> Finanzas → Estado de cuenta semanal → PDF<br>
-                <strong>Resumen:</strong> Earnings Summary CSV
+                <strong>orderDetails:</strong> Finanzas → Detalle de pedidos<br>
+                <strong>ordersSummary + opsSummary:</strong> Reportes semanales<br>
+                <strong>customersSummary:</strong> Marketing → Clientes<br>
+                <strong>account_statement.pdf:</strong> Finanzas → Estado semanal<br>
+                <strong>reporte_detallado:</strong> Publicidad → Performance<br>
+                <strong>ordersPerMonth:</strong> Finanzas → Histórico mensual
               </div>
             </div>
+          </div>
+
+          <div id="filesDetectedList" style="display:none;margin-top:16px;padding:14px;background:var(--w);border-radius:6px;border-left:3px solid var(--gr);">
+            <div style="font-size:.65rem;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">✓ Archivos detectados</div>
+            <div id="filesDetectedItems"></div>
+          </div>
+
+          <div style="margin-top:14px;padding:12px 14px;background:rgba(45,106,79,.05);border-radius:6px;font-size:.72rem;color:var(--m);border-left:3px solid var(--gr)">
+            <strong style="color:var(--gr)">📊 Modo agregativo Sprint 4:</strong> Al generar análisis, los datos se guardan en tu historial acumulativo. Cada semana subís los archivos nuevos y el sistema los suma automáticamente al histórico para comparativas WoW y MoM.
           </div>
 
           <button class="an-btn" id="anBtn" disabled onclick="runAnalysis()">
@@ -1680,6 +1714,42 @@ input[type=file]{display:none;}
         </div>
       </div>
 
+      <!-- ── MARCA (Sprint 4) ── -->
+      <div class="panel" id="p-marca">
+        <div class="section-head">
+          <div class="section-ico">🏷️</div>
+          <div>
+            <div class="section-title">Estrategia de Marca</div>
+            <div class="section-sub">Rol de cada canal en tu estrategia digital</div>
+          </div>
+        </div>
+        <div id="marcaBody"></div>
+      </div>
+
+      <!-- ── PRODUCTOS (Sprint 4) ── -->
+      <div class="panel" id="p-productos">
+        <div class="section-head">
+          <div class="section-ico">🍔</div>
+          <div>
+            <div class="section-title">Productos por canal</div>
+            <div class="section-sub">Qué SKU vende mejor en qué plataforma</div>
+          </div>
+        </div>
+        <div id="productosBody"></div>
+      </div>
+
+      <!-- ── REVIEWS (Sprint 4) ── -->
+      <div class="panel" id="p-reviews">
+        <div class="section-head">
+          <div class="section-ico">⭐</div>
+          <div>
+            <div class="section-title">Reviews y calificaciones</div>
+            <div class="section-sub">NPS · distribución de estrellas · comentarios</div>
+          </div>
+        </div>
+        <div id="reviewsBody"></div>
+      </div>
+
       <!-- ── TENDENCIAS ── -->
       <div class="panel" id="p-tendencias">
         <div class="section-head">
@@ -1797,10 +1867,12 @@ const showAuthStep = (step) => {
 };
 
 const TAB_META = {
+  marca:      { icon: '🏷️', label: 'Marca' },
   dashboard:  { icon: '📊', label: 'Dashboard' },
   patrones:   { icon: '⏰', label: 'Patrones' },
   precios:    { icon: '💡', label: 'Precios' },
   menu:       { icon: '🍽️', label: 'Menú' },
+  productos:  { icon: '🍔', label: 'Productos' },
   combos:     { icon: '🎯', label: 'Combos' },
   promos:     { icon: '📣', label: 'Promos' },
   adq:        { icon: '🚀', label: 'Adquisición' },
@@ -1808,6 +1880,7 @@ const TAB_META = {
   retencion:  { icon: '🔁', label: 'Retención' },
   costos:     { icon: '💸', label: 'Costos reales' },
   roas:       { icon: '📈', label: 'Publicidad' },
+  reviews:    { icon: '⭐', label: 'Reviews' },
   tendencias: { icon: '📈', label: 'Tendencias' },
   tiempos:    { icon: '⏱️', label: 'Tiempos' },
   reclamos:   { icon: '⚠️', label: 'Reclamos' },
@@ -4023,11 +4096,12 @@ function renderTabBar(){
   const allowedTabs = new Set(APP.tier.tabs);
   const groups = [
     ['dashboard'],
+    ['marca'],
     ['patrones', 'precios'],
-    ['menu', 'combos', 'promos'],
+    ['menu', 'productos', 'combos', 'promos'],
     ['adq', 'ticket', 'retencion'],
     ['tendencias', 'tiempos', 'reclamos'],
-    ['costos', 'roas'],
+    ['costos', 'roas', 'reviews'],
     ['roadmap'],
   ];
   let html = '';
@@ -4429,12 +4503,54 @@ function removeOrderFile(i){
 function renderOrderFileList(){
   const el = document.getElementById('orderFileList');
   if(!APP.files.length){ el.innerHTML=''; return; }
+
+  // Sprint 4: mapa de tipos legibles
+  const FILE_TYPE_LABELS = {
+    'rappi_report': { label: '🟠 Rappi Financiero', color: '#FF6900', tab: 'Dashboard + Costos + ROAS' },
+    'rappi_service_level': { label: '🟠 Service Level', color: '#FF6900', tab: 'Tiempos + Reclamos' },
+    'rappi_reviews': { label: '🟠 Reviews', color: '#FF6900', tab: 'Reviews' },
+    'rappi_orders_basic': { label: '🟠 Orders (básico)', color: '#999', tab: 'Ignorable — usa Rappi_Report' },
+    'peya_order_details': { label: '🔵 PeYa Orden Details', color: '#0064C8', tab: 'Dashboard + Tiempos + Reclamos' },
+    'peya_orders_summary': { label: '🔵 PeYa Orders Summary', color: '#0064C8', tab: 'Dashboard KPIs' },
+    'peya_ops_summary': { label: '🔵 PeYa Ops Summary', color: '#0064C8', tab: 'Tiempos + Reclamos' },
+    'peya_customers_summary': { label: '🔵 PeYa Customers', color: '#0064C8', tab: 'Adquisición + Retención' },
+    'peya_ads_detailed': { label: '🔵 PeYa Ads Detallado', color: '#0064C8', tab: 'Publicidad' },
+    'peya_orders_per_month': { label: '🔵 PeYa Histórico Mensual', color: '#0064C8', tab: 'Tendencias' },
+    'peya_account_statement_pdf': { label: '🔵 PeYa Estado Cuenta', color: '#0064C8', tab: 'Costos reales' },
+    'peya_invoice_pdf': { label: '🔵 PeYa Factura', color: '#999', tab: 'Ignorable' },
+    'peya_earnings_summary': { label: '🔵 PeYa Earnings', color: '#0064C8', tab: 'Costos' },
+    'unknown': { label: '❓ Desconocido', color: '#c8392b', tab: 'No se procesará' },
+    'unknown_pdf': { label: '❓ PDF desconocido', color: '#c8392b', tab: 'No se procesará' },
+  };
+
+  // Detectar tipos de forma síncrona (solo por nombre - detección profunda requiere lectura)
+  const detectByName = (name) => {
+    const n = name.toLowerCase();
+    if (n.startsWith('rappi_report')) return 'rappi_report';
+    if (n.startsWith('service_level')) return 'rappi_service_level';
+    if (n.startsWith('reviews_') || (n.endsWith('.csv') && n.includes('review'))) return 'rappi_reviews';
+    if (n.startsWith('orders-') && /^orders-[0-9a-f-]+/.test(n)) return 'rappi_orders_basic';
+    if (n.startsWith('orderdetails')) return 'peya_order_details';
+    if (n.startsWith('orderssummary') || n.startsWith('orders_summary')) return 'peya_orders_summary';
+    if (n.startsWith('opssummary') || n.startsWith('ops_summary')) return 'peya_ops_summary';
+    if (n.startsWith('customerssummary') || n.startsWith('customers_summary')) return 'peya_customers_summary';
+    if (n.startsWith('ordersperm')) return 'peya_orders_per_month';
+    if (n.startsWith('reporte_detallado') || n.startsWith('campaign_performance')) return 'peya_ads_detailed';
+    if (n.startsWith('earnings-summary')) return 'peya_earnings_summary';
+    if (n.startsWith('account_statement') && n.endsWith('.pdf')) return 'peya_account_statement_pdf';
+    if (n.startsWith('invoice') && n.endsWith('.pdf')) return 'peya_invoice_pdf';
+    if (n.endsWith('.pdf')) return 'unknown_pdf';
+    return 'unknown';
+  };
+
   el.innerHTML = APP.files.map((f,i)=>{
-    const p = getPlatInfo(detectPlat(f.name));
-    return `<div class="fitem">
+    const detected = detectByName(f.name);
+    const info = FILE_TYPE_LABELS[detected] || FILE_TYPE_LABELS.unknown;
+    return `<div class="fitem" style="border-left: 3px solid ${info.color}">
       <span>📄</span>
-      <span class="fitem-name">${f.name}</span>
-      <span class="ptag" style="background:${p.color}22;color:${p.color}">${p.label}</span>
+      <span class="fitem-name" title="${f.name}">${f.name}</span>
+      <span class="ptag" style="background:${info.color}22;color:${info.color};font-size:.6rem">${info.label}</span>
+      <span style="font-size:.6rem;color:var(--m);flex:1;text-align:right" title="Alimenta: ${info.tab}">→ ${info.tab}</span>
       <span style="font-size:.65rem;color:var(--m)">${(f.size/1024).toFixed(0)}KB</span>
       <span class="fx" onclick="removeOrderFile(${i})">✕</span>
     </div>`;
@@ -4854,18 +4970,745 @@ function parsePeyaMonthlyHistory(rows) {
 }
 
 
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 4 — Parsers para TODOS los archivos Rappi + PeYa
+//  Se pegan dentro del <script> del HTML
+// ═══════════════════════════════════════════════════════════════════════
+
+// ─── DETECCIÓN DE TIPO DE ARCHIVO ──────────────────────────────────────
+
+/**
+ * Detecta el tipo de archivo por su estructura + nombre
+ * Retorna: 'rappi_report' | 'rappi_service_level' | 'rappi_reviews' |
+ *          'rappi_orders_basic' | 'peya_order_details' | 'peya_orders_summary' |
+ *          'peya_ops_summary' | 'peya_customers_summary' | 'peya_ads_detailed' |
+ *          'peya_orders_per_month' | 'peya_account_statement_pdf' |
+ *          'peya_invoice_pdf' | 'unknown'
+ */
+function detectFileType(file, sheets) {
+  const name = file.name.toLowerCase();
+
+  // PDFs por nombre
+  if (name.endsWith('.pdf')) {
+    if (name.startsWith('account_statement')) return 'peya_account_statement_pdf';
+    if (name.startsWith('invoice')) return 'peya_invoice_pdf';
+    return 'unknown_pdf';
+  }
+
+  // CSV: Reviews Rappi
+  if (name.endsWith('.csv') && name.includes('review')) return 'rappi_reviews';
+  if (name.startsWith('customerssummary') || name.startsWith('customers_summary')) return 'peya_customers_summary';
+
+  // Por nombre XLSX
+  if (name.startsWith('rappi_report')) return 'rappi_report';
+  if (name.startsWith('service_level')) return 'rappi_service_level';
+  if (name.startsWith('reviews_')) return 'rappi_reviews';
+  if (name.startsWith('orders-') && /^orders-[0-9a-f-]+/.test(name)) return 'rappi_orders_basic';
+  if (name.startsWith('orderdetails')) return 'peya_order_details';
+  if (name.startsWith('orderssummary') || name.startsWith('orders_summary')) return 'peya_orders_summary';
+  if (name.startsWith('opssummary') || name.startsWith('ops_summary')) return 'peya_ops_summary';
+  if (name.startsWith('ordersperm')) return 'peya_orders_per_month';
+  if (name.startsWith('reporte_detallado') || name.startsWith('campaign_performance')) return 'peya_ads_detailed';
+  if (name.startsWith('earnings-summary')) return 'peya_earnings_summary';
+
+  // Detección por estructura si el nombre no es claro
+  if (sheets && sheets.length > 0) {
+    for (const s of sheets) {
+      const headers = (s.rows[0] || []).map(v => String(v || '').toLowerCase());
+      const headers1 = (s.rows[1] || []).map(v => String(v || '').toLowerCase());
+
+      // Rappi_Report tiene sheet "Detalle" con "Fecha de creación orden"
+      if (s.name === 'Detalle' && headers1.some(h => /fecha de creaci.n orden/.test(h))) {
+        return 'rappi_report';
+      }
+      // Service_Level tiene "Nivel de Servicio"
+      if (headers1.some(h => /nivel de servicio/.test(h)) || headers.some(h => /nivel de servicio/.test(h))) {
+        return 'rappi_service_level';
+      }
+      // ordersPerMonth
+      if (headers.some(h => /^mes$/.test(h)) && headers.some(h => /^pedidos$/.test(h))) {
+        return 'peya_orders_per_month';
+      }
+      // opsSummary
+      if (headers.some(h => /order rejection rate/.test(h)) || headers.some(h => /tiempo de preparaci.n promedio/.test(h))) {
+        return 'peya_ops_summary';
+      }
+      // ordersSummary
+      if (headers.some(h => /restaurant name/.test(h)) && headers.some(h => /^sales$/.test(h))) {
+        return 'peya_orders_summary';
+      }
+      // orderDetails PeYa
+      if (headers.some(h => /orden metadata/.test(h)) || headers1.some(h => /nro de pedido/.test(h))) {
+        return 'peya_order_details';
+      }
+      // customersSummary
+      if (headers.some(h => /orders from new customers/.test(h))) {
+        return 'peya_customers_summary';
+      }
+      // Reviews Rappi
+      if (headers.some(h => /^calificaci.n$/.test(h)) && headers.some(h => /raz.n/.test(h))) {
+        return 'rappi_reviews';
+      }
+      // Ads detallado
+      if (headers.some(h => /id de la campa.a/.test(h)) && headers.some(h => /clicks/.test(h))) {
+        return 'peya_ads_detailed';
+      }
+    }
+  }
+
+  return 'unknown';
+}
+
+// ─── PARSER: RAPPI SERVICE LEVEL ───────────────────────────────────────
+
+/**
+ * Parsea el archivo Service_Level de Rappi
+ * Retorna: { periodStart, periodEnd, metrics, cancellations, complaints, waitTimes }
+ */
+function parseRappiServiceLevel(sheets) {
+  const result = {
+    _type: 'rappi_service_level',
+    periodStart: null,
+    periodEnd: null,
+    metrics: {},
+    cancellations: [],
+    complaints: [],
+    waitTimes: [],
+  };
+
+  const toFloat = (v) => {
+    if (!v) return 0;
+    const s = String(v).replace(/[%,]/g, '');
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
+
+  // Sheet "Resumen"
+  const resumen = sheets.find(s => /resumen/i.test(s.name) && !/tienda/i.test(s.name));
+  if (resumen) {
+    const rows = resumen.rows;
+    // Fechas
+    for (const row of rows) {
+      const idx = row.findIndex(v => /fecha inicio/i.test(String(v || '')));
+      if (idx >= 0 && row[idx + 1]) {
+        result.periodStart = String(row[idx + 1]);
+      }
+      const idxE = row.findIndex(v => /fecha fin/i.test(String(v || '')));
+      if (idxE >= 0 && row[idxE + 1]) {
+        result.periodEnd = String(row[idxE + 1]);
+      }
+      if (result.periodStart && result.periodEnd) break;
+    }
+
+    // Métricas del nivel de servicio: buscar la fila "Porcentajes"
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const rowStr = row.join('|').toLowerCase();
+
+      if (/porcentajes/.test(rowStr) && !result.metrics.cancellation_rate) {
+        // Fila anterior contiene los headers
+        const headerRow = rows[i - 1] || [];
+        for (let j = 0; j < headerRow.length; j++) {
+          const h = String(headerRow[j] || '').toLowerCase();
+          const val = row[j];
+          if (/cancelaciones/.test(h) && val) result.metrics.cancellation_rate = toFloat(val);
+          if (/^errores$/.test(h) && val) result.metrics.error_rate = toFloat(val);
+          if (/disponibilidad/.test(h) && val) result.metrics.availability = toFloat(val);
+          if (/demora/.test(h) && val) result.metrics.delay_rate = toFloat(val);
+        }
+      }
+
+      // Detalle de cancelaciones
+      if (/porcentajes de cancelaci/i.test(rowStr)) {
+        const headerRow = rows[i - 1] || [];
+        for (let j = 0; j < headerRow.length; j++) {
+          const h = String(headerRow[j] || '').toLowerCase();
+          const val = row[j];
+          if (/rechazos/.test(h) && val) result.metrics.cancel_rejections = toFloat(val);
+          if (/inactividad/.test(h) && val) result.metrics.cancel_inactivity = toFloat(val);
+          if (/tienda cerrada/.test(h) && val) result.metrics.cancel_store_closed = toFloat(val);
+          if (/producto agotado/.test(h) && val) result.metrics.cancel_out_of_stock = toFloat(val);
+          if (/demora en tienda/.test(h) && val) result.metrics.cancel_slow_store = toFloat(val);
+        }
+      }
+
+      // Errores
+      if (/porcentajes de errores/i.test(rowStr)) {
+        const headerRow = rows[i - 1] || [];
+        for (let j = 0; j < headerRow.length; j++) {
+          const h = String(headerRow[j] || '').toLowerCase();
+          const val = row[j];
+          if (/mal estado/.test(h) && val) result.metrics.error_bad_state = toFloat(val);
+          if (/producto diferente/.test(h) && val) result.metrics.error_different_product = toFloat(val);
+          if (/producto faltante/.test(h) && val) result.metrics.error_missing_product = toFloat(val);
+        }
+      }
+    }
+  }
+
+  // Sheet "Cancelaciones"
+  const cancelSheet = sheets.find(s => /cancelaciones/i.test(s.name));
+  if (cancelSheet) {
+    const rows = cancelSheet.rows;
+    // Buscar header row (contiene "ORDEN ID")
+    const hi = rows.findIndex(r => r.some(v => /orden id/i.test(String(v || ''))));
+    if (hi >= 0) {
+      const headers = rows[hi];
+      const cols = {
+        tiendaId: headers.findIndex(v => /tienda id/i.test(String(v || ''))),
+        tienda: headers.findIndex(v => /^tienda$/i.test(String(v || ''))),
+        ordenId: headers.findIndex(v => /orden id/i.test(String(v || ''))),
+        fecha: headers.findIndex(v => /^fecha$/i.test(String(v || ''))),
+        descripcion: headers.findIndex(v => /descripci/i.test(String(v || ''))),
+        producto: headers.findIndex(v => /producto/i.test(String(v || ''))),
+      };
+      for (let i = hi + 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r.some(v => v)) continue;
+        const orderId = cols.ordenId >= 0 ? String(r[cols.ordenId] || '').trim() : '';
+        if (!orderId) continue;
+        result.cancellations.push({
+          orderId,
+          branchId: cols.tiendaId >= 0 ? String(r[cols.tiendaId] || '') : '',
+          branchName: cols.tienda >= 0 ? String(r[cols.tienda] || '') : '',
+          date: cols.fecha >= 0 ? String(r[cols.fecha] || '') : '',
+          reason: cols.descripcion >= 0 ? String(r[cols.descripcion] || '') : '',
+          product: cols.producto >= 0 ? String(r[cols.producto] || '') : '',
+        });
+      }
+    }
+  }
+
+  // Sheet "Reclamos - Órdenes"
+  const reclSheet = sheets.find(s => /reclamos.*orden/i.test(s.name));
+  if (reclSheet) {
+    const rows = reclSheet.rows;
+    const hi = rows.findIndex(r => r.some(v => /orden id/i.test(String(v || ''))));
+    if (hi >= 0) {
+      const headers = rows[hi];
+      const cols = {
+        ordenId: headers.findIndex(v => /orden id/i.test(String(v || ''))),
+        tiendaId: headers.findIndex(v => /tienda id/i.test(String(v || ''))),
+        tienda: headers.findIndex(v => /^tienda$/i.test(String(v || ''))),
+        fecha: headers.findIndex(v => /^fecha$/i.test(String(v || ''))),
+        motivo: headers.findIndex(v => /^motivo$/i.test(String(v || ''))),
+        detalle: headers.findIndex(v => /detalle del motivo/i.test(String(v || ''))),
+        compRappi: headers.findIndex(v => /compensaci.n.*rappi/i.test(String(v || ''))),
+        compRest: headers.findIndex(v => /compensaci.n.*restaurante/i.test(String(v || ''))),
+      };
+      const num = (v) => { const n = parseFloat(String(v || '').replace(',', '.')); return isNaN(n) ? 0 : n; };
+      for (let i = hi + 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r.some(v => v)) continue;
+        const orderId = cols.ordenId >= 0 ? String(r[cols.ordenId] || '').trim() : '';
+        if (!orderId) continue;
+        result.complaints.push({
+          orderId,
+          branchId: cols.tiendaId >= 0 ? String(r[cols.tiendaId] || '') : '',
+          branchName: cols.tienda >= 0 ? String(r[cols.tienda] || '') : '',
+          date: cols.fecha >= 0 ? String(r[cols.fecha] || '') : '',
+          reason: cols.motivo >= 0 ? String(r[cols.motivo] || '') : '',
+          detail: cols.detalle >= 0 ? String(r[cols.detalle] || '') : '',
+          compensationRappi: cols.compRappi >= 0 ? num(r[cols.compRappi]) : 0,
+          compensationRestaurant: cols.compRest >= 0 ? num(r[cols.compRest]) : 0,
+        });
+      }
+    }
+  }
+
+  // Sheet "Tiempo de espera del repartidor"
+  const timeSheet = sheets.find(s => /tiempo.*espera.*repartidor/i.test(s.name));
+  if (timeSheet) {
+    const rows = timeSheet.rows;
+    const hi = rows.findIndex(r => r.some(v => /id de la orden/i.test(String(v || ''))));
+    if (hi >= 0) {
+      const headers = rows[hi];
+      const cols = {
+        tiendaId: headers.findIndex(v => /id de la tienda/i.test(String(v || ''))),
+        tienda: headers.findIndex(v => /nombre de la tienda/i.test(String(v || ''))),
+        ordenId: headers.findIndex(v => /id de la orden/i.test(String(v || ''))),
+        fecha: headers.findIndex(v => /^fecha$/i.test(String(v || ''))),
+        prepEst: headers.findIndex(v => /preparaci.n estimado/i.test(String(v || ''))),
+        espera: headers.findIndex(v => /espera del repartidor/i.test(String(v || ''))),
+        prepReal: headers.findIndex(v => /preparaci.n real/i.test(String(v || '')) || /tiempo real de preparaci/i.test(String(v || ''))),
+        total: headers.findIndex(v => /tiempo total/i.test(String(v || ''))),
+      };
+      const num = (v) => { const n = parseFloat(String(v || '').replace(',', '.')); return isNaN(n) ? 0 : n; };
+      for (let i = hi + 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r.some(v => v)) continue;
+        const orderId = cols.ordenId >= 0 ? String(r[cols.ordenId] || '').trim() : '';
+        if (!orderId) continue;
+        result.waitTimes.push({
+          orderId,
+          branchId: cols.tiendaId >= 0 ? String(r[cols.tiendaId] || '') : '',
+          branchName: cols.tienda >= 0 ? String(r[cols.tienda] || '') : '',
+          date: cols.fecha >= 0 ? String(r[cols.fecha] || '') : '',
+          prepEstimated: cols.prepEst >= 0 ? num(r[cols.prepEst]) : 0,
+          courierWait: cols.espera >= 0 ? num(r[cols.espera]) : 0,
+          prepReal: cols.prepReal >= 0 ? num(r[cols.prepReal]) : 0,
+          totalTime: cols.total >= 0 ? num(r[cols.total]) : 0,
+        });
+      }
+    }
+  }
+
+  return result;
+}
+
+// ─── PARSER: RAPPI REVIEWS ─────────────────────────────────────────────
+
+function parseRappiReviews(text) {
+  const result = {
+    _type: 'rappi_reviews',
+    reviews: [],
+  };
+
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return result;
+
+  // Parseo simple CSV (asume que no hay comas dentro de strings)
+  const parseCSVLine = (line) => {
+    const cells = [];
+    let cur = '', inQ = false;
+    for (const ch of line) {
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === ',' && !inQ) { cells.push(cur); cur = ''; continue; }
+      cur += ch;
+    }
+    cells.push(cur);
+    return cells;
+  };
+
+  const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
+  const ci = {
+    tienda: headers.findIndex(h => /^tienda$/.test(h) || /tienda name/.test(h)),
+    tiendaId: headers.findIndex(h => /id tienda/.test(h)),
+    ordenId: headers.findIndex(h => /id orden/.test(h)),
+    fecha: headers.findIndex(h => /fecha/.test(h)),
+    calificacion: headers.findIndex(h => /calificaci/.test(h)),
+    razon: headers.findIndex(h => /raz.n|comentario/.test(h)),
+  };
+
+  for (let i = 1; i < lines.length; i++) {
+    const cells = parseCSVLine(lines[i]);
+    const rating = ci.calificacion >= 0 ? parseInt(cells[ci.calificacion], 10) : 0;
+    if (!rating || isNaN(rating)) continue;
+
+    result.reviews.push({
+      branchName: ci.tienda >= 0 ? cells[ci.tienda].trim() : '',
+      branchId: ci.tiendaId >= 0 ? cells[ci.tiendaId].trim() : '',
+      orderId: ci.ordenId >= 0 ? cells[ci.ordenId].trim() : '',
+      date: ci.fecha >= 0 ? cells[ci.fecha].trim() : '',
+      rating,
+      comment: ci.razon >= 0 ? cells[ci.razon].trim() : '',
+    });
+  }
+
+  return result;
+}
+
+// ─── PARSER: PEYA ORDER DETAILS (con timestamps) ───────────────────────
+
+function parsePeyaOrderDetails(rows) {
+  // Los headers reales están en fila 1 (fila 0 son categorías)
+  if (!rows || rows.length < 3) return [];
+
+  const headers = rows[1].map(v => String(v || '').toLowerCase().trim());
+  const fi = (kw) => headers.findIndex(h => kw.test(h));
+
+  const ci = {
+    branch: fi(/nombre del local/),
+    orderId: fi(/nro de pedido/),
+    branchId: fi(/id de tienda/),
+    deliveryMethod: fi(/m.todo de entrega/),
+    paymentMethod: fi(/forma de pago/),
+    scheduled: fi(/pedido programado/),
+    status: fi(/estado del pedido/),
+
+    // Timestamps (los importantes)
+    orderDate: fi(/fecha del pedido/),
+    acceptedAt: fi(/aceptado en/),
+    readyAt: fi(/lista para retiro/),
+    riderNear: fi(/repartidor cerca del local/),
+    pickedUpAt: fi(/retirado del local el/),
+    deliveredAt: fi(/entregado el/),
+
+    hasComplaint: fi(/tiene reclamos/),
+    complaintReason: fi(/motivo del reclamo/),
+    cancelledAt: fi(/cancelado el/),
+    cancelReason: fi(/motivo de rechazo/),
+
+    // Montos
+    subtotal: fi(/total parcial/),
+    commission: fi(/^comisi.n$/),
+    charges: fi(/^cargos$/),
+    tax: fi(/cargo impositivo/),
+    onlineFee: fi(/tarifa de pago en l.nea/),
+    discountByYou: fi(/descuento financiado por usted/),
+    payable: fi(/es pagadero/),
+    estimatedIncome: fi(/ingreso estimado/),
+    paidCash: fi(/monto en efectivo ya cobrado/),
+    debtToPeya: fi(/monto adeudado a pedidosya/),
+    paymentAmount: fi(/monto de pago/),
+    fugacesDiscount: fi(/cargos por descuentos fugaces/),
+    adsFee: fi(/tarifa por servicios de publicidad total/),
+  };
+
+  const num = (v) => {
+    if (v == null || v === '') return 0;
+    let s = String(v).trim().replace(/[^0-9,.\-]/g, '');
+    // PeYa usa coma como decimal
+    if (/^-?\d{1,3}(\.\d{3})*,\d+$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');
+    else s = s.replace(',', '.');
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
+
+  const parseTs = (v) => {
+    if (!v) return null;
+    const s = String(v).trim();
+    if (!s) return null;
+    // Formato PeYa: "2026-07-14 13:21"
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const orders = [];
+  // Datos empiezan en fila 2
+  for (let i = 2; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row.some(v => v)) continue;
+
+    const orderId = ci.orderId >= 0 ? String(row[ci.orderId] || '').trim() : '';
+    if (!orderId) continue;
+
+    const status = String(row[ci.status] || '').toLowerCase();
+    const cancelled = /cancel|rechaz/.test(status);
+
+    const orderDate = parseTs(row[ci.orderDate]);
+    const acceptedAt = parseTs(row[ci.acceptedAt]);
+    const readyAt = parseTs(row[ci.readyAt]);
+    const pickedUpAt = parseTs(row[ci.pickedUpAt]);
+    const deliveredAt = parseTs(row[ci.deliveredAt]);
+    const cancelledAt = parseTs(row[ci.cancelledAt]);
+
+    // Calcular tiempos en minutos
+    let prepTime = 0, deliveryTime = 0, totalTime = 0;
+    if (acceptedAt && readyAt) prepTime = (readyAt - acceptedAt) / 60000;
+    if (readyAt && deliveredAt) deliveryTime = (deliveredAt - readyAt) / 60000;
+    if (orderDate && deliveredAt) totalTime = (deliveredAt - orderDate) / 60000;
+
+    const subtotal = num(row[ci.subtotal]);
+    const commission = Math.abs(num(row[ci.commission]));
+    const fugaces = Math.abs(num(row[ci.fugacesDiscount]));
+    const adsFee = Math.abs(num(row[ci.adsFee]));
+
+    const hasComplaint = /s.$/.test(String(row[ci.hasComplaint] || '').toLowerCase().trim());
+
+    orders.push({
+      id: orderId,
+      date: orderDate,
+      platform: 'peya',
+      total: subtotal,
+      basePrice: subtotal,
+      discAmt: Math.abs(num(row[ci.discountByYou])),
+      discPct: 0,
+      cancelled,
+      sucursal: ci.branch >= 0 ? String(row[ci.branch] || 'Principal') : 'Principal',
+      branchId: ci.branchId >= 0 ? String(row[ci.branchId] || '') : '',
+      metodo: ci.paymentMethod >= 0 ? String(row[ci.paymentMethod] || 'Online') : 'Online',
+      deliveryMethod: ci.deliveryMethod >= 0 ? String(row[ci.deliveryMethod] || '') : '',
+      estado: status,
+      comision: commission,
+      ingreso: num(row[ci.estimatedIncome]),
+      items: '',
+      isPrime: false,
+
+      // Timestamps
+      acceptedAt, readyAt, pickedUpAt, deliveredAt, cancelledAt,
+      prepTime: prepTime > 0 ? Math.round(prepTime * 100) / 100 : 0,
+      deliveryTime: deliveryTime > 0 ? Math.round(deliveryTime * 100) / 100 : 0,
+      totalTime: totalTime > 0 ? Math.round(totalTime * 100) / 100 : 0,
+
+      // Reclamos
+      hasComplaint,
+      complaintReason: hasComplaint ? String(row[ci.complaintReason] || '') : '',
+      cancelReason: cancelled ? String(row[ci.cancelReason] || '') : '',
+
+      // Costos
+      costs: {
+        commission,
+        adsSpend: adsFee,
+        taxAds: 0,
+        darDiscount: 0,
+        freeDelivery: 0,
+        integration: 0,
+        lateDelivery: 0,
+        transactional: 0,
+        wallet: 0,
+        service: 0,
+        ivaPlatform: Math.abs(num(row[ci.tax])),
+        fugaces: fugaces,
+        onlineFee: Math.abs(num(row[ci.onlineFee])),
+      },
+
+      _fmt: 'peya_order_details',
+    });
+  }
+
+  return orders;
+}
+
+// ─── PARSER: PEYA OPS SUMMARY ──────────────────────────────────────────
+
+function parsePeyaOpsSummary(rows) {
+  if (!rows || rows.length < 2) return null;
+
+  const headers = rows[0].map(v => String(v || '').toLowerCase().trim());
+  const fi = (kw) => headers.findIndex(h => kw.test(h));
+
+  const ci = {
+    branch: fi(/nombre del restaurante/),
+    branchId: fi(/id del restaurante/),
+    unavailable: fi(/unavailable time/),
+    rejectionRate: fi(/order rejection rate/),
+    avoidableWait: fi(/tiempo de espera evitable/),
+    avgPrep: fi(/tiempo de preparaci.n promedio/),
+    complaints: fi(/customer complaints/),
+    readyOnTime: fi(/pedidos marcados como listos/),
+  };
+
+  const num = (v) => { const n = parseFloat(String(v || '').replace(',', '.')); return isNaN(n) ? 0 : n; };
+
+  const result = {
+    _type: 'peya_ops_summary',
+    branches: [],
+  };
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row.some(v => v)) continue;
+    const branchName = ci.branch >= 0 ? String(row[ci.branch] || '') : '';
+    if (!branchName) continue;
+
+    result.branches.push({
+      branchName,
+      branchId: ci.branchId >= 0 ? String(row[ci.branchId] || '') : '',
+      unavailableTime: ci.unavailable >= 0 ? num(row[ci.unavailable]) : 0,
+      rejectionRate: ci.rejectionRate >= 0 ? num(row[ci.rejectionRate]) : 0,
+      avoidableWaitOrders: ci.avoidableWait >= 0 ? num(row[ci.avoidableWait]) : 0,
+      avgPrepTime: ci.avgPrep >= 0 ? num(row[ci.avgPrep]) : 0,
+      customerComplaints: ci.complaints >= 0 ? num(row[ci.complaints]) : 0,
+      readyOnTimePct: ci.readyOnTime >= 0 ? num(row[ci.readyOnTime]) : 0,
+    });
+  }
+
+  return result;
+}
+
+// ─── PARSER: PEYA ORDERS SUMMARY ───────────────────────────────────────
+
+function parsePeyaOrdersSummary(rows) {
+  if (!rows || rows.length < 2) return null;
+
+  const headers = rows[0].map(v => String(v || '').toLowerCase().trim());
+  const fi = (kw) => headers.findIndex(h => kw.test(h));
+
+  const ci = {
+    branch: fi(/restaurant name/),
+    branchId: fi(/restaurant id/),
+    orders: fi(/^pedidos$/),
+    sales: fi(/^sales$/),
+    avgTicket: fi(/ticket promedio/),
+  };
+
+  const num = (v) => {
+    if (!v && v !== 0) return 0;
+    let s = String(v).trim();
+    if (/^\d{1,3}(\.\d{3})*(,\d+)?$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');
+    else s = s.replace(',', '.');
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
+
+  const result = { _type: 'peya_orders_summary', branches: [] };
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row.some(v => v)) continue;
+    result.branches.push({
+      branchName: String(row[ci.branch] || ''),
+      branchId: String(row[ci.branchId] || ''),
+      orders: num(row[ci.orders]),
+      sales: num(row[ci.sales]),
+      avgTicket: num(row[ci.avgTicket]),
+    });
+  }
+  return result;
+}
+
+// ─── PARSER: PEYA CUSTOMERS SUMMARY ────────────────────────────────────
+
+function parsePeyaCustomersSummary(rows) {
+  if (!rows || rows.length < 2) return null;
+
+  const headers = rows[0].map(v => String(v || '').toLowerCase().trim());
+  const fi = (kw) => headers.findIndex(h => kw.test(h));
+
+  const ci = {
+    branch: fi(/nombre del restaurante/),
+    branchId: fi(/id del restaurante/),
+    newCustomers: fi(/orders from new customers/),
+    returningCustomers: fi(/clientes recurrentes/),
+    impressions: fi(/impresiones/),
+    menuViews: fi(/visualizaron tu men/),
+    orders: fi(/realizaron un pedido/),
+    addedToCart: fi(/carrito/),
+  };
+
+  const num = (v) => { const n = parseFloat(String(v || '').replace(',', '.')); return isNaN(n) ? 0 : n; };
+
+  const result = { _type: 'peya_customers_summary', branches: [] };
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row.some(v => v)) continue;
+    result.branches.push({
+      branchName: String(row[ci.branch] || ''),
+      branchId: String(row[ci.branchId] || ''),
+      newCustomers: num(row[ci.newCustomers]),
+      returningCustomers: num(row[ci.returningCustomers]),
+      impressions: num(row[ci.impressions]),
+      menuViews: num(row[ci.menuViews]),
+      orders: num(row[ci.orders]),
+      addedToCart: num(row[ci.addedToCart]),
+    });
+  }
+  return result;
+}
+
+// ─── PARSER: PEYA ADS DETAILED (Campaign Performance) ──────────────────
+
+function parsePeyaAdsDetailed(rows) {
+  if (!rows || rows.length < 2) return null;
+
+  const headers = rows[0].map(v => String(v || '').toLowerCase().trim());
+  const fi = (kw) => headers.findIndex(h => kw.test(h));
+
+  const ci = {
+    date: fi(/^fecha$/),
+    dow: fi(/dia de la semana/),
+    branch: fi(/nombre del local/),
+    branchId: fi(/id de local/),
+    productLine: fi(/a.adir producto/),
+    status: fi(/estado de tu anuncio/),
+    campaignId: fi(/id de la campa.a/),
+    clicks: fi(/clicks/),
+    conversion: fi(/ratio de conversi.n/),
+    orders: fi(/^.rdenes$/),
+    revenue: fi(/^ingresos$/),
+    cost: fi(/^costo$/),
+    roas: fi(/retorno de la inversi.n/),
+    avgTicket: fi(/ticket promedio/),
+    cpc: fi(/costo promedio por clic/),
+    cpo: fi(/costo promedio por/),
+  };
+
+  const num = (v) => { const n = parseFloat(String(v || '').replace(',', '.')); return isNaN(n) ? 0 : n; };
+
+  const result = { _type: 'peya_ads_detailed', ads: [] };
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row.some(v => v)) continue;
+    const dateStr = ci.date >= 0 ? String(row[ci.date] || '') : '';
+    if (!dateStr) continue;
+
+    result.ads.push({
+      date: dateStr,
+      dayOfWeek: ci.dow >= 0 ? String(row[ci.dow] || '') : '',
+      branchName: ci.branch >= 0 ? String(row[ci.branch] || '') : '',
+      branchId: ci.branchId >= 0 ? String(row[ci.branchId] || '') : '',
+      campaignName: ci.productLine >= 0 ? String(row[ci.productLine] || '') : '',
+      status: ci.status >= 0 ? String(row[ci.status] || '') : '',
+      campaignId: ci.campaignId >= 0 ? String(row[ci.campaignId] || '') : '',
+      clicks: ci.clicks >= 0 ? num(row[ci.clicks]) : 0,
+      conversionRate: ci.conversion >= 0 ? num(row[ci.conversion]) : 0,
+      orders: ci.orders >= 0 ? num(row[ci.orders]) : 0,
+      revenue: ci.revenue >= 0 ? num(row[ci.revenue]) : 0,
+      cost: ci.cost >= 0 ? num(row[ci.cost]) : 0,
+      roas: ci.roas >= 0 ? num(row[ci.roas]) : 0,
+      avgTicket: ci.avgTicket >= 0 ? num(row[ci.avgTicket]) : 0,
+      avgCostPerClick: ci.cpc >= 0 ? num(row[ci.cpc]) : 0,
+      avgCostPerOrder: ci.cpo >= 0 ? num(row[ci.cpo]) : 0,
+      platform: 'peya',
+    });
+  }
+  return result;
+}
+
+
 async function parseAllFiles(files){
   const orders = [];
   orders._peyaSummary = null;
   orders._peyaMonthlyHistory = null;
   orders._parseLog    = [];
+  // Sprint 4: buffers para los nuevos tipos de archivo
+  orders._rappiServiceLevel = null;  // { periodStart, periodEnd, metrics, cancellations, complaints, waitTimes }
+  orders._rappiReviews = null;       // { reviews: [] }
+  orders._peyaOpsSummary = null;     // { branches: [] }
+  orders._peyaOrdersSummary = null;  // { branches: [] }
+  orders._peyaCustomers = null;      // { branches: [] }
+  orders._peyaAdsDetailed = null;    // { ads: [] }
+  orders._filesDetected = [];        // [{ name, type, summary }]
   console.log('[parseAllFiles] Procesando', files.length, 'archivos:', Array.from(files).map(f => f.name));
 
   for(const file of files){
     const logEntry = { name: file.name, fmt: 'unknown', rows: 0, orders: 0, error: null, sheets: [] };
     try{
-      // Sprint 3: si es PDF, usar el parser específico
-      if (/\.pdf$/i.test(file.name)) {
+      // ═══ Sprint 4: DETECCIÓN Y ROUTING de tipos nuevos ═══
+      // Primero leemos el archivo si es xlsx/csv para detectar
+      const isCSV = /\.csv$/i.test(file.name);
+      const isPDF = /\.pdf$/i.test(file.name);
+
+      // CSVs: leer como texto y decidir
+      if (isCSV) {
+        try {
+          const txt = await file.text();
+          const detected = detectFileType(file, null);
+
+          if (detected === 'rappi_reviews') {
+            const rv = parseRappiReviews(txt);
+            orders._rappiReviews = rv;
+            orders._filesDetected.push({ name: file.name, type: 'rappi_reviews', summary: rv.reviews.length + ' reviews' });
+            logEntry.fmt = 'rappi_reviews';
+            logEntry.orders = rv.reviews.length;
+            orders._parseLog.push(logEntry);
+            console.log('[Parser Sprint 4] Reviews Rappi:', rv.reviews.length);
+            continue;
+          }
+
+          if (detected === 'peya_customers_summary') {
+            // Convertir CSV a rows
+            const rows = txt.split(/\r?\n/).filter(l => l.trim()).map(l => l.split(','));
+            const cs = parsePeyaCustomersSummary(rows);
+            if (cs) {
+              orders._peyaCustomers = cs;
+              orders._filesDetected.push({ name: file.name, type: 'peya_customers_summary', summary: cs.branches.length + ' sucursales' });
+              logEntry.fmt = 'peya_customers_summary';
+              logEntry.orders = cs.branches.length;
+              orders._parseLog.push(logEntry);
+              console.log('[Parser Sprint 4] Customers Summary PeYa:', cs.branches.length);
+              continue;
+            }
+          }
+        } catch (e) {
+          console.warn('[Parser Sprint 4] Error CSV:', file.name, e.message);
+        }
+      }
+
+      // Sprint 3: PDF handling (mantenemos el original)
+      if (isPDF) {
         const pdfResult = await parsePeyaAccountStatementPDF(file);
         if (pdfResult) {
           if (!orders._peyaSummary) {
@@ -4913,7 +5756,133 @@ async function parseAllFiles(files){
       const pl = detectPlat(file.name);
       let fileOrders = 0;
 
-      // Process EACH SHEET independently
+      // ═══ Sprint 4: DETECCIÓN de tipos nuevos XLSX antes del loop ═══
+      const allSheets = wb.SheetNames.map(sn => ({
+        name: sn,
+        rows: XLSX.utils.sheet_to_json(wb.Sheets[sn], { raw:false, defval:'', header:1 }),
+      }));
+      const detected = detectFileType(file, allSheets);
+      console.log('[Parser Sprint 4] Detectado:', file.name, '=>', detected);
+
+      // Rappi Service Level
+      if (detected === 'rappi_service_level') {
+        const sl = parseRappiServiceLevel(allSheets);
+        orders._rappiServiceLevel = sl;
+        orders._filesDetected.push({
+          name: file.name, type: 'rappi_service_level',
+          summary: 'Servicio ' + (sl.periodStart || '') + ' → ' + (sl.periodEnd || '')
+        });
+        logEntry.fmt = 'rappi_service_level';
+        logEntry.orders = sl.waitTimes.length + sl.cancellations.length + sl.complaints.length;
+        orders._parseLog.push(logEntry);
+        continue;
+      }
+
+      // Rappi Reviews (XLSX version - poco común)
+      if (detected === 'rappi_reviews') {
+        // Solo procesamos el primer sheet
+        const rows = allSheets[0]?.rows || [];
+        // Convertir a CSV-like text
+        const headers = rows[0]?.map(h => String(h || '')).join(',') || '';
+        const dataRows = rows.slice(1).map(r => r.map(v => String(v || '')).join(','));
+        const txt = [headers, ...dataRows].join('\n');
+        const rv = parseRappiReviews(txt);
+        orders._rappiReviews = rv;
+        orders._filesDetected.push({ name: file.name, type: 'rappi_reviews', summary: rv.reviews.length + ' reviews' });
+        logEntry.fmt = 'rappi_reviews';
+        logEntry.orders = rv.reviews.length;
+        orders._parseLog.push(logEntry);
+        continue;
+      }
+
+      // PeYa orderDetails con timestamps completos
+      if (detected === 'peya_order_details') {
+        const rows = allSheets[0]?.rows || [];
+        const peyaOrders = parsePeyaOrderDetails(rows);
+        if (peyaOrders.length > 0) {
+          orders.push(...peyaOrders);
+          orders._filesDetected.push({
+            name: file.name, type: 'peya_order_details',
+            summary: peyaOrders.length + ' órdenes con timestamps'
+          });
+          logEntry.fmt = 'peya_order_details_v2';
+          logEntry.orders = peyaOrders.length;
+          orders._parseLog.push(logEntry);
+          console.log('[Parser Sprint 4] PeYa order details:', peyaOrders.length, 'órdenes');
+          fileOrders += peyaOrders.length;
+          continue;
+        }
+      }
+
+      // PeYa opsSummary
+      if (detected === 'peya_ops_summary') {
+        const rows = allSheets[0]?.rows || [];
+        const ops = parsePeyaOpsSummary(rows);
+        if (ops) {
+          orders._peyaOpsSummary = ops;
+          orders._filesDetected.push({
+            name: file.name, type: 'peya_ops_summary',
+            summary: ops.branches.length + ' sucursales'
+          });
+          logEntry.fmt = 'peya_ops_summary';
+          logEntry.orders = ops.branches.length;
+          orders._parseLog.push(logEntry);
+          continue;
+        }
+      }
+
+      // PeYa ordersSummary
+      if (detected === 'peya_orders_summary') {
+        const rows = allSheets[0]?.rows || [];
+        const os = parsePeyaOrdersSummary(rows);
+        if (os) {
+          orders._peyaOrdersSummary = os;
+          orders._filesDetected.push({
+            name: file.name, type: 'peya_orders_summary',
+            summary: os.branches.length + ' sucursales'
+          });
+          logEntry.fmt = 'peya_orders_summary';
+          logEntry.orders = os.branches.length;
+          orders._parseLog.push(logEntry);
+          continue;
+        }
+      }
+
+      // PeYa customersSummary (XLSX version)
+      if (detected === 'peya_customers_summary') {
+        const rows = allSheets[0]?.rows || [];
+        const cs = parsePeyaCustomersSummary(rows);
+        if (cs) {
+          orders._peyaCustomers = cs;
+          orders._filesDetected.push({
+            name: file.name, type: 'peya_customers_summary',
+            summary: cs.branches.length + ' sucursales'
+          });
+          logEntry.fmt = 'peya_customers_summary';
+          logEntry.orders = cs.branches.length;
+          orders._parseLog.push(logEntry);
+          continue;
+        }
+      }
+
+      // PeYa ads detallado (Campaign Performance)
+      if (detected === 'peya_ads_detailed') {
+        const rows = allSheets[0]?.rows || [];
+        const ads = parsePeyaAdsDetailed(rows);
+        if (ads) {
+          orders._peyaAdsDetailed = ads;
+          orders._filesDetected.push({
+            name: file.name, type: 'peya_ads_detailed',
+            summary: ads.ads.length + ' registros de ads'
+          });
+          logEntry.fmt = 'peya_ads_detailed';
+          logEntry.orders = ads.ads.length;
+          orders._parseLog.push(logEntry);
+          continue;
+        }
+      }
+
+      // Process EACH SHEET independently (fallback: motor v1 original)
       for(const sn of wb.SheetNames){
         const ws = wb.Sheets[sn];
         const rows = XLSX.utils.sheet_to_json(ws, { raw:false, defval:'', header:1 });
@@ -5306,8 +6275,16 @@ async function runAnalysis(){
         if(o.id) seen.add(key);
         deduped.push(o);
       }
+      // Sprint 4: preservar TODOS los metadata nuevos
       deduped._peyaSummary = APP.allOrders._peyaSummary;
       deduped._peyaMonthlyHistory = APP.allOrders._peyaMonthlyHistory;
+      deduped._rappiServiceLevel = APP.allOrders._rappiServiceLevel;
+      deduped._rappiReviews = APP.allOrders._rappiReviews;
+      deduped._peyaOpsSummary = APP.allOrders._peyaOpsSummary;
+      deduped._peyaOrdersSummary = APP.allOrders._peyaOrdersSummary;
+      deduped._peyaCustomers = APP.allOrders._peyaCustomers;
+      deduped._peyaAdsDetailed = APP.allOrders._peyaAdsDetailed;
+      deduped._filesDetected = APP.allOrders._filesDetected;
       deduped._parseLog    = APP.allOrders._parseLog;
       APP.allOrders = deduped;
     }
@@ -5328,6 +6305,29 @@ async function runAnalysis(){
             '\n\nVerifica que sean exports de Rappi, PedidosYa u otra plataforma de delivery.');
       showPanel('upWrap'); hide('ldWrap'); return;
     }
+    // ═══ Sprint 4: PERSISTIR + FUSIONAR CON HISTÓRICO ═══
+    if (APP.supabase && APP.brand?.id && typeof persistParsedDataToSupabase === 'function') {
+      ld('Guardando en historial acumulativo...'); await sleep(200);
+      try {
+        const persistResult = await persistParsedDataToSupabase(APP.allOrders);
+        console.log('[Sprint 4] Persistencia OK:', persistResult);
+      } catch (e) {
+        console.warn('[Sprint 4] Error persistiendo (continuamos):', e);
+      }
+
+      // Fusionar con histórico
+      ld('Cargando datos históricos acumulados...'); await sleep(200);
+      try {
+        const merged = await loadHistoryAndMerge(APP.allOrders);
+        if (merged && merged.length > APP.allOrders.length) {
+          APP.allOrders = merged;
+          console.log('[Sprint 4] Total tras fusión:', merged.length, 'órdenes');
+        }
+      } catch (e) {
+        console.warn('[Sprint 4] Error fusión (continuamos con parseados):', e);
+      }
+    }
+
     ld(`Analizando ${APP.allOrders.length} registros...`); await sleep(300);
     APP.D = analyze(APP.allOrders);
     if (APP.allOrders._peyaMonthlyHistory) APP.D._peyaMonthlyHistory = APP.allOrders._peyaMonthlyHistory;
@@ -7730,13 +8730,16 @@ function renderTabContent(tabId) {
     targetPanel.querySelectorAll('.no-analysis-yet').forEach(el => el.remove());
     targetPanel.querySelectorAll('.engine-placeholder').forEach(el => el.remove());
 
-    // Sprint 3: llamar renderer específico al activar
+    // Sprint 3+4: llamar renderer específico al activar
     try {
       if (tabId === 'costos' && typeof renderCostos === 'function') renderCostos();
       else if (tabId === 'roas' && typeof renderROAS === 'function') renderROAS();
       else if (tabId === 'tendencias' && typeof renderTendencias === 'function') renderTendencias();
       else if (tabId === 'tiempos' && typeof renderTiempos === 'function') renderTiempos();
       else if (tabId === 'reclamos' && typeof renderReclamos === 'function') renderReclamos();
+      else if (tabId === 'marca' && typeof renderMarca === 'function') renderMarca();
+      else if (tabId === 'productos' && typeof renderProductos === 'function') renderProductos();
+      else if (tabId === 'reviews' && typeof renderReviews === 'function') renderReviews();
     } catch (err) {
       console.error('[renderTabContent] Error tab', tabId, err);
     }
@@ -10380,6 +11383,700 @@ function renderAllSprint3Modules() {
 
 // Sprint 3: renderAllSprint3Modules se llama directamente desde renderStage2
 // (el hook a window.renderStage2 NO funcionaba por strict mode + function declaration binding)
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SPRINT 4 — INTEGRACIÓN
+//  - Hook post-parse para guardar en Supabase (agregativo)
+//  - Cargar desde histórico al hacer runAnalysis
+//  - Tabs nuevos: Marca, Productos, Reviews
+// ═══════════════════════════════════════════════════════════════════════
+
+// ─── HOOK POST-PARSE: guardar en Supabase acumulativamente ─────────────
+async function persistParsedDataToSupabase(orders) {
+  if (!APP.supabase || !APP.brand?.id) {
+    console.log('[Persist] Sin supabase o brand, skip');
+    return { skipped: true };
+  }
+  if (!window.SAZON_PERSISTENCE) return { skipped: true };
+
+  const brandId = APP.brand.id;
+  const results = {};
+
+  try {
+    // 1. Órdenes unificadas
+    if (orders && orders.length > 0) {
+      const sourceFile = orders._filesDetected?.map(f => f.name).join(', ') || 'upload';
+      const r = await SAZON_PERSISTENCE.saveOrdersToHistory(APP.supabase, brandId, orders, sourceFile);
+      results.orders = r;
+      console.log('[Persist] Orders:', r);
+    }
+
+    // 2. PeYa monthly snapshots
+    if (orders._peyaMonthlyHistory?.months) {
+      const r = await SAZON_PERSISTENCE.saveMonthlySnapshots(
+        APP.supabase, brandId, 'peya',
+        orders._peyaMonthlyHistory.months, 'ordersPerMonth'
+      );
+      results.monthly = r;
+      console.log('[Persist] Monthly PeYa:', r);
+    }
+
+    // 3. Rappi Service Level → weekly snapshot
+    if (orders._rappiServiceLevel) {
+      const sl = orders._rappiServiceLevel;
+      // Convertir "13/07/2026" → "2026-07-13"
+      const parseDate = (s) => {
+        const m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        return m ? `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}` : null;
+      };
+      const weekStart = parseDate(sl.periodStart);
+      const weekEnd = parseDate(sl.periodEnd);
+      if (weekStart) {
+        const r = await SAZON_PERSISTENCE.saveWeeklySnapshot(
+          APP.supabase, brandId, 'rappi', weekStart, weekEnd, sl.metrics,
+          {
+            cancellations: sl.cancellations,
+            complaints: sl.complaints,
+            sourceFile: 'Service_Level',
+          }
+        );
+        results.rappiServiceLevel = r;
+        console.log('[Persist] Rappi Service Level:', r);
+      }
+    }
+
+    // 4. Rappi Reviews → weekly snapshot con reviews[]
+    if (orders._rappiReviews?.reviews?.length > 0) {
+      const reviews = orders._rappiReviews.reviews;
+      // Fecha promedio de las reviews como semana
+      const dates = reviews.map(r => {
+        const m = String(r.date || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        return m ? new Date(+m[3], +m[2]-1, +m[1]) : null;
+      }).filter(d => d);
+      if (dates.length > 0) {
+        const minD = new Date(Math.min(...dates.map(d => d.getTime())));
+        const maxD = new Date(Math.max(...dates.map(d => d.getTime())));
+        const weekStart = minD.toISOString().split('T')[0];
+        const weekEnd = maxD.toISOString().split('T')[0];
+        const r = await SAZON_PERSISTENCE.saveWeeklySnapshot(
+          APP.supabase, brandId, 'rappi', weekStart, weekEnd, { source: 'reviews' },
+          { reviews, sourceFile: 'Reviews' }
+        );
+        results.rappiReviews = r;
+      }
+    }
+
+    // 5. PeYa opsSummary → weekly snapshot
+    if (orders._peyaOpsSummary?.branches) {
+      const filename = orders._filesDetected?.find(f => f.type === 'peya_ops_summary')?.name || '';
+      const m = filename.match(/(\d{8})-(\d{8})/);
+      let weekStart, weekEnd;
+      if (m) {
+        weekStart = `${m[1].substring(0,4)}-${m[1].substring(4,6)}-${m[1].substring(6,8)}`;
+        weekEnd = `${m[2].substring(0,4)}-${m[2].substring(4,6)}-${m[2].substring(6,8)}`;
+      }
+      if (weekStart) {
+        const r = await SAZON_PERSISTENCE.saveWeeklySnapshot(
+          APP.supabase, brandId, 'peya', weekStart, weekEnd,
+          { ops: orders._peyaOpsSummary.branches },
+          { sourceFile: 'opsSummary' }
+        );
+        results.peyaOps = r;
+      }
+    }
+
+    // 6. PeYa customersSummary → weekly snapshot
+    if (orders._peyaCustomers?.branches) {
+      const filename = orders._filesDetected?.find(f => f.type === 'peya_customers_summary')?.name || '';
+      const m = filename.match(/(\d{8})-(\d{8})/);
+      let weekStart, weekEnd;
+      if (m) {
+        weekStart = `${m[1].substring(0,4)}-${m[1].substring(4,6)}-${m[1].substring(6,8)}`;
+        weekEnd = `${m[2].substring(0,4)}-${m[2].substring(4,6)}-${m[2].substring(6,8)}`;
+      }
+      if (weekStart) {
+        const r = await SAZON_PERSISTENCE.saveWeeklySnapshot(
+          APP.supabase, brandId, 'peya', weekStart, weekEnd,
+          { customers: orders._peyaCustomers.branches },
+          { sourceFile: 'customersSummary' }
+        );
+        results.peyaCustomers = r;
+      }
+    }
+
+    // 7. PeYa ads detallado → ads_performance
+    if (orders._peyaAdsDetailed?.ads) {
+      const r = await SAZON_PERSISTENCE.saveAdsPerformance(
+        APP.supabase, brandId, orders._peyaAdsDetailed.ads, 'reporte_detallado'
+      );
+      results.peyaAds = r;
+    }
+
+    return results;
+  } catch (err) {
+    console.error('[Persist] Error:', err);
+    return { error: err.message };
+  }
+}
+
+// ─── HYDRATION: cargar histórico desde Supabase ────────────────────────
+async function loadHistoryFromSupabase(opts = {}) {
+  if (!APP.supabase || !APP.brand?.id) return null;
+  if (!window.SAZON_PERSISTENCE) return null;
+
+  const brandId = APP.brand.id;
+
+  try {
+    // Órdenes
+    const ordersResult = await SAZON_PERSISTENCE.getOrdersHistory(APP.supabase, brandId, {
+      dateFrom: opts.dateFrom,
+      dateTo: opts.dateTo,
+      platform: opts.platform,
+    });
+
+    if (!ordersResult.success) {
+      console.warn('[LoadHistory] Error orders:', ordersResult.error);
+      return null;
+    }
+
+    const orders = ordersResult.orders || [];
+
+    // Monthly
+    const monthlyResult = await SAZON_PERSISTENCE.getMonthlySnapshots(APP.supabase, brandId, {
+      platform: opts.platform,
+    });
+
+    if (monthlyResult.success && monthlyResult.months.length > 0) {
+      orders._peyaMonthlyHistory = {
+        _type: 'peya_monthly_history',
+        months: monthlyResult.months.map(m => ({
+          month: m.month_key,
+          orders: m.orders_total,
+          rejected: m.orders_rejected,
+          sales: parseFloat(m.gmv) || 0,
+          avgTicket: parseFloat(m.avg_ticket) || 0,
+          rejectionRate: (m.orders_total + m.orders_rejected) > 0
+            ? (m.orders_rejected / (m.orders_total + m.orders_rejected)) * 100 : 0,
+          ordersDelivery: m.orders_delivery,
+          ordersPickup: m.orders_pickup,
+          salesDelivery: parseFloat(m.gmv_delivery) || 0,
+          salesPickup: parseFloat(m.gmv_pickup) || 0,
+          ordersOnline: m.orders_online,
+        })),
+        monthCount: monthlyResult.months.length,
+      };
+    }
+
+    // Weekly snapshots (para reviews, ops, customers)
+    const weeklyResult = await SAZON_PERSISTENCE.getWeeklySnapshots(APP.supabase, brandId, {
+      platform: opts.platform, limit: 52,
+    });
+
+    if (weeklyResult.success) {
+      const weekly = weeklyResult.snapshots;
+      // Extraer reviews más recientes
+      const rappiReviewsSnap = weekly.find(w => w.platform === 'rappi' && w.reviews && w.reviews.length > 0);
+      if (rappiReviewsSnap) {
+        orders._rappiReviews = { reviews: rappiReviewsSnap.reviews, _fromHistory: true };
+      }
+      // Ops PeYa más reciente
+      const opsSnap = weekly.find(w => w.platform === 'peya' && w.metrics?.ops);
+      if (opsSnap) {
+        orders._peyaOpsSummary = { branches: opsSnap.metrics.ops, _fromHistory: true };
+      }
+      // Customers PeYa más reciente
+      const custSnap = weekly.find(w => w.platform === 'peya' && w.metrics?.customers);
+      if (custSnap) {
+        orders._peyaCustomers = { branches: custSnap.metrics.customers, _fromHistory: true };
+      }
+      // Cancelaciones y reclamos Rappi
+      const rappiSLSnap = weekly.find(w => w.platform === 'rappi' && w.cancellations);
+      if (rappiSLSnap) {
+        orders._rappiServiceLevel = {
+          periodStart: rappiSLSnap.week_start,
+          periodEnd: rappiSLSnap.week_end,
+          metrics: rappiSLSnap.metrics || {},
+          cancellations: rappiSLSnap.cancellations || [],
+          complaints: rappiSLSnap.complaints || [],
+          waitTimes: [],
+          _fromHistory: true,
+        };
+      }
+    }
+
+    // Ads
+    const adsResult = await SAZON_PERSISTENCE.getAdsPerformance(APP.supabase, brandId, {
+      platform: opts.platform,
+    });
+    if (adsResult.success && adsResult.ads.length > 0) {
+      orders._peyaAdsDetailed = {
+        ads: adsResult.ads.map(a => ({
+          date: a.ad_date,
+          branchName: a.branch_name,
+          branchId: a.branch_id,
+          campaignName: a.campaign_name,
+          campaignId: a.campaign_id,
+          status: a.status,
+          clicks: a.clicks,
+          orders: a.orders,
+          conversionRate: parseFloat(a.conversion_rate) || 0,
+          revenue: parseFloat(a.revenue) || 0,
+          cost: parseFloat(a.cost) || 0,
+          roas: parseFloat(a.roas) || 0,
+          avgTicket: parseFloat(a.avg_ticket) || 0,
+          avgCostPerClick: parseFloat(a.avg_cost_per_click) || 0,
+          avgCostPerOrder: parseFloat(a.avg_cost_per_order) || 0,
+          platform: a.platform,
+        })),
+        _fromHistory: true,
+      };
+    }
+
+    console.log('[LoadHistory] Cargadas:', orders.length, 'órdenes desde histórico',
+      '· monthly:', !!orders._peyaMonthlyHistory,
+      '· reviews:', !!orders._rappiReviews,
+      '· ops:', !!orders._peyaOpsSummary,
+      '· ads:', !!orders._peyaAdsDetailed);
+
+    return orders;
+  } catch (err) {
+    console.error('[LoadHistory] Error:', err);
+    return null;
+  }
+}
+
+// ─── FUSIÓN: parsed + histórico ────────────────────────────────────────
+async function loadHistoryAndMerge(newOrders) {
+  const historicalOrders = await loadHistoryFromSupabase();
+  if (!historicalOrders || historicalOrders.length === 0) {
+    console.log('[Merge] Sin histórico - usar solo lo nuevo');
+    return newOrders;
+  }
+
+  // Merge de órdenes con dedup por (platform + id)
+  const seen = new Set();
+  const merged = [];
+
+  // Primero las nuevas (tienen prioridad)
+  for (const o of newOrders) {
+    const key = `${o.platform}:${o.id}`;
+    if (!seen.has(key)) { seen.add(key); merged.push(o); }
+  }
+  // Luego las históricas que no estén ya
+  for (const o of historicalOrders) {
+    const key = `${o.platform}:${o.id}`;
+    if (!seen.has(key)) { seen.add(key); merged.push(o); }
+  }
+
+  // Preservar todos los metadata (priorizar nuevo si existe, sino histórico)
+  merged._peyaSummary = newOrders._peyaSummary || historicalOrders._peyaSummary;
+  merged._peyaMonthlyHistory = newOrders._peyaMonthlyHistory || historicalOrders._peyaMonthlyHistory;
+  merged._rappiServiceLevel = newOrders._rappiServiceLevel || historicalOrders._rappiServiceLevel;
+  merged._rappiReviews = newOrders._rappiReviews || historicalOrders._rappiReviews;
+  merged._peyaOpsSummary = newOrders._peyaOpsSummary || historicalOrders._peyaOpsSummary;
+  merged._peyaOrdersSummary = newOrders._peyaOrdersSummary || historicalOrders._peyaOrdersSummary;
+  merged._peyaCustomers = newOrders._peyaCustomers || historicalOrders._peyaCustomers;
+  merged._peyaAdsDetailed = newOrders._peyaAdsDetailed || historicalOrders._peyaAdsDetailed;
+  merged._parseLog = newOrders._parseLog || [];
+  merged._filesDetected = newOrders._filesDetected || [];
+
+  console.log('[Merge] Fusión completa:', merged.length, 'órdenes totales',
+    '(nuevas:', newOrders.length, ', históricas:', historicalOrders.length, ')');
+
+  return merged;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  TAB: MARCA — Rol estratégico por canal
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderMarca() {
+  const body = document.getElementById('marcaBody');
+  if (!body) return;
+
+  const orders = APP.allOrders || [];
+  const done = orders.filter(o => !o.cancelled && o.total > 0);
+
+  if (done.length === 0) {
+    body.innerHTML = '<div class="mod-noData"><div class="mod-noData-ico">🏷️</div>' +
+      '<div class="mod-noData-title">Sin datos</div>' +
+      '<div class="mod-noData-desc">Sube reportes de al menos una plataforma para ver el análisis por marca.</div></div>';
+    return;
+  }
+
+  const money = n => 'S/' + Math.round(n).toLocaleString('es-PE');
+  const moneyDec = n => 'S/' + n.toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const pct = n => n.toFixed(1) + '%';
+  const num = n => Math.round(n).toLocaleString('es-PE');
+
+  // Métricas por canal
+  const byChannel = {};
+  done.forEach(o => {
+    const p = o.platform;
+    if (!byChannel[p]) byChannel[p] = {
+      orders: 0, gmv: 0, tickets: [], commission: 0, adsCost: 0, prepTimes: [],
+      newCustomers: 0, returning: 0, complaints: 0,
+    };
+    const c = byChannel[p];
+    c.orders++;
+    c.gmv += o.total;
+    c.tickets.push(o.total);
+    c.commission += (o.comision || 0);
+    if (o.costs) {
+      c.adsCost += (o.costs.adsSpend || 0) + (o.costs.taxAds || 0) + (o.costs.fugaces || 0);
+    }
+    if (o.prepTime > 0) c.prepTimes.push(o.prepTime);
+    if (o.hasComplaint) c.complaints++;
+  });
+
+  // Enriquecer con customers si hay data
+  if (APP.allOrders?._peyaCustomers?.branches) {
+    const totNew = APP.allOrders._peyaCustomers.branches.reduce((s,b) => s + b.newCustomers, 0);
+    const totRet = APP.allOrders._peyaCustomers.branches.reduce((s,b) => s + b.returningCustomers, 0);
+    if (byChannel.peya) {
+      byChannel.peya.newCustomers = totNew;
+      byChannel.peya.returning = totRet;
+    }
+  }
+
+  const totalGmv = Object.values(byChannel).reduce((s,c) => s + c.gmv, 0);
+  const totalOrders = Object.values(byChannel).reduce((s,c) => s + c.orders, 0);
+  const totalAds = Object.values(byChannel).reduce((s,c) => s + c.adsCost, 0);
+
+  const channelNames = { rappi: '🟠 Rappi', peya: '🔵 PedidosYa', didi: '🟡 Didi', ubereats: '⚫ Uber Eats' };
+  const channelColors = { rappi: '#ff5100', peya: '#0064c8', didi: '#f4d000', ubereats: '#000' };
+
+  // Calcular rol estratégico de cada canal
+  const channels = Object.entries(byChannel).map(([platform, c]) => {
+    const avgTicket = c.tickets.length > 0 ? c.gmv / c.orders : 0;
+    const commPct = c.gmv > 0 ? (c.commission / c.gmv) * 100 : 0;
+    const adsPct = c.gmv > 0 ? (c.adsCost / c.gmv) * 100 : 0;
+    const totalCostPct = commPct + adsPct;
+    const netMargin = 100 - totalCostPct;
+    const avgPrep = c.prepTimes.length > 0 ? c.prepTimes.reduce((s,v) => s+v, 0) / c.prepTimes.length : 0;
+    const gmvShare = totalGmv > 0 ? (c.gmv / totalGmv) * 100 : 0;
+    const ordersShare = totalOrders > 0 ? (c.orders / totalOrders) * 100 : 0;
+
+    // Detectar rol estratégico
+    const roles = [];
+    const allTickets = Object.values(byChannel).map(x => x.gmv / Math.max(x.orders, 1));
+    const maxTicket = Math.max(...allTickets);
+    const allMargins = Object.values(byChannel).map(x => {
+      const cp = x.gmv > 0 ? (x.commission / x.gmv) * 100 : 0;
+      const ap = x.gmv > 0 ? (x.adsCost / x.gmv) * 100 : 0;
+      return 100 - cp - ap;
+    });
+    const maxMargin = Math.max(...allMargins);
+
+    if (avgTicket === maxTicket && Object.keys(byChannel).length > 1) {
+      roles.push({ icon: '💎', label: 'Ticket alto', color: '#8a4a0e', desc: 'Ticket promedio mayor entre canales' });
+    }
+    if (netMargin === maxMargin && Object.keys(byChannel).length > 1) {
+      roles.push({ icon: '💰', label: 'Rentabilidad', color: '#2d6a4f', desc: 'Mayor margen neto por orden' });
+    }
+    if (c.newCustomers > c.returning * 2 && c.newCustomers > 10) {
+      roles.push({ icon: '🎯', label: 'Adquisición', color: '#0064c8', desc: 'Trae muchos clientes nuevos' });
+    }
+    if (c.returning > c.newCustomers && c.returning > 10) {
+      roles.push({ icon: '🔁', label: 'Retención', color: '#c8392b', desc: 'Base de recurrentes fuerte' });
+    }
+    if (gmvShare > 60) {
+      roles.push({ icon: '🏆', label: 'Volumen principal', color: '#e88b3a', desc: 'Concentra la mayor parte del GMV' });
+    }
+
+    return {
+      platform, ...c,
+      avgTicket, commPct, adsPct, totalCostPct, netMargin, avgPrep,
+      gmvShare, ordersShare, roles,
+    };
+  }).sort((a,b) => b.gmv - a.gmv);
+
+  const channelsHtml = channels.map(c => `
+    <div class="channel-card" style="border-top: 4px solid ${channelColors[c.platform] || '#666'}">
+      <div class="channel-header">
+        <div class="channel-name">${channelNames[c.platform] || c.platform.toUpperCase()}</div>
+        <div class="channel-share">${pct(c.gmvShare)} del GMV</div>
+      </div>
+      <div class="channel-roles">
+        ${c.roles.length > 0
+          ? c.roles.map(r => `<div class="role-badge" style="color:${r.color};background:${r.color}15" title="${r.desc}">${r.icon} ${r.label}</div>`).join('')
+          : '<div class="role-badge role-neutral">Sin rol destacado</div>'}
+      </div>
+      <div class="channel-kpi-grid">
+        <div>
+          <div class="channel-kpi-label">GMV</div>
+          <div class="channel-kpi-val">${money(c.gmv)}</div>
+        </div>
+        <div>
+          <div class="channel-kpi-label">Órdenes</div>
+          <div class="channel-kpi-val">${num(c.orders)}</div>
+        </div>
+        <div>
+          <div class="channel-kpi-label">Ticket promedio</div>
+          <div class="channel-kpi-val">${moneyDec(c.avgTicket)}</div>
+        </div>
+        <div>
+          <div class="channel-kpi-label">Margen neto est.</div>
+          <div class="channel-kpi-val ${c.netMargin > 70 ? 'up' : c.netMargin > 60 ? 'warn' : 'dn'}">${pct(c.netMargin)}</div>
+        </div>
+        <div>
+          <div class="channel-kpi-label">Costo comisión</div>
+          <div class="channel-kpi-val">${pct(c.commPct)}</div>
+        </div>
+        <div>
+          <div class="channel-kpi-label">Costo ads</div>
+          <div class="channel-kpi-val">${pct(c.adsPct)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Recomendaciones estratégicas
+  const strategy = [];
+  if (channels.length > 1) {
+    const ticketLeader = channels.reduce((max, c) => c.avgTicket > max.avgTicket ? c : max);
+    const marginLeader = channels.reduce((max, c) => c.netMargin > max.netMargin ? c : max);
+    const volumeLeader = channels[0];
+
+    if (ticketLeader.platform !== marginLeader.platform) {
+      strategy.push({
+        icon: '⚖️',
+        text: `<strong>${channelNames[ticketLeader.platform]}</strong> tiene el ticket más alto (${moneyDec(ticketLeader.avgTicket)}) pero <strong>${channelNames[marginLeader.platform]}</strong> te deja más margen neto (${pct(marginLeader.netMargin)}). Considera empujar volumen en el segundo y usar el primero para productos premium.`
+      });
+    }
+
+    if (volumeLeader.adsPct > 8) {
+      strategy.push({
+        icon: '💸',
+        text: `<strong>${channelNames[volumeLeader.platform]}</strong> concentra tu volumen pero gastás <strong>${pct(volumeLeader.adsPct)}</strong> del GMV en ads. Explorá reducir gasto en este canal para probar si el volumen se sostiene orgánicamente.`
+      });
+    }
+
+    const highMargin = channels.find(c => c.netMargin > 70);
+    if (highMargin && highMargin.orders < volumeLeader.orders * 0.5) {
+      strategy.push({
+        icon: '🚀',
+        text: `<strong>${channelNames[highMargin.platform]}</strong> tiene margen neto de ${pct(highMargin.netMargin)} pero solo ${pct(highMargin.gmvShare)} del GMV. Es tu canal más rentable — considerá invertir en crecerlo.`
+      });
+    }
+  } else {
+    strategy.push({
+      icon: '📊',
+      text: 'Con datos de una sola plataforma no podemos comparar roles. Subí archivos de ambos canales para ver la estrategia cruzada.'
+    });
+  }
+
+  const strategyHtml = strategy.length > 0
+    ? `<div class="mod-insights"><div class="mod-insights-title">🎯 Estrategia de marca</div>
+       ${strategy.map(s => `<div class="mod-insight-item"><span class="ico">${s.icon}</span><div>${s.text}</div></div>`).join('')}
+       </div>`
+    : '';
+
+  body.innerHTML = `
+    <div class="mod-hero" style="border-top:4px solid #e88b3a">
+      <div class="mod-hero-title">🏷️ Estrategia de Marca</div>
+      <div class="mod-hero-desc">Qué rol juega cada canal en tu estrategia digital · basado en ${num(totalOrders)} órdenes · GMV total ${money(totalGmv)}</div>
+    </div>
+    <div class="channels-grid">${channelsHtml}</div>
+    ${strategyHtml}
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  TAB: PRODUCTOS — SKU performance por canal (limitado)
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderProductos() {
+  const body = document.getElementById('productosBody');
+  if (!body) return;
+
+  // Nota honesta: los archivos actuales de Rappi_Report NO desglosan por producto por orden
+  // El campo "items" está vacío en el motor v1
+  // Vamos a mostrar lo que sí sabemos (categorías si el motor v1 catalogData tiene datos)
+
+  const catalog = APP.catalogData || [];
+  if (catalog.length === 0) {
+    body.innerHTML = '<div class="mod-noData"><div class="mod-noData-ico">🍔</div>' +
+      '<div class="mod-noData-title">Análisis por producto no disponible aún</div>' +
+      '<div class="mod-noData-desc">Los reportes actuales de Rappi y PeYa no desglosan qué productos se vendieron en cada orden. ' +
+      'Para este análisis necesitamos que las plataformas expongan el detalle de items por orden.' +
+      '<br><br>Vamos a habilitarlo cuando integremos con las APIs directas de las plataformas.</div></div>';
+    return;
+  }
+
+  const money = n => 'S/' + Math.round(n).toLocaleString('es-PE');
+  const num = n => Math.round(n).toLocaleString('es-PE');
+
+  // Ordenar productos por revenue total
+  const items = catalog.map(item => {
+    const totalRev = (item.paidEst || 0) * (item.freq?.rappi || 0 + item.freq?.peya || 0);
+    return { ...item, totalRev };
+  }).sort((a,b) => b.totalRev - a.totalRev).slice(0, 30);
+
+  const rowsHtml = items.map(item => {
+    const rappiFreq = item.freq?.rappi || 0;
+    const peyaFreq = item.freq?.peya || 0;
+    const totalFreq = rappiFreq + peyaFreq;
+    if (totalFreq === 0) return '';
+
+    // Detectar dónde vende mejor
+    let bestChannel = '';
+    if (rappiFreq > peyaFreq * 1.5) bestChannel = '<span class="chan-badge rappi">🟠 Rappi</span>';
+    else if (peyaFreq > rappiFreq * 1.5) bestChannel = '<span class="chan-badge peya">🔵 PeYa</span>';
+    else bestChannel = '<span class="chan-badge neutral">Ambos</span>';
+
+    return `<div class="mod-table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">
+      <div><strong>${item.name || 'Sin nombre'}</strong></div>
+      <div>${num(rappiFreq)}</div>
+      <div>${num(peyaFreq)}</div>
+      <div>${bestChannel}</div>
+      <div>${money(item.paidEst || 0)}</div>
+    </div>`;
+  }).filter(r => r).join('');
+
+  body.innerHTML = `
+    <div class="mod-hero" style="border-top:4px solid #c8392b">
+      <div class="mod-hero-title">🍔 Productos por canal</div>
+      <div class="mod-hero-desc">Top ${items.length} productos · dónde vende mejor cada uno</div>
+    </div>
+    <div class="mod-table">
+      <div class="mod-table-head" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">
+        <div>Producto</div>
+        <div>Órdenes Rappi</div>
+        <div>Órdenes PeYa</div>
+        <div>Vende mejor en</div>
+        <div>Precio est.</div>
+      </div>
+      ${rowsHtml}
+    </div>
+    <style>
+      .chan-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:.65rem;font-weight:700}
+      .chan-badge.rappi{background:rgba(255,81,0,.15);color:#8a3400}
+      .chan-badge.peya{background:rgba(0,100,200,.15);color:#003d75}
+      .chan-badge.neutral{background:rgba(0,0,0,.06);color:var(--m)}
+    </style>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  TAB: REVIEWS — Reseñas Rappi
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderReviews() {
+  const body = document.getElementById('reviewsBody');
+  if (!body) return;
+
+  const reviewsData = APP.allOrders?._rappiReviews;
+  if (!reviewsData || !reviewsData.reviews || reviewsData.reviews.length === 0) {
+    body.innerHTML = '<div class="mod-noData"><div class="mod-noData-ico">⭐</div>' +
+      '<div class="mod-noData-title">Sin reviews cargadas</div>' +
+      '<div class="mod-noData-desc">Para ver el análisis de reviews:<br><br>' +
+      '<strong>Rappi</strong>: Portal → Reportes → Reviews (CSV)<br>' +
+      '<strong>PedidosYa</strong>: Aún no soportado — PeYa no exporta reviews individuales' +
+      '</div></div>';
+    return;
+  }
+
+  const reviews = reviewsData.reviews;
+  const num = n => Math.round(n).toLocaleString('es-PE');
+
+  // Distribución de estrellas
+  const dist = [0, 0, 0, 0, 0, 0];  // índices 1-5
+  reviews.forEach(r => { if (r.rating >= 1 && r.rating <= 5) dist[r.rating]++; });
+
+  const total = reviews.length;
+  const avgRating = total > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / total : 0;
+  const pos = dist[4] + dist[5];
+  const neg = dist[1] + dist[2];
+  const nps = total > 0 ? ((pos - neg) / total) * 100 : 0;
+
+  const clsAvg = avgRating >= 4.5 ? 'up' : avgRating >= 3.5 ? 'warn' : 'dn';
+  const clsNps = nps > 60 ? 'up' : nps > 30 ? 'warn' : 'dn';
+
+  // Reviews recientes (últimas 10)
+  const sortedReviews = [...reviews].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 10);
+  const reviewsHtml = sortedReviews.map(r => {
+    const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+    return `<div style="padding:12px 14px;border-bottom:1px solid var(--l);font-size:.82rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="color:#e88b3a;font-size:1rem;letter-spacing:2px">${stars}</div>
+        <div style="font-size:.7rem;color:var(--m)">${r.date} · ${r.branchName}</div>
+      </div>
+      ${r.comment ? `<div style="color:var(--t);line-height:1.5">"${r.comment}"</div>` : '<div style="color:var(--m);font-style:italic">Sin comentario</div>'}
+    </div>`;
+  }).join('');
+
+  // Distribución visual
+  const maxDist = Math.max(...dist.slice(1));
+  const distHtml = [5, 4, 3, 2, 1].map(rating => {
+    const count = dist[rating];
+    const p = total > 0 ? (count / total) * 100 : 0;
+    const color = rating >= 4 ? '#2d6a4f' : rating === 3 ? '#8a6000' : '#c8392b';
+    return `<div style="display:grid;grid-template-columns:60px 1fr 60px 50px;gap:12px;align-items:center;padding:6px 0;font-size:.82rem">
+      <div style="color:#e88b3a">${'★'.repeat(rating)}</div>
+      <div style="background:rgba(0,0,0,.06);border-radius:100px;height:12px;overflow:hidden">
+        <div style="height:100%;width:${maxDist > 0 ? (count/maxDist*100) : 0}%;background:${color};transition:width .3s"></div>
+      </div>
+      <div style="text-align:right;font-family:monospace">${count}</div>
+      <div style="text-align:right;color:var(--m);font-size:.7rem">${p.toFixed(1)}%</div>
+    </div>`;
+  }).join('');
+
+  const insights = [];
+  if (avgRating >= 4.5) insights.push({ ico: '🏆', text: `Excelente calificación promedio de <strong>${avgRating.toFixed(2)}</strong> — mantener este nivel es clave para el ranking.` });
+  else if (avgRating < 4) insights.push({ ico: '⚠️', text: `Calificación promedio de <strong>${avgRating.toFixed(2)}</strong> — sobre 4.0 estás en el nivel esperado para restaurantes.` });
+
+  if (nps > 60) insights.push({ ico: '🎯', text: `NPS de <strong>${nps.toFixed(0)}</strong> — clientes muy satisfechos.` });
+  else if (nps < 30) insights.push({ ico: '📉', text: `NPS bajo (<strong>${nps.toFixed(0)}</strong>) — revisá los comentarios negativos y actuá sobre las causas.` });
+
+  if (dist[1] > 0) insights.push({ ico: '🚨', text: `Tenés <strong>${dist[1]} review(s) de 1 estrella</strong>. Revisá los comentarios inmediatamente — cada estrella baja el ranking.` });
+
+  const insightsHtml = insights.length > 0
+    ? `<div class="mod-insights"><div class="mod-insights-title">💡 Análisis</div>
+       ${insights.map(i => `<div class="mod-insight-item"><span class="ico">${i.ico}</span><div>${i.text}</div></div>`).join('')}
+       </div>`
+    : '';
+
+  body.innerHTML = `
+    <div class="mod-hero" style="border-top:4px solid #e88b3a">
+      <div class="mod-hero-title">⭐ Reviews y calificaciones</div>
+      <div class="mod-hero-desc">Basado en ${num(total)} reviews · Rappi</div>
+    </div>
+    <div class="mod-kpi-grid">
+      <div class="mod-kpi"><div class="mod-kpi-label">Promedio</div>
+        <div class="mod-kpi-val ${clsAvg}">${avgRating.toFixed(2)}</div>
+        <div class="mod-kpi-hint">de 5 estrellas</div></div>
+      <div class="mod-kpi"><div class="mod-kpi-label">Total reviews</div>
+        <div class="mod-kpi-val">${num(total)}</div>
+        <div class="mod-kpi-hint">período analizado</div></div>
+      <div class="mod-kpi"><div class="mod-kpi-label">Positivas (4-5★)</div>
+        <div class="mod-kpi-val up">${num(pos)}</div>
+        <div class="mod-kpi-hint">${total > 0 ? ((pos/total)*100).toFixed(1) : 0}% del total</div></div>
+      <div class="mod-kpi"><div class="mod-kpi-label">NPS aproximado</div>
+        <div class="mod-kpi-val ${clsNps}">${nps.toFixed(0)}</div>
+        <div class="mod-kpi-hint">Positivas menos negativas</div></div>
+    </div>
+    <div class="mod-chart-wrap">
+      <div class="mod-chart-title">⭐ Distribución de estrellas</div>
+      ${distHtml}
+    </div>
+    <div class="mod-chart-wrap">
+      <div class="mod-chart-title">💬 Reviews recientes</div>
+      <div>${reviewsHtml}</div>
+    </div>
+    ${insightsHtml}
+  `;
+}
+
+// Sprint 4: agregar los 3 nuevos al pipeline
+const _origRenderAllSprint3 = typeof renderAllSprint3Modules === 'function' ? renderAllSprint3Modules : null;
+window.renderAllSprint3Modules = function() {
+  if (_origRenderAllSprint3) _origRenderAllSprint3();
+  try { renderMarca(); } catch (e) { console.error('[Marca]', e); }
+  try { renderProductos(); } catch (e) { console.error('[Productos]', e); }
+  try { renderReviews(); } catch (e) { console.error('[Reviews]', e); }
+};
 
 
 if(document.readyState === 'loading') {
