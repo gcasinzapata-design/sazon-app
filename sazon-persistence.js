@@ -1,320 +1,528 @@
 // ═══════════════════════════════════════════════════════════════════════
-//  SAZÓN GROWTH ENGINE — PERSISTENCE MODULE
-//  Sprint 2 A.1: Guardar/cargar análisis desde Supabase
+//  SAZÓN PERSISTENCE — biblioteca de acceso a Supabase
+//  Sprint 4: Modelo agregativo con dedup y snapshots
 // ═══════════════════════════════════════════════════════════════════════
 
-window.SAZON_PERSISTENCE = (function() {
+(function() {
+  'use strict';
 
-  // ─── PRIVATE HELPERS ─────────────────────────────────────────────
+  const SAZON_PERSISTENCE = {
 
-  /**
-   * Detecta el período (fechas mín/máx) desde el array de órdenes
-   */
-  function detectPeriod(orders) {
-    if (!orders || orders.length === 0) return { start: null, end: null };
-    const dates = orders
-      .filter(o => o.date instanceof Date)
-      .map(o => o.date.getTime());
-    if (dates.length === 0) return { start: null, end: null };
-    return {
-      start: new Date(Math.min(...dates)).toISOString(),
-      end:   new Date(Math.max(...dates)).toISOString()
-    };
-  }
+    // ─── SPRINT 4: ÓRDENES UNIFICADAS ─────────────────────────────────
 
-  /**
-   * Genera un nombre automático basado en el período detectado
-   * Ej: "Análisis del 1-31 May 2026" o "Análisis del 17 Jul 2026"
-   */
-  function autoName(orders) {
-    const period = detectPeriod(orders);
-    if (!period.start) {
-      return 'Análisis del ' + new Date().toLocaleDateString('es-PE', {
-        day: 'numeric', month: 'short', year: 'numeric'
-      });
-    }
-    const s = new Date(period.start);
-    const e = new Date(period.end);
-    const sameMonth = s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear();
-    if (sameMonth) {
-      return `Análisis ${s.toLocaleDateString('es-PE', { month: 'short', year: 'numeric' })}`;
-    }
-    return `Análisis ${s.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })} — ${e.toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-  }
+    /**
+     * Guarda órdenes en el historial acumulado (dedup por brand+platform+order_id)
+     * @param {Object} supabase - cliente Supabase
+     * @param {string} brandId - ID de la marca
+     * @param {Array} orders - array de órdenes normalizadas
+     * @param {string} sourceFile - nombre del archivo original
+     * @returns {Promise<{success, inserted, updated, skipped, error}>}
+     */
+    async saveOrdersToHistory(supabase, brandId, orders, sourceFile) {
+      if (!supabase || !brandId || !Array.isArray(orders) || orders.length === 0) {
+        return { success: false, error: 'Datos inválidos' };
+      }
 
-  /**
-   * Snapshot del config actual de la marca al momento del análisis
-   */
-  function snapshotConfig(brand) {
-    if (!brand) return {};
-    return {
-      fee_rappi_pct:    brand.fee_rappi_pct    ?? null,
-      fee_peya_pct:     brand.fee_peya_pct     ?? null,
-      fee_didi_pct:     brand.fee_didi_pct     ?? null,
-      fee_glovo_pct:    brand.fee_glovo_pct    ?? null,
-      fee_ubereats_pct: brand.fee_ubereats_pct ?? null,
-      fee_ifood_pct:    brand.fee_ifood_pct    ?? null,
-      fee_justo_pct:    brand.fee_justo_pct    ?? null,
-      food_cost_pct:    brand.food_cost_pct    ?? null,
-      country:          brand.country ?? 'PE',
-      timezone:         brand.timezone ?? 'America/Lima',
-      currency:         brand.currency_display ?? 'USD',
-      snapshotted_at:   new Date().toISOString()
-    };
-  }
+      try {
+        // Preparar payload para el RPC
+        const payload = orders.map(o => ({
+          platform: o.platform || 'rappi',
+          order_id: String(o.id || o.order_id || ''),
+          order_date: o.date instanceof Date ? o.date.toISOString() : o.date,
+          status: o.estado || o.status || null,
+          cancelled: !!o.cancelled,
 
-  // ─── PUBLIC API ──────────────────────────────────────────────────
+          branch_id: o.branchId || o.branch_id || null,
+          branch_name: o.sucursal || o.branch_name || 'Principal',
 
-  /**
-   * Verifica si la marca puede crear un análisis nuevo este mes según su tier
-   * @returns {Promise<{can_create, plan, limit, used, remaining}>}
-   */
-  async function checkQuota(supabase, brandId) {
-    const { data, error } = await supabase.rpc('check_analysis_quota', {
-      p_brand_id: brandId
-    });
-    if (error) {
-      console.error('checkQuota error:', error);
-      return { can_create: false, error: error.message };
-    }
-    return data;
-  }
+          gmv: o.total || o.gmv || 0,
+          base_price: o.basePrice || o.base_price || null,
+          discount_amt: o.discAmt || o.discount_amt || null,
+          discount_pct: o.discPct || o.discount_pct || null,
+          commission: o.comision || o.commission || null,
 
-  /**
-   * Guarda un análisis en Supabase
-   * @param {Object} params
-   * @param {Object} params.supabase - Cliente Supabase autenticado
-   * @param {Object} params.brand - Registro de la marca del usuario
-   * @param {Array}  params.orders - Array de órdenes procesadas
-   * @param {Object} params.modules - Resultados de cada módulo (dashboard, patrones, etc.)
-   * @param {Array}  params.files - Metadata de archivos originales [{name, size, platform, format}]
-   * @param {Number} params.processingMs - ms que tomó procesar
-   * @param {String} [params.customName] - Nombre custom (si null, se auto-genera)
-   * @returns {Promise<{success, analysisId, error}>}
-   */
-  async function saveAnalysis({
-    supabase, brand, orders, modules, files, processingMs, customName
-  }) {
-    if (!supabase || !brand) {
-      return { success: false, error: 'Missing supabase or brand' };
-    }
+          cost_ads: o.costs?.adsSpend || null,
+          cost_ads_tax: o.costs?.taxAds || null,
+          cost_dar: o.costs?.darDiscount || null,
+          cost_free_delivery: o.costs?.freeDelivery || null,
+          cost_integration: o.costs?.integration || null,
+          cost_late: o.costs?.lateDelivery || null,
+          cost_transactional: o.costs?.transactional || null,
+          cost_wallet: o.costs?.wallet || null,
+          cost_service: o.costs?.service || null,
+          cost_iva_platform: o.costs?.ivaPlatform || null,
 
-    try {
-      // 1. Verificar quota
-      const quota = await checkQuota(supabase, brand.id);
-      if (!quota.can_create) {
+          prep_time_min: o.prepTime || o.prep_time_min || null,
+          delivery_time_min: o.deliveryTime || o.delivery_time_min || null,
+          total_time_min: o.totalTime || o.total_time_min || null,
+
+          accepted_at: o.acceptedAt ? (o.acceptedAt instanceof Date ? o.acceptedAt.toISOString() : o.acceptedAt) : null,
+          ready_at: o.readyAt ? (o.readyAt instanceof Date ? o.readyAt.toISOString() : o.readyAt) : null,
+          picked_up_at: o.pickedUpAt ? (o.pickedUpAt instanceof Date ? o.pickedUpAt.toISOString() : o.pickedUpAt) : null,
+          delivered_at: o.deliveredAt ? (o.deliveredAt instanceof Date ? o.deliveredAt.toISOString() : o.deliveredAt) : null,
+          cancelled_at: o.cancelledAt ? (o.cancelledAt instanceof Date ? o.cancelledAt.toISOString() : o.cancelledAt) : null,
+
+          payment_method: o.metodo || o.payment_method || null,
+          delivery_method: o.deliveryMethod || o.delivery_method || null,
+          has_complaint: !!o.hasComplaint,
+          complaint_reason: o.complaintReason || null,
+          cancel_reason: o.cancelReason || null,
+
+          source_file: sourceFile,
+          raw_data: o.raw_data || null,
+        }));
+
+        // Batch de 100 en 100 para no exceder límites
+        let totalInserted = 0, totalUpdated = 0, totalSkipped = 0;
+        const BATCH_SIZE = 100;
+
+        for (let i = 0; i < payload.length; i += BATCH_SIZE) {
+          const batch = payload.slice(i, i + BATCH_SIZE);
+          const { data, error } = await supabase.rpc('upsert_orders_bulk', {
+            p_brand_id: brandId,
+            p_orders: batch,
+          });
+
+          if (error) {
+            console.error('[Persistence] Error batch', i, error);
+            return { success: false, error: error.message };
+          }
+
+          if (data && data.length > 0) {
+            totalInserted += data[0].inserted_count || 0;
+            totalUpdated += data[0].updated_count || 0;
+            totalSkipped += data[0].skipped_count || 0;
+          }
+        }
+
         return {
-          success: false,
-          error: `Alcanzaste el límite de ${quota.limit} análisis mensuales del plan ${quota.plan}. Upgrade para más análisis.`,
-          quotaExceeded: true,
-          quota
+          success: true,
+          inserted: totalInserted,
+          updated: totalUpdated,
+          skipped: totalSkipped,
+          total: payload.length,
         };
+      } catch (err) {
+        console.error('[Persistence] saveOrdersToHistory error:', err);
+        return { success: false, error: err.message };
+      }
+    },
+
+    /**
+     * Recupera órdenes históricas por rango de fechas y plataforma
+     */
+    async getOrdersHistory(supabase, brandId, opts = {}) {
+      if (!supabase || !brandId) return { success: false, error: 'Datos inválidos' };
+
+      try {
+        let query = supabase
+          .from('orders_unified')
+          .select('*')
+          .eq('brand_id', brandId)
+          .order('order_date', { ascending: false });
+
+        if (opts.dateFrom) query = query.gte('order_date', opts.dateFrom);
+        if (opts.dateTo) query = query.lte('order_date', opts.dateTo);
+        if (opts.platform && opts.platform !== 'all') query = query.eq('platform', opts.platform);
+        if (opts.limit) query = query.limit(opts.limit);
+
+        const { data, error } = await query;
+        if (error) return { success: false, error: error.message };
+
+        // Deserializar dates
+        const orders = (data || []).map(row => ({
+          id: row.order_id,
+          date: row.order_date ? new Date(row.order_date) : null,
+          platform: row.platform,
+          total: parseFloat(row.gmv) || 0,
+          basePrice: parseFloat(row.base_price) || 0,
+          discAmt: parseFloat(row.discount_amt) || 0,
+          discPct: parseFloat(row.discount_pct) || 0,
+          cancelled: !!row.cancelled,
+          estado: row.status,
+          sucursal: row.branch_name,
+          metodo: row.payment_method,
+          comision: parseFloat(row.commission) || 0,
+          prepTime: parseFloat(row.prep_time_min) || 0,
+          deliveryTime: parseFloat(row.delivery_time_min) || 0,
+          totalTime: parseFloat(row.total_time_min) || 0,
+          acceptedAt: row.accepted_at ? new Date(row.accepted_at) : null,
+          readyAt: row.ready_at ? new Date(row.ready_at) : null,
+          deliveredAt: row.delivered_at ? new Date(row.delivered_at) : null,
+          hasComplaint: !!row.has_complaint,
+          complaintReason: row.complaint_reason,
+          cancelReason: row.cancel_reason,
+          items: '',
+          isPrime: false,
+          costs: {
+            commission: parseFloat(row.commission) || 0,
+            adsSpend: parseFloat(row.cost_ads) || 0,
+            taxAds: parseFloat(row.cost_ads_tax) || 0,
+            darDiscount: parseFloat(row.cost_dar) || 0,
+            freeDelivery: parseFloat(row.cost_free_delivery) || 0,
+            integration: parseFloat(row.cost_integration) || 0,
+            lateDelivery: parseFloat(row.cost_late) || 0,
+            transactional: parseFloat(row.cost_transactional) || 0,
+            wallet: parseFloat(row.cost_wallet) || 0,
+            service: parseFloat(row.cost_service) || 0,
+            ivaPlatform: parseFloat(row.cost_iva_platform) || 0,
+          },
+          _fromHistory: true,
+        }));
+
+        return { success: true, orders, count: orders.length };
+      } catch (err) {
+        console.error('[Persistence] getOrdersHistory error:', err);
+        return { success: false, error: err.message };
+      }
+    },
+
+    /**
+     * Guarda items de órdenes (productos)
+     */
+    async saveOrderItems(supabase, brandId, items) {
+      if (!supabase || !brandId || !Array.isArray(items) || items.length === 0) {
+        return { success: false, error: 'Datos inválidos' };
       }
 
-      // 2. Preparar metadata v2
-      const period = detectPeriod(orders);
-      const done = orders.filter(o => !o.cancelled && o.total > 0);
-      const cancelled = orders.filter(o => o.cancelled);
-      const gmv = done.reduce((s, o) => s + (o.total || 0), 0);
-      const platforms = [...new Set(done.map(o => o.platform).filter(Boolean))];
+      try {
+        // Batch de 500
+        const BATCH_SIZE = 500;
+        let inserted = 0;
 
-      const metadata = {
-        version: 2,
-        created_from: 'browser',
-        processing_ms: processingMs || null,
+        for (let i = 0; i < items.length; i += BATCH_SIZE) {
+          const batch = items.slice(i, i + BATCH_SIZE).map(it => ({
+            brand_id: brandId,
+            platform: it.platform,
+            order_id: it.order_id || it.orderId,
+            product_name: it.product_name || it.name,
+            quantity: it.quantity || it.qty || 1,
+            unit_price: it.unit_price || it.price,
+            base_price: it.base_price || null,
+            discount_amt: it.discount_amt || 0,
+          }));
 
-        sources: {
-          files: files || [],
-          menu_loaded: !!(window.APP?.menu?.length > 0),
-        },
+          const { error } = await supabase.from('order_items').insert(batch);
+          if (error) {
+            console.error('[Persistence] items batch error:', error);
+            return { success: false, error: error.message };
+          }
+          inserted += batch.length;
+        }
 
-        kpis: {
-          orders_total: orders.length,
-          orders_completed: done.length,
-          orders_cancelled: cancelled.length,
-          gmv: gmv,
-          avg_ticket: done.length > 0 ? gmv / done.length : 0,
-          cancellation_pct: orders.length > 0 ? (cancelled.length / orders.length) * 100 : 0,
-          period_start: period.start,
-          period_end: period.end,
-          platforms: platforms
-        },
+        return { success: true, inserted };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
 
-        modules: modules || {}
-      };
+    // ─── SPRINT 4: WEEKLY SNAPSHOTS ───────────────────────────────────
 
-      const configSnapshot = snapshotConfig(brand);
-      const analysisName = (customName || '').trim() || autoName(orders);
+    /**
+     * Guarda un snapshot semanal (Service_Level, opsSummary, etc.)
+     */
+    async saveWeeklySnapshot(supabase, brandId, platform, weekStart, weekEnd, metrics, opts = {}) {
+      if (!supabase || !brandId) return { success: false, error: 'Datos inválidos' };
 
-      // 3. Llamar a la función SQL create_analysis
-      const { data, error } = await supabase.rpc('create_analysis', {
-        p_brand_id: brand.id,
-        p_name: analysisName,
-        p_metadata: metadata,
-        p_config_snapshot: configSnapshot,
-        p_files_count: files?.length || 0,
-        p_processing_ms: processingMs || null
-      });
+      try {
+        const { data, error } = await supabase
+          .from('weekly_snapshots')
+          .upsert({
+            brand_id: brandId,
+            platform,
+            week_start: weekStart,
+            week_end: weekEnd,
+            metrics,
+            complaints: opts.complaints || null,
+            cancellations: opts.cancellations || null,
+            reviews: opts.reviews || null,
+            source_file: opts.sourceFile || null,
+          }, { onConflict: 'brand_id,platform,week_start' })
+          .select();
 
-      if (error) {
-        console.error('saveAnalysis SQL error:', error);
-        return { success: false, error: error.message };
+        if (error) return { success: false, error: error.message };
+        return { success: true, data };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
+
+    /**
+     * Obtiene snapshots semanales por rango
+     */
+    async getWeeklySnapshots(supabase, brandId, opts = {}) {
+      if (!supabase || !brandId) return { success: false, error: 'Datos inválidos' };
+
+      try {
+        let query = supabase
+          .from('weekly_snapshots')
+          .select('*')
+          .eq('brand_id', brandId)
+          .order('week_start', { ascending: false });
+
+        if (opts.dateFrom) query = query.gte('week_start', opts.dateFrom);
+        if (opts.dateTo) query = query.lte('week_start', opts.dateTo);
+        if (opts.platform && opts.platform !== 'all') query = query.eq('platform', opts.platform);
+        if (opts.limit) query = query.limit(opts.limit);
+
+        const { data, error } = await query;
+        if (error) return { success: false, error: error.message };
+        return { success: true, snapshots: data || [] };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
+
+    // ─── SPRINT 4: MONTHLY SNAPSHOTS ──────────────────────────────────
+
+    async saveMonthlySnapshots(supabase, brandId, platform, months, sourceFile) {
+      if (!supabase || !brandId || !Array.isArray(months)) {
+        return { success: false, error: 'Datos inválidos' };
       }
 
-      return {
-        success: true,
-        analysisId: data,
-        name: analysisName,
-        expiresAt: null // se puede leer con getAnalysis(data)
-      };
-    } catch (err) {
-      console.error('saveAnalysis exception:', err);
-      return { success: false, error: err.message };
-    }
-  }
+      try {
+        const payload = months.map(m => ({
+          brand_id: brandId,
+          platform,
+          month_key: m.month,
+          orders_total: m.orders || 0,
+          orders_rejected: m.rejected || 0,
+          gmv: m.sales || 0,
+          avg_ticket: m.avgTicket || 0,
+          orders_delivery: m.ordersDelivery || 0,
+          orders_pickup: m.ordersPickup || 0,
+          gmv_delivery: m.salesDelivery || 0,
+          gmv_pickup: m.salesPickup || 0,
+          orders_online: m.ordersOnline || 0,
+          source_file: sourceFile,
+        }));
 
-  /**
-   * Sube archivo original a Supabase Storage (solo Partner+)
-   * @returns {Promise<{success, storagePath, error}>}
-   */
-  async function uploadRawFile({
-    supabase, brand, analysisId, file, plan
-  }) {
-    // Solo Partner+ pueden guardar archivos originales
-    if (!['partner', 'enterprise'].includes(plan)) {
-      return {
-        success: false,
-        error: 'Almacenamiento de archivos originales solo disponible en Partner+',
-        skipped: true
-      };
-    }
+        const { data, error } = await supabase
+          .from('monthly_snapshots')
+          .upsert(payload, { onConflict: 'brand_id,platform,month_key' })
+          .select();
 
-    try {
-      const storagePath = `${brand.id}/${analysisId}/${file.name}`;
-      const { data, error } = await supabase.storage
-        .from('raw-uploads')
-        .upload(storagePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+        if (error) return { success: false, error: error.message };
+        return { success: true, count: data?.length || 0 };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
 
-      if (error) {
-        console.error('uploadRawFile error:', error);
-        return { success: false, error: error.message };
+    async getMonthlySnapshots(supabase, brandId, opts = {}) {
+      if (!supabase || !brandId) return { success: false, error: 'Datos inválidos' };
+
+      try {
+        let query = supabase
+          .from('monthly_snapshots')
+          .select('*')
+          .eq('brand_id', brandId)
+          .order('month_key', { ascending: true });
+
+        if (opts.platform && opts.platform !== 'all') query = query.eq('platform', opts.platform);
+
+        const { data, error } = await query;
+        if (error) return { success: false, error: error.message };
+        return { success: true, months: data || [] };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
+
+    // ─── SPRINT 4: ADS PERFORMANCE ────────────────────────────────────
+
+    async saveAdsPerformance(supabase, brandId, adsRows, sourceFile) {
+      if (!supabase || !brandId || !Array.isArray(adsRows)) {
+        return { success: false, error: 'Datos inválidos' };
       }
 
-      // Registrar en tabla files
-      const { error: fErr } = await supabase.from('files').insert({
-        analysis_id: analysisId,
-        brand_id: brand.id,
-        filename: file.name,
-        size_bytes: file.size,
-        storage_path: data.path
-      });
+      try {
+        const payload = adsRows.map(r => ({
+          brand_id: brandId,
+          platform: r.platform || 'peya',
+          ad_date: r.date,
+          branch_id: r.branchId,
+          branch_name: r.branchName,
+          campaign_name: r.campaignName,
+          campaign_id: r.campaignId,
+          status: r.status,
+          clicks: r.clicks,
+          orders: r.orders,
+          conversion_rate: r.conversionRate,
+          revenue: r.revenue,
+          cost: r.cost,
+          roas: r.roas,
+          avg_ticket: r.avgTicket,
+          avg_cost_per_click: r.avgCostPerClick,
+          avg_cost_per_order: r.avgCostPerOrder,
+          source_file: sourceFile,
+        }));
 
-      if (fErr) {
-        console.warn('Files table insert failed:', fErr);
+        const BATCH_SIZE = 500;
+        let inserted = 0;
+        for (let i = 0; i < payload.length; i += BATCH_SIZE) {
+          const batch = payload.slice(i, i + BATCH_SIZE);
+          const { error } = await supabase
+            .from('ads_performance')
+            .upsert(batch, { onConflict: 'brand_id,platform,ad_date,branch_id,campaign_id' });
+          if (error) return { success: false, error: error.message };
+          inserted += batch.length;
+        }
+        return { success: true, inserted };
+      } catch (err) {
+        return { success: false, error: err.message };
       }
+    },
 
-      return { success: true, storagePath: data.path };
-    } catch (err) {
-      console.error('uploadRawFile exception:', err);
-      return { success: false, error: err.message };
-    }
-  }
+    async getAdsPerformance(supabase, brandId, opts = {}) {
+      if (!supabase || !brandId) return { success: false, error: 'Datos inválidos' };
 
-  /**
-   * Lista análisis previos de la marca (para "Mis análisis previos")
-   */
-  async function listAnalyses(supabase, brandId, options = {}) {
-    const limit = options.limit || 50;
+      try {
+        let query = supabase
+          .from('ads_performance')
+          .select('*')
+          .eq('brand_id', brandId)
+          .order('ad_date', { ascending: false });
 
-    const { data, error } = await supabase
-      .from('analyses')
-      .select('id, name, custom_name, created_at, expires_at, period_start, period_end, orders_count, gmv, avg_ticket, platforms, files_count')
-      .eq('brand_id', brandId)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(limit);
+        if (opts.dateFrom) query = query.gte('ad_date', opts.dateFrom);
+        if (opts.dateTo) query = query.lte('ad_date', opts.dateTo);
+        if (opts.platform && opts.platform !== 'all') query = query.eq('platform', opts.platform);
 
-    if (error) {
-      console.error('listAnalyses error:', error);
-      return { success: false, error: error.message, analyses: [] };
-    }
+        const { data, error } = await query;
+        if (error) return { success: false, error: error.message };
+        return { success: true, ads: data || [] };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
 
-    // Aplicar el nombre custom si existe, sino el auto
-    const analyses = (data || []).map(a => ({
-      ...a,
-      display_name: a.custom_name || a.name
-    }));
+    // ─── SPRINT 4: FILE UPLOADS AUDIT ─────────────────────────────────
 
-    return { success: true, analyses };
-  }
+    async logFileUpload(supabase, brandId, fileInfo) {
+      if (!supabase || !brandId) return { success: false, error: 'Datos inválidos' };
 
-  /**
-   * Carga un análisis específico con todos sus datos (metadata + módulos)
-   */
-  async function getAnalysis(supabase, analysisId) {
-    const { data, error } = await supabase
-      .from('analyses')
-      .select('*')
-      .eq('id', analysisId)
-      .is('deleted_at', null)
-      .single();
+      try {
+        const { data, error } = await supabase
+          .from('file_uploads')
+          .insert({
+            brand_id: brandId,
+            file_name: fileInfo.name,
+            file_type: fileInfo.type,
+            file_size_bytes: fileInfo.size,
+            period_start: fileInfo.periodStart,
+            period_end: fileInfo.periodEnd,
+            rows_processed: fileInfo.rowsProcessed || 0,
+            rows_inserted: fileInfo.rowsInserted || 0,
+            rows_updated: fileInfo.rowsUpdated || 0,
+            rows_skipped: fileInfo.rowsSkipped || 0,
+            status: fileInfo.status || 'success',
+            error_message: fileInfo.error || null,
+            processed_at: new Date().toISOString(),
+          })
+          .select();
 
-    if (error) {
-      console.error('getAnalysis error:', error);
-      return { success: false, error: error.message };
-    }
+        if (error) return { success: false, error: error.message };
+        return { success: true, data };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
 
-    return { success: true, analysis: data };
-  }
+    async getFileUploadsHistory(supabase, brandId, limit = 20) {
+      if (!supabase || !brandId) return { success: false, error: 'Datos inválidos' };
 
-  /**
-   * Renombra un análisis
-   */
-  async function renameAnalysis(supabase, analysisId, newName) {
-    const trimmed = (newName || '').trim();
-    if (!trimmed) return { success: false, error: 'El nombre no puede estar vacío' };
-    if (trimmed.length > 200) return { success: false, error: 'Máximo 200 caracteres' };
+      try {
+        const { data, error } = await supabase
+          .from('file_uploads')
+          .select('*')
+          .eq('brand_id', brandId)
+          .order('uploaded_at', { ascending: false })
+          .limit(limit);
 
-    const { error } = await supabase
-      .from('analyses')
-      .update({ custom_name: trimmed })
-      .eq('id', analysisId);
+        if (error) return { success: false, error: error.message };
+        return { success: true, uploads: data || [] };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
 
-    if (error) return { success: false, error: error.message };
-    return { success: true };
-  }
+    // ─── SPRINT 2 LEGACY: Análisis snapshots (mantenidos para compat) ─
 
-  /**
-   * Elimina un análisis (soft delete)
-   */
-  async function deleteAnalysis(supabase, analysisId) {
-    const { error } = await supabase
-      .from('analyses')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', analysisId);
+    async saveAnalysis(supabase, params) {
+      if (!supabase) return { success: false, error: 'No hay supabase' };
 
-    if (error) return { success: false, error: error.message };
-    return { success: true };
-  }
+      try {
+        const { data, error } = await supabase
+          .from('analyses')
+          .insert({
+            brand_id: params.brandId,
+            user_id: params.userId,
+            name: params.name || 'Análisis',
+            custom_name: params.customName || null,
+            period_start: params.periodStart,
+            period_end: params.periodEnd,
+            orders_count: params.ordersCount || 0,
+            gmv: params.gmv || 0,
+            avg_ticket: params.avgTicket || 0,
+            platforms: params.platforms || [],
+            files_count: params.filesCount || 0,
+            metadata: params.metadata || {},
+            expires_at: params.expiresAt || null,
+          })
+          .select()
+          .single();
 
-  // ─── EXPORT ─────────────────────────────────────────────────────
-  return {
-    checkQuota,
-    saveAnalysis,
-    uploadRawFile,
-    listAnalyses,
-    getAnalysis,
-    renameAnalysis,
-    deleteAnalysis,
+        if (error) return { success: false, error: error.message };
+        return { success: true, analysisId: data.id, analysis: data };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
 
-    // Helpers exportados para testing
-    _internal: {
-      detectPeriod,
-      autoName,
-      snapshotConfig
-    }
+    async getAnalysis(supabase, analysisId) {
+      if (!supabase || !analysisId) return { success: false, error: 'Datos inválidos' };
+      try {
+        const { data, error } = await supabase
+          .from('analyses')
+          .select('*')
+          .eq('id', analysisId)
+          .single();
+        if (error) return { success: false, error: error.message };
+        return { success: true, analysis: data };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
+
+    async listAnalyses(supabase, brandId, limit = 20) {
+      if (!supabase || !brandId) return { success: false, error: 'Datos inválidos' };
+      try {
+        const { data, error } = await supabase
+          .from('analyses')
+          .select('id, name, custom_name, created_at, expires_at, period_start, period_end, orders_count, gmv, avg_ticket, platforms, files_count')
+          .eq('brand_id', brandId)
+          .order('created_at', { ascending: false })
+          .limit(limit);
+
+        if (error) return { success: false, error: error.message };
+        return { success: true, analyses: data || [] };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
+
+    async deleteAnalysis(supabase, analysisId) {
+      if (!supabase || !analysisId) return { success: false, error: 'Datos inválidos' };
+      try {
+        const { error } = await supabase.from('analyses').delete().eq('id', analysisId);
+        if (error) return { success: false, error: error.message };
+        return { success: true };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
   };
+
+  window.SAZON_PERSISTENCE = SAZON_PERSISTENCE;
+  console.log('[Persistence] Sprint 4 loaded - modelo agregativo activo');
 })();
