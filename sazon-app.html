@@ -6901,6 +6901,13 @@ function populatePxSelectors(){
 function renderPrecios(){
   if(!APP.D || !APP.catalogData) return;
   const { catalog, platDisc } = APP.catalogData;
+  if (!catalog || catalog.length === 0) {
+    const panel = document.getElementById('p-precios');
+    if (panel && panel.querySelector('.mod-noData') == null) {
+      // Solo mostrar mensaje si el panel está vacío
+    }
+    return;
+  }
   const key    = document.getElementById('pxItemSel')?.value;
   const plat   = document.getElementById('pxPlatSel')?.value || 'peya';
   const branch = document.getElementById('pxBranchSel')?.value || '__all__';
@@ -6938,7 +6945,7 @@ function renderPrecios(){
       }
       const { d } = discountForState(st, dBase);
       const price = round05(base*(1-d));
-      const inc = projectedOrderDelta(st, d, dBase, item.type);
+      const inc = projectedOrderDelta(st, d, dBase, item?.type || 'main');
       const ordWk = c.orders/P.weeks;
       const tip = `${b.label} ${DAYS[cfgDayIdx(jd)]}: lista ${fp(base)} · dto ${(d*100).toFixed(0)}% · ${ordWk.toFixed(1)} órd/sem actuales → proyectado ${(ordWk*(1+inc)).toFixed(1)}/sem (${inc>=0?'+':''}${(inc*100).toFixed(0)}%)`;
       m += `<div class="px-cell" style="${stBG[st]}" title="${tip}">
@@ -6964,7 +6971,7 @@ function renderPrecios(){
     if(ordWk===0 && !Object.keys(stCount).length) return;
     const domSt = Object.entries(stCount).sort((a,b)=>b[1]-a[1])[0]?.[0]||'dead';
     const { d, tier } = discountForState(domSt, dBase);
-    const inc = projectedOrderDelta(domSt, d, dBase, item.type);
+    const inc = projectedOrderDelta(domSt, d, dBase, item?.type || 'main');
     const slotTicket = ord>0 ? gmv/ord : paidNow;
     const newPaid = slotTicket*(1-(d-dBase)/(1-dBase));
     const newOrdWk = ordWk*(1+inc);
@@ -7286,6 +7293,7 @@ function priceRecommendation(item, plats, elas){
 function renderMenu(){
   if(!APP.catalogData || !APP.D) return;
   const { catalog, platDisc } = APP.catalogData;
+  if (!catalog || catalog.length === 0) return;
   const bcg  = bcgClassify(catalog);
   const elas = estimateElasticity(catalog, APP.allOrders);
   APP.menuData = { catalog, platDisc, bcg, elas };
@@ -7574,10 +7582,18 @@ function genPromoLayers(){
   const P = computePatterns(APP.allOrders, '__all__');
   const dayOrder=[1,2,3,4,5,6,0];
 
-  // Top items
+  // Top items - con guard contra catalog vacío
+  if (!catalog || catalog.length === 0) {
+    console.warn('[genPromoLayers] Catalog vacío - abortando');
+    return { l1: [], l2: [], l3: [] };
+  }
   const topMain  = catalog.find(i=>i.type==='main' && i.orders>0) || catalog[0];
   const topCombo = catalog.find(i=>i.type==='combo' && i.orders>0) || topMain;
   const lowMain  = catalog.filter(i=>i.type==='main' && i.orders>0).sort((a,b)=>a.orders-b.orders)[0] || topMain;
+  if (!topMain || !topMain.type) {
+    console.warn('[genPromoLayers] topMain undefined - abortando');
+    return { l1: [], l2: [], l3: [] };
+  }
 
   // Plataformas activas
   const plats = Object.keys(D.byPlat).filter(p=>p!=='unknown' && D.byPlat[p]?.done>0);
@@ -7652,7 +7668,7 @@ function genPromoLayers(){
     const dBase = platDisc[platDom] || 0.22;
     const promoDto = Math.min(0.40, dBase + 0.10);
     const finalPaid = round05(baseLow*(1-promoDto));
-    const inc = projectedOrderDelta('low', promoDto, dBase, lowMain.type);
+    const inc = projectedOrderDelta('low', promoDto, dBase, lowMain?.type || 'main');
     const newOrdersWk = worstWk * inc;
     const gmvDelta = newOrdersWk * finalPaid - worstWk * (inc * (baseLow*(1-dBase)*0)); // simplificado
     const incRev = newOrdersWk * finalPaid;
@@ -7680,7 +7696,7 @@ function genPromoLayers(){
     const dBase = platDisc[platDom] || 0.22;
     const promoDto = Math.min(0.40, dBase + 0.10);
     const finalPaid = round05(baseLow*(1-promoDto));
-    const inc = projectedOrderDelta(worst.st, promoDto, dBase, lowMain.type);
+    const inc = projectedOrderDelta(worst.st, promoDto, dBase, lowMain?.type || 'main');
     const newOrdersWk = ordersWk * inc;
     const extraDiscCost = (ordersWk + newOrdersWk) * baseLow * (promoDto - dBase);
     const netGmv = newOrdersWk * finalPaid - extraDiscCost;
@@ -7706,7 +7722,7 @@ function genPromoLayers(){
   const dBase = platDisc[platDom] || 0.22;
   const rescueDto = 0.35;
   const rescuePaid = round05(baseTop*(1-rescueDto));
-  const rescueInc = projectedOrderDelta('low', rescueDto, dBase, topMain.type);
+  const rescueInc = projectedOrderDelta('low', rescueDto, dBase, topMain?.type || 'main');
   l3.push({
     name: `Rescate — pico de ${(rescueDto*100).toFixed(0)}% por 48h`,
     when: `Cuando una semana cae <60% del promedio (${weakWeeks} semanas detectadas en el período)`,
@@ -7735,6 +7751,7 @@ function genPromoLayers(){
 function renderCombos(){
   if(!APP.catalogData || !APP.D) return;
   const { catalog, comboOpts } = APP.catalogData;
+  if (!catalog || catalog.length === 0) return;
   const coOcc = buildCoOccurrence(APP.allOrders);
   const newCombos = genNewCombos(catalog, coOcc, APP.allOrders);
 
@@ -7833,6 +7850,8 @@ function renderCombos(){
 
 function renderPromos(){
   if(!APP.catalogData || !APP.D) return;
+  const catalog = APP.catalogData.catalog;
+  if (!catalog || catalog.length === 0) return;
   const { l1, l2, l3 } = genPromoLayers();
 
   document.getElementById('promosInsight').innerHTML = `<div class="alert ok"><span class="alert-ico">📐</span><span class="alert-body">
@@ -7876,7 +7895,63 @@ function renderPromos(){
 
 // ─── ADQUISICIÓN ─────────────────────────────────────────
 function renderAdq(){
-  if(!APP.catalogData || !APP.menuData) return;
+  // Sprint 4: agregar bloque de PeYa customers si está disponible
+  const injectPeyaCustomers = () => {
+    const cust = APP.allOrders?._peyaCustomers || APP._unfilteredOrders?._peyaCustomers;
+    if (!cust || !cust.branches || cust.branches.length === 0) return '';
+
+    const num = n => Math.round(n).toLocaleString('es-PE');
+    const pct = n => (n||0).toFixed(1) + '%';
+
+    const totalNew = cust.branches.reduce((s,b) => s + (b.newCustomers||0), 0);
+    const totalRet = cust.branches.reduce((s,b) => s + (b.returningCustomers||0), 0);
+    const totalImp = cust.branches.reduce((s,b) => s + (b.impressions||0), 0);
+    const totalMenu = cust.branches.reduce((s,b) => s + (b.menuViews||0), 0);
+    const totalCart = cust.branches.reduce((s,b) => s + (b.addedToCart||0), 0);
+    const totalOrd = cust.branches.reduce((s,b) => s + (b.orders||0), 0);
+
+    const totalCust = totalNew + totalRet;
+    const pctNew = totalCust > 0 ? (totalNew/totalCust)*100 : 0;
+
+    // Funnel
+    const menuRate = totalImp > 0 ? (totalMenu/totalImp)*100 : 0;
+    const cartRate = totalMenu > 0 ? (totalCart/totalMenu)*100 : 0;
+    const orderRate = totalCart > 0 ? (totalOrd/totalCart)*100 : 0;
+
+    return '<div class="mod-chart-wrap" style="border-top:3px solid #0064C8;margin-top:20px">' +
+      '<div class="mod-chart-title">🔵 PedidosYa — Adquisición y funnel oficial</div>' +
+      '<div class="mod-kpi-grid">' +
+        '<div class="mod-kpi"><div class="mod-kpi-label">Nuevos clientes</div>' +
+        '<div class="mod-kpi-val up">' + num(totalNew) + '</div>' +
+        '<div class="mod-kpi-hint">' + pct(pctNew) + ' del total</div></div>' +
+        '<div class="mod-kpi"><div class="mod-kpi-label">Recurrentes</div>' +
+        '<div class="mod-kpi-val">' + num(totalRet) + '</div>' +
+        '<div class="mod-kpi-hint">' + pct(100-pctNew) + ' del total</div></div>' +
+        '<div class="mod-kpi"><div class="mod-kpi-label">Impresiones totales</div>' +
+        '<div class="mod-kpi-val">' + num(totalImp) + '</div>' +
+        '<div class="mod-kpi-hint">Vistas de tu marca</div></div>' +
+        '<div class="mod-kpi"><div class="mod-kpi-label">Conversión total</div>' +
+        '<div class="mod-kpi-val ' + (orderRate > 30 ? 'up' : 'warn') + '">' + pct((totalOrd/Math.max(totalImp,1))*100) + '</div>' +
+        '<div class="mod-kpi-hint">Impresión → orden</div></div>' +
+      '</div>' +
+      '<div style="margin-top:16px"><div class="mod-chart-title" style="font-size:.85rem">🎯 Funnel de conversión</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:8px;font-size:.78rem">' +
+        '<div style="text-align:center;padding:12px;background:rgba(0,100,200,.05);border-radius:4px"><div style="font-weight:700">' + num(totalImp) + '</div><div style="color:var(--m);font-size:.65rem">Impresiones</div></div>' +
+        '<div style="text-align:center;padding:12px;background:rgba(0,100,200,.08);border-radius:4px"><div style="font-weight:700">' + num(totalMenu) + '</div><div style="color:var(--m);font-size:.65rem">Vieron menú (' + pct(menuRate) + ')</div></div>' +
+        '<div style="text-align:center;padding:12px;background:rgba(0,100,200,.11);border-radius:4px"><div style="font-weight:700">' + num(totalCart) + '</div><div style="color:var(--m);font-size:.65rem">Al carrito (' + pct(cartRate) + ')</div></div>' +
+        '<div style="text-align:center;padding:12px;background:rgba(0,100,200,.14);border-radius:4px"><div style="font-weight:700">' + num(totalOrd) + '</div><div style="color:var(--m);font-size:.65rem">Ordenaron (' + pct(orderRate) + ')</div></div>' +
+        '</div></div>' +
+    '</div>';
+  };
+
+  // Si no hay APP.catalogData o menuData, mostrar sólo el bloque Sprint 4
+  if(!APP.catalogData || !APP.menuData) {
+    const el = document.getElementById('adqInsight');
+    const list = document.getElementById('adqProductList');
+    if (el) el.innerHTML = '';
+    if (list) list.innerHTML = injectPeyaCustomers() || '<div style="font-size:.75rem;color:var(--m);padding:20px;text-align:center">Sin datos de adquisición.</div>';
+    return;
+  }
   const { catalog } = APP.catalogData;
   const hasMenu = (APP.menu||[]).length > 0;
   // Tomamos los ítems CON demanda (los que vale la pena optimizar para captar nuevos)
@@ -7977,6 +8052,12 @@ function renderAdq(){
       </div>
     </div>`;
   }).join('');
+
+  // Sprint 4: agregar bloque de customersSummary al final
+  const peyaBlock = injectPeyaCustomers();
+  if (peyaBlock) {
+    document.getElementById('adqProductList').innerHTML += peyaBlock;
+  }
 }
 
 // ─── DESARROLLO DE TICKET ────────────────────────────────
@@ -7984,6 +8065,7 @@ function renderTicket(){
   if(!APP.D || !APP.catalogData) return;
   const D = APP.D;
   const { catalog, platDisc, comboOpts } = APP.catalogData;
+  if (!catalog || catalog.length === 0) return;
 
   const ticketNow = D.avgTicket;
   // Target: +25% sobre el ticket actual (alcanzable con la suma de palancas)
@@ -10636,6 +10718,50 @@ function renderROAS() {
 
     ${insightsHtml}
   `;
+
+  // Sprint 4: bloque de detalle diario/campaña si hay reporte detallado PeYa
+  const peyaAds = APP.allOrders?._peyaAdsDetailed || APP._unfilteredOrders?._peyaAdsDetailed;
+  if (peyaAds && peyaAds.ads && peyaAds.ads.length > 0) {
+    const money = n => 'S/' + (n||0).toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const num = n => Math.round(n).toLocaleString('es-PE');
+
+    // Agrupar por campaña
+    const byCampaign = {};
+    peyaAds.ads.forEach(a => {
+      const key = a.campaignName || 'Sin nombre';
+      if (!byCampaign[key]) byCampaign[key] = { clicks: 0, orders: 0, cost: 0, revenue: 0 };
+      byCampaign[key].clicks += (a.clicks || 0);
+      byCampaign[key].orders += (a.orders || 0);
+      byCampaign[key].cost += (a.cost || 0);
+      byCampaign[key].revenue += (a.revenue || 0);
+    });
+
+    const campaignRows = Object.entries(byCampaign)
+      .sort((a,b) => b[1].cost - a[1].cost)
+      .map(([name, m]) => {
+        const roas = m.cost > 0 ? m.revenue / m.cost : 0;
+        const cpo = m.orders > 0 ? m.cost / m.orders : 0;
+        const clsRoas = roas > 3 ? 'up' : roas > 1.5 ? 'warn' : 'dn';
+        return '<div class="mod-table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr">' +
+          '<div><strong>' + name + '</strong></div>' +
+          '<div>' + num(m.clicks) + '</div>' +
+          '<div>' + num(m.orders) + '</div>' +
+          '<div>' + money(m.cost) + '</div>' +
+          '<div>' + money(cpo) + '</div>' +
+          '<div><span class="mod-kpi-val ' + clsRoas + '" style="font-size:.95rem">' + roas.toFixed(2) + 'x</span></div>' +
+        '</div>';
+      }).join('');
+
+    const detailHtml = '<div class="mod-chart-wrap" style="border-top:3px solid #0064C8;margin-top:20px">' +
+      '<div class="mod-chart-title">🔵 PedidosYa — Detalle por campaña (' + peyaAds.ads.length + ' registros)</div>' +
+      '<div class="mod-table">' +
+        '<div class="mod-table-head" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr">' +
+        '<div>Campaña</div><div>Clicks</div><div>Órdenes</div><div>Gasto</div><div>Costo/orden</div><div>ROAS</div>' +
+        '</div>' +
+        campaignRows +
+      '</div></div>';
+    body.innerHTML += detailHtml;
+  }
 }
 
 // Sprint 3: renderROAS se llama desde renderAllSprint3Modules() vía hook único
@@ -10879,6 +11005,78 @@ showReport = function() {
 // ═══════════════════════════════════════════════════════════════════════
 
 // ─── TENDENCIAS ─────────────────────────────────────────────
+// ═══ Sprint 4: cálculo WoW y MoM ═══
+function computeWoWMoMComparison(orders) {
+  const done = orders.filter(o => !o.cancelled && o.total > 0 && o.date instanceof Date);
+  if (done.length === 0) return null;
+
+  // Ordenar por fecha
+  const sorted = done.slice().sort((a,b) => a.date - b.date);
+  const latest = sorted[sorted.length - 1].date;
+  const earliest = sorted[0].date;
+
+  // Helper: filtrar órdenes en un rango
+  const inRange = (from, to) => sorted.filter(o => o.date >= from && o.date < to);
+
+  // Agregado
+  const agg = (arr) => ({
+    orders: arr.length,
+    gmv: arr.reduce((s,o) => s+o.total, 0),
+    avgTicket: arr.length > 0 ? arr.reduce((s,o) => s+o.total, 0) / arr.length : 0,
+    cancelled: orders.filter(o => o.cancelled && o.date >= arr[0]?.date && o.date <= arr[arr.length-1]?.date).length,
+  });
+
+  const DAY_MS = 86400000;
+
+  // ── WoW: última semana (últimos 7 días) vs semana anterior (días 8-14) ──
+  const week1End = new Date(latest.getTime() + DAY_MS);
+  const week1Start = new Date(latest.getTime() - 6 * DAY_MS);
+  const week2End = week1Start;
+  const week2Start = new Date(week2End.getTime() - 7 * DAY_MS);
+
+  const w1 = inRange(week1Start, week1End);
+  const w2 = inRange(week2Start, week2End);
+
+  // ── MoM: últimos 30 días vs 30 días previos ──
+  const m1End = week1End;
+  const m1Start = new Date(latest.getTime() - 29 * DAY_MS);
+  const m2End = m1Start;
+  const m2Start = new Date(m2End.getTime() - 30 * DAY_MS);
+
+  const mo1 = inRange(m1Start, m1End);
+  const mo2 = inRange(m2Start, m2End);
+
+  const delta = (curr, prev) => prev > 0 ? ((curr - prev) / prev) * 100 : (curr > 0 ? 100 : 0);
+
+  const w1Agg = agg(w1);
+  const w2Agg = agg(w2);
+  const m1Agg = agg(mo1);
+  const m2Agg = agg(mo2);
+
+  return {
+    wow: {
+      current: { start: week1Start, end: latest, ...w1Agg },
+      previous: { start: week2Start, end: week2End, ...w2Agg },
+      delta: {
+        orders: delta(w1Agg.orders, w2Agg.orders),
+        gmv: delta(w1Agg.gmv, w2Agg.gmv),
+        avgTicket: delta(w1Agg.avgTicket, w2Agg.avgTicket),
+      },
+      hasData: w2Agg.orders > 0,
+    },
+    mom: {
+      current: { start: m1Start, end: latest, ...m1Agg },
+      previous: { start: m2Start, end: m2End, ...m2Agg },
+      delta: {
+        orders: delta(m1Agg.orders, m2Agg.orders),
+        gmv: delta(m1Agg.gmv, m2Agg.gmv),
+        avgTicket: delta(m1Agg.avgTicket, m2Agg.avgTicket),
+      },
+      hasData: m2Agg.orders > 0,
+    },
+  };
+}
+
 function renderTendencias() {
   const body = document.getElementById('tendenciasBody');
   if (!body) return;
@@ -10894,6 +11092,9 @@ function renderTendencias() {
       '<div class="mod-noData-desc">Necesitamos al menos algunos meses de órdenes para calcular tendencias.</div></div>';
     return;
   }
+
+  // Sprint 4: calcular WoW y MoM
+  const cmp = computeWoWMoMComparison(orders);
 
   // Agrupar por mes (YYYY-MM)
   const byMonth = {};
@@ -10999,7 +11200,66 @@ function renderTendencias() {
     insights.map(i => '<div class="mod-insight-item"><span class="ico">' + i.ico + '</span><div>' + i.text + '</div></div>').join('') +
     '</div>';
 
+  // Sprint 4: bloque WoW/MoM al inicio si hay datos
+  const money2 = n => 'S/' + Math.round(n).toLocaleString('es-PE');
+  const pctD = n => (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
+  const clsD = n => Math.abs(n) < 1 ? 'flat' : (n > 0 ? 'up' : 'dn');
+  const fmtRange = (d1, d2) => {
+    const opts = { day: 'numeric', month: 'short' };
+    return d1.toLocaleDateString('es-PE', opts) + ' → ' + d2.toLocaleDateString('es-PE', opts);
+  };
+
+  let wowMomHtml = '';
+  if (cmp) {
+    wowMomHtml += '<div class="mod-chart-wrap" style="border-top:3px solid #2d6a4f;margin-bottom:20px">' +
+      '<div class="mod-chart-title">🔄 Comparación Semana vs Semana (WoW) y Mes vs Mes (MoM)</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">';
+
+    // WoW
+    if (cmp.wow.hasData) {
+      wowMomHtml += '<div style="background:var(--w);padding:16px;border-radius:6px">' +
+        '<div style="font-size:.7rem;color:var(--m);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📅 Últimos 7 días vs 7 anteriores</div>' +
+        '<div style="font-size:.65rem;color:var(--m);margin-bottom:12px">' + fmtRange(cmp.wow.current.start, cmp.wow.current.end) + ' vs ' + fmtRange(cmp.wow.previous.start, cmp.wow.previous.end) + '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' +
+          '<div><div style="font-size:.6rem;color:var(--m);margin-bottom:4px">GMV</div>' +
+          '<div style="font-family:\'Playfair Display\',serif;font-size:1.05rem;font-weight:900">' + money2(cmp.wow.current.gmv) + '</div>' +
+          '<div class="trend-badge ' + clsD(cmp.wow.delta.gmv) + '">' + pctD(cmp.wow.delta.gmv) + '</div></div>' +
+          '<div><div style="font-size:.6rem;color:var(--m);margin-bottom:4px">Órdenes</div>' +
+          '<div style="font-family:\'Playfair Display\',serif;font-size:1.05rem;font-weight:900">' + cmp.wow.current.orders + '</div>' +
+          '<div class="trend-badge ' + clsD(cmp.wow.delta.orders) + '">' + pctD(cmp.wow.delta.orders) + '</div></div>' +
+          '<div><div style="font-size:.6rem;color:var(--m);margin-bottom:4px">Ticket</div>' +
+          '<div style="font-family:\'Playfair Display\',serif;font-size:1.05rem;font-weight:900">' + money2(cmp.wow.current.avgTicket) + '</div>' +
+          '<div class="trend-badge ' + clsD(cmp.wow.delta.avgTicket) + '">' + pctD(cmp.wow.delta.avgTicket) + '</div></div>' +
+        '</div></div>';
+    } else {
+      wowMomHtml += '<div style="background:var(--w);padding:16px;border-radius:6px;color:var(--m);font-size:.75rem"><strong>WoW</strong>: sin datos suficientes en la semana previa (' + fmtRange(cmp.wow.previous.start, cmp.wow.previous.end) + ' tuvo ' + cmp.wow.previous.orders + ' órdenes).</div>';
+    }
+
+    // MoM
+    if (cmp.mom.hasData) {
+      wowMomHtml += '<div style="background:var(--w);padding:16px;border-radius:6px">' +
+        '<div style="font-size:.7rem;color:var(--m);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📅 Últimos 30 días vs 30 anteriores</div>' +
+        '<div style="font-size:.65rem;color:var(--m);margin-bottom:12px">' + fmtRange(cmp.mom.current.start, cmp.mom.current.end) + ' vs ' + fmtRange(cmp.mom.previous.start, cmp.mom.previous.end) + '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' +
+          '<div><div style="font-size:.6rem;color:var(--m);margin-bottom:4px">GMV</div>' +
+          '<div style="font-family:\'Playfair Display\',serif;font-size:1.05rem;font-weight:900">' + money2(cmp.mom.current.gmv) + '</div>' +
+          '<div class="trend-badge ' + clsD(cmp.mom.delta.gmv) + '">' + pctD(cmp.mom.delta.gmv) + '</div></div>' +
+          '<div><div style="font-size:.6rem;color:var(--m);margin-bottom:4px">Órdenes</div>' +
+          '<div style="font-family:\'Playfair Display\',serif;font-size:1.05rem;font-weight:900">' + cmp.mom.current.orders + '</div>' +
+          '<div class="trend-badge ' + clsD(cmp.mom.delta.orders) + '">' + pctD(cmp.mom.delta.orders) + '</div></div>' +
+          '<div><div style="font-size:.6rem;color:var(--m);margin-bottom:4px">Ticket</div>' +
+          '<div style="font-family:\'Playfair Display\',serif;font-size:1.05rem;font-weight:900">' + money2(cmp.mom.current.avgTicket) + '</div>' +
+          '<div class="trend-badge ' + clsD(cmp.mom.delta.avgTicket) + '">' + pctD(cmp.mom.delta.avgTicket) + '</div></div>' +
+        '</div></div>';
+    } else {
+      wowMomHtml += '<div style="background:var(--w);padding:16px;border-radius:6px;color:var(--m);font-size:.75rem"><strong>MoM</strong>: sin datos suficientes en el período previo (' + fmtRange(cmp.mom.previous.start, cmp.mom.previous.end) + ' tuvo ' + cmp.mom.previous.orders + ' órdenes).</div>';
+    }
+
+    wowMomHtml += '</div></div>';
+  }
+
   body.innerHTML =
+    wowMomHtml +
     '<div class="mod-hero tendencias">' +
     '<div class="mod-hero-title">📈 Comparación mes a mes</div>' +
     '<div class="mod-hero-desc">Evolución de GMV y órdenes a lo largo de ' + months.length + ' meses · desde ' + fmtMonth(months[0].month) + ' hasta ' + fmtMonth(months[months.length-1].month) + '</div>' +
@@ -11247,9 +11507,13 @@ function renderReclamos() {
   const orders = APP.allOrders || [];
   const totalOrders = orders.length;
 
-  console.log('[Reclamos] total orders:', totalOrders);
+  // Sprint 4: fuentes oficiales
+  const rappiSL = orders._rappiServiceLevel || APP._unfilteredOrders?._rappiServiceLevel || null;
+  const peyaOps = orders._peyaOpsSummary || APP._unfilteredOrders?._peyaOpsSummary || null;
 
-  if (totalOrders === 0) {
+  console.log('[Reclamos] total orders:', totalOrders, '· rappiSL:', !!rappiSL, '· peyaOps:', !!peyaOps);
+
+  if (totalOrders === 0 && !rappiSL && !peyaOps) {
     const isFiltered = APP.currentPlatformFilter !== 'all' || APP.currentPeriodFilter !== 'all';
     body.innerHTML = '<div class="mod-noData"><div class="mod-noData-ico">⚠️</div>' +
       '<div class="mod-noData-title">' + (isFiltered ? 'Sin órdenes para el filtro actual' : 'Sin datos') + '</div>' +
@@ -11380,6 +11644,73 @@ function renderReclamos() {
         '<div>Plataforma</div><div>Órdenes</div><div>Canceladas</div><div>Tasa</div></div>' + platRows + '</div></div>'
       : '') +
     insightsHtml;
+
+  // ─── Sprint 4: Bloques oficiales de plataforma ─────────
+  let officialHtml = '';
+
+  if (rappiSL && rappiSL.metrics && (rappiSL.cancellations?.length > 0 || rappiSL.complaints?.length > 0 || Object.keys(rappiSL.metrics).length > 0)) {
+    const m = rappiSL.metrics;
+    officialHtml += '<div class="mod-chart-wrap" style="border-top:3px solid #FF6900">' +
+      '<div class="mod-chart-title">🟠 Rappi — Nivel de Servicio oficial (' + (rappiSL.periodStart || '') + ' → ' + (rappiSL.periodEnd || '') + ')</div>' +
+      '<div class="mod-kpi-grid">' +
+        '<div class="mod-kpi"><div class="mod-kpi-label">Cancelaciones</div><div class="mod-kpi-val ' + (m.cancellation_rate > 5 ? 'dn' : 'up') + '">' + (m.cancellation_rate || 0).toFixed(2) + '%</div></div>' +
+        '<div class="mod-kpi"><div class="mod-kpi-label">Errores</div><div class="mod-kpi-val ' + (m.error_rate > 3 ? 'dn' : 'up') + '">' + (m.error_rate || 0).toFixed(2) + '%</div></div>' +
+        '<div class="mod-kpi"><div class="mod-kpi-label">Disponibilidad</div><div class="mod-kpi-val ' + (m.availability > 98 ? 'up' : 'warn') + '">' + (m.availability || 0).toFixed(2) + '%</div></div>' +
+        '<div class="mod-kpi"><div class="mod-kpi-label">Con demora</div><div class="mod-kpi-val ' + (m.delay_rate > 10 ? 'dn' : 'up') + '">' + (m.delay_rate || 0).toFixed(2) + '%</div></div>' +
+      '</div>';
+
+    if (rappiSL.cancellations?.length > 0) {
+      const cancByReason = {};
+      rappiSL.cancellations.forEach(c => {
+        const r = c.reason || 'Sin causa';
+        cancByReason[r] = (cancByReason[r] || 0) + 1;
+      });
+      const rows = Object.entries(cancByReason).sort((a,b) => b[1] - a[1])
+        .map(([r,c]) => '<div class="mod-table-row" style="grid-template-columns:3fr 1fr"><div>' + r + '</div><div style="text-align:right">' + c + '</div></div>').join('');
+      officialHtml += '<div class="mod-table" style="margin-top:12px">' +
+        '<div class="mod-table-head" style="grid-template-columns:3fr 1fr"><div>Causa cancelación</div><div style="text-align:right">Cantidad</div></div>' +
+        rows + '</div>';
+    }
+
+    if (rappiSL.complaints?.length > 0) {
+      const complByReason = {};
+      let totCompRappi = 0, totCompRest = 0;
+      rappiSL.complaints.forEach(c => {
+        const r = c.reason || 'Sin motivo';
+        complByReason[r] = (complByReason[r] || 0) + 1;
+        totCompRappi += c.compensationRappi || 0;
+        totCompRest += c.compensationRestaurant || 0;
+      });
+      const rows = Object.entries(complByReason).sort((a,b) => b[1] - a[1])
+        .map(([r,c]) => '<div class="mod-table-row" style="grid-template-columns:3fr 1fr"><div>' + r + '</div><div style="text-align:right">' + c + '</div></div>').join('');
+      officialHtml += '<div class="mod-table" style="margin-top:12px">' +
+        '<div class="mod-table-head" style="grid-template-columns:3fr 1fr"><div>Motivo reclamo</div><div style="text-align:right">Cantidad</div></div>' +
+        rows + '</div>';
+      officialHtml += '<div style="margin-top:10px;padding:10px 14px;background:rgba(200,57,43,.05);border-radius:4px;font-size:.75rem;color:var(--m)">Compensaciones: Rappi ' + money(totCompRappi) + ' · Restaurante ' + money(totCompRest) + '</div>';
+    }
+
+    officialHtml += '</div>';
+  }
+
+  if (peyaOps && peyaOps.branches && peyaOps.branches.length > 0) {
+    const rows = peyaOps.branches.map(b => {
+      const clsR = b.rejectionRate > 5 ? 'dn' : b.rejectionRate > 2 ? 'warn' : 'up';
+      return '<div class="mod-table-row" style="grid-template-columns:2fr 1fr 1fr 1fr">' +
+        '<div><strong>' + b.branchName + '</strong></div>' +
+        '<div>' + b.customerComplaints + ' reclamos</div>' +
+        '<div>' + b.avoidableWaitOrders + ' esperas</div>' +
+        '<div><span class="mod-kpi-val ' + clsR + '" style="font-size:.9rem">' + b.rejectionRate.toFixed(2) + '%</span></div>' +
+      '</div>';
+    }).join('');
+    officialHtml += '<div class="mod-chart-wrap" style="border-top:3px solid #0064C8">' +
+      '<div class="mod-chart-title">🔵 PedidosYa — Ops Summary oficial</div>' +
+      '<div class="mod-table">' +
+        '<div class="mod-table-head" style="grid-template-columns:2fr 1fr 1fr 1fr"><div>Sucursal</div><div>Reclamos</div><div>Esperas evitables</div><div>Rechazo %</div></div>' +
+        rows +
+      '</div></div>';
+  }
+
+  body.innerHTML += officialHtml;
 }
 
 // ─── Función unificada Sprint 3 ─────────────────────────────
