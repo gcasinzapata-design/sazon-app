@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════
-//  SAZÓN GROWTH ENGINE — CONFIG
+//  SAZÓN GROWTH ENGINE — CONFIG (Sprint 4)
 // ═══════════════════════════════════════════════════════════════════════
 
 window.SAZON_CONFIG = {
@@ -20,7 +20,7 @@ window.SAZON_CONFIG = {
       maxLocations: 2,
       historyMonths: 3,
       analysesPerMonth: 5,
-      tabs: ['dashboard', 'patrones', 'menu', 'costos', 'roas', 'tendencias', 'reclamos'],
+      tabs: ['marca', 'dashboard', 'patrones', 'menu', 'productos', 'costos', 'roas', 'reviews', 'tendencias', 'reclamos'],
     },
     growth: {
       label:  'Growth',
@@ -29,7 +29,7 @@ window.SAZON_CONFIG = {
       maxLocations: 5,
       historyMonths: 6,
       analysesPerMonth: 20,
-      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'roas', 'tendencias', 'tiempos', 'reclamos'],
+      tabs: ['marca', 'dashboard', 'patrones', 'precios', 'menu', 'productos', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'roas', 'reviews', 'tendencias', 'tiempos', 'reclamos'],
     },
     partner: {
       label:  'Partner',
@@ -38,7 +38,7 @@ window.SAZON_CONFIG = {
       maxLocations: 999,
       historyMonths: 12,
       analysesPerMonth: 999,
-      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'roas', 'tendencias', 'tiempos', 'reclamos', 'roadmap'],
+      tabs: ['marca', 'dashboard', 'patrones', 'precios', 'menu', 'productos', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'roas', 'reviews', 'tendencias', 'tiempos', 'reclamos', 'roadmap'],
     },
     enterprise: {
       label:  'Enterprise',
@@ -47,7 +47,7 @@ window.SAZON_CONFIG = {
       maxLocations: 999,
       historyMonths: 24,
       analysesPerMonth: 999,
-      tabs: ['dashboard', 'patrones', 'precios', 'menu', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'roas', 'tendencias', 'tiempos', 'reclamos', 'roadmap'],
+      tabs: ['marca', 'dashboard', 'patrones', 'precios', 'menu', 'productos', 'combos', 'promos', 'adq', 'ticket', 'retencion', 'costos', 'roas', 'reviews', 'tendencias', 'tiempos', 'reclamos', 'roadmap'],
     },
   },
   subscriptionBehavior: {
