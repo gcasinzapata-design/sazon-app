@@ -1661,7 +1661,7 @@ input[type=file]{display:none;}
       <div class="kt-form" style="grid-template-columns:repeat(3,1fr) auto;margin-top:0">
         <div><label>Nuevos usuarios (opc.)</label><input type="number" id="ktNewUsers" placeholder="0"></div>
         <div><label>% Recompra (opc.)</label><input type="number" id="ktRepurchase" placeholder="0" step="0.1"></div>
-        <div><label>Plataforma (opc.)</label><select id="ktPlat"><option value="all">Todo delivery</option><option value="rappi">Rappi</option><option value="peya">PedidosYa</option><option value="other">Otra</option></select></div>
+        <div><label>Plataforma (opc.)</label><select id="ktPlat"><option value="all">Todo delivery</option><option value="rappi">Rappi</option><option value="peya">PedidosYa</option></select></div>
         <div></div>
       </div>
       <div id="ktTable"></div>
@@ -1867,7 +1867,6 @@ const showAuthStep = (step) => {
 };
 
 const TAB_META = {
-  diagnostico: { icon: '🩺', label: 'Diagnóstico' },
   marca:      { icon: '🏷️', label: 'Marca' },
   dashboard:  { icon: '📊', label: 'Dashboard' },
   patrones:   { icon: '⏰', label: 'Patrones' },
@@ -4095,12 +4094,10 @@ function renderSubBanner(){
 function renderTabBar(){
   const tabBar = $('tabBar');
   const allowedTabs = new Set(APP.tier.tabs);
-  // Diagnóstico siempre visible como cortesía del piloto
-  allowedTabs.add('diagnostico');
   const groups = [
     ['dashboard'],
     ['marca'],
-    ['diagnostico', 'patrones', 'precios'],
+    ['patrones', 'precios'],
     ['menu', 'productos', 'combos', 'promos'],
     ['adq', 'ticket', 'retencion'],
     ['tendencias', 'tiempos', 'reclamos'],
@@ -4149,535 +4146,6 @@ function selectTab(tabId, el){
   renderTabContent(tabId);
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  DIAGNÓSTICO EMBEBIDO — Mr Smash
-//  Análisis completo pre-cargado, sin dependencia de archivos
-// ═══════════════════════════════════════════════════════════════════════
-function renderDiagnosticoMrSmash() {
-  const P = {
-    wine: '#722F37', wineDark: '#4A1E24', gold: '#C89F5E', cream: '#F4EFE7',
-    ink: '#1A1A1A', charcoal: '#3D3D3D', gray: '#757575', grayLight: '#D9D9D9',
-    white: '#FFFFFF', smashRed: '#CE2D3B', smashRedD: '#9E1F2C', smashYel: '#FDDA2A',
-    peya: '#E60064', rappi: '#FF6900', green: '#2D6A4F', amber: '#E88B3A',
-  };
-
-  const S = {
-    page: `background:${P.white};padding:0;font-family:'Helvetica Neue',Arial,sans-serif;color:${P.ink}`,
-    section: `padding:32px 40px;border-bottom:1px solid ${P.grayLight}`,
-    sectionDark: `padding:40px;background:${P.wine};color:${P.white}`,
-    h1: `font-size:26px;font-weight:700;color:${P.wine};margin:0 0 6px 0;letter-spacing:-.5px`,
-    h1White: `font-size:32px;font-weight:700;color:${P.smashYel};margin:0 0 6px 0;font-style:italic;letter-spacing:-.5px`,
-    h2: `font-size:11px;font-weight:700;color:${P.gold};letter-spacing:2px;text-transform:uppercase;margin:0 0 20px 0`,
-    sub: `font-size:13px;color:${P.gray};font-style:italic;margin:0 0 24px 0`,
-    accent: `width:40px;height:3px;background:${P.gold};margin:0 0 20px 0`,
-    grid: `display:grid;gap:16px`,
-    card: `background:${P.cream};padding:20px;border-radius:6px;border-left:6px solid ${P.wine}`,
-    cardRed: `background:${P.cream};padding:20px;border-radius:6px;border-left:6px solid ${P.smashRed}`,
-    kpiVal: `font-size:34px;font-weight:700;color:${P.wine};margin:6px 0`,
-    kpiLbl: `font-size:11px;font-weight:700;color:${P.gold};text-transform:uppercase;letter-spacing:2px`,
-    kpiHint: `font-size:11px;color:${P.gray};font-style:italic;margin-top:4px`,
-    tbl: `width:100%;border-collapse:collapse;font-size:12px`,
-    th: `background:${P.wine};color:${P.gold};padding:10px;text-align:center;font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase`,
-    td: `padding:10px;border-bottom:1px solid ${P.grayLight};font-family:'Consolas','Courier New',monospace`,
-    tdName: `padding:10px;border-bottom:1px solid ${P.grayLight};font-weight:700;color:${P.wine}`,
-    tag: `display:inline-block;padding:3px 10px;border-radius:12px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase`,
-    yellow: `background:${P.smashYel};color:${P.smashRedD};padding:8px 14px;border-radius:4px;font-size:12px;font-weight:700`,
-  };
-
-  const money = n => 'S/' + (Math.round(n)).toLocaleString('es-PE');
-  const money2 = n => 'S/' + n.toFixed(2);
-  const pct = n => (n * 100).toFixed(1) + '%';
-
-  // Los 7 errores
-  const errores = [
-    { n: 1, area: 'OPS', tit: 'Surquillo escala mal', d: 'Rechazo 5.74% · reclamos 9.84%', imp: '~40 órd/mes perdidas', c: P.smashRed },
-    { n: 2, area: 'ADS', tit: 'Ads Rappi sin control', d: '28.8% del GMV · sin ROAS medido', imp: '~S/1.5K margen/mes', c: P.smashRed },
-    { n: 3, area: 'MENÚ', tit: 'Concentración 61% en 1 SKU', d: 'Combo Mr Smash = todo el riesgo', imp: 'Vulnerabilidad estructural', c: P.amber },
-    { n: 4, area: 'PRECIOS', tit: 'Descuentos sin política', d: 'Fugaces + Gold Vip = S/195/sem', imp: 'Margen perdido no medido', c: P.amber },
-    { n: 5, area: 'CATÁLOGO', tit: 'Funnel 26.7% carrito→orden', d: 'La mitad del benchmark', imp: '~60 órd/mes perdidas', c: P.gold },
-    { n: 6, area: 'MIX', tit: 'Combos 2 y 3 escondidos', d: 'Ticket S/54 estancado', imp: '+S/4 ticket sin capturar', c: P.gold },
-    { n: 7, area: 'RETENCIÓN', tit: 'Sin plan 1ª/2ª compra', d: '631 nuevos vs 198 recurrentes', imp: 'LTV bajo · adq. cara', c: P.gold },
-  ];
-
-  // Meses histórico
-  const meses = [
-    { m: 'Nov 25', peya: 4425, rappi: 0 }, { m: 'Dic 25', peya: 3427, rappi: 0 },
-    { m: 'Ene 26', peya: 4301, rappi: 0 }, { m: 'Feb 26', peya: 5636, rappi: 0 },
-    { m: 'Mar 26', peya: 34, rappi: 0 },   { m: 'Abr 26', peya: 3022, rappi: 0 },
-    { m: 'May 26', peya: 1613, rappi: 2215 }, { m: 'Jun 26', peya: 3320, rappi: 2441 },
-    { m: 'Jul 26', peya: 9057, rappi: 1740 },
-  ];
-  const maxGmv = Math.max(...meses.map(m => m.peya + m.rappi));
-
-  // Menú
-  const skus = [
-    { name: 'Combo Mr. Smash', rol: 'Adquisición', price: 48, hoy: 61, meta: 40, mcP: 19.4, mcR: 26.1 },
-    { name: 'Cheddar Bacon Burger', rol: 'Entrada / margen', price: 32, hoy: 9, meta: 13, mcP: 26.5, mcR: 33.8 },
-    { name: 'Oklahoma Burger', rol: 'Entrada / margen', price: 32, hoy: 9, meta: 12, mcP: 26.5, mcR: 33.8 },
-    { name: 'Shake It', rol: 'Valle / upsell', price: 54, hoy: 6, meta: 8, mcP: 27.9, mcR: 35.3 },
-    { name: 'Combo Para 2', rol: 'Cena · AOV', price: 86, hoy: 10, meta: 20, mcP: 27.9, mcR: 35.3 },
-    { name: 'Combo Para 3', rol: 'Grupos', price: 130, hoy: 4, meta: 7, mcP: 30.0, mcR: 37.6 },
-  ];
-
-  return `
-<div style="${S.page}">
-
-<!-- ═════ SECCIÓN 1: HERO ═════ -->
-<div style="${S.sectionDark}">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:32px">
-    <div>
-      <div style="font-size:12px;color:${P.gold};letter-spacing:4px;font-weight:700">SAZÓN × MR SMASH</div>
-      <div style="font-size:11px;color:${P.cream};margin-top:4px">Diagnóstico Growth Partner · agosto 2026</div>
-    </div>
-    <div style="background:${P.smashYel};padding:8px 16px;color:${P.smashRed};font-weight:700;letter-spacing:2px">MR SMASH</div>
-  </div>
-  <div style="${S.h1White}">De S/11K a S/35K en 90 días</div>
-  <div style="width:60px;height:3px;background:${P.gold};margin:20px 0"></div>
-  <div style="font-size:14px;color:${P.cream};font-style:italic;max-width:800px">
-    Análisis histórico nov 2025 – jul 2026 · PedidosYa + Rappi delivery · Surquillo + Refugio.
-    Un fix por módulo: menú, precios, financiero, ads, operación, adquisición.
-  </div>
-
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:32px">
-    ${[
-      { v: 'S/10.8K', l: 'GMV Julio', h: 'Mejor mes desde febrero' },
-      { v: '212', l: 'Órdenes/mes', h: '+177% vs junio' },
-      { v: 'S/54', l: 'Ticket promedio', h: 'Sano · sin crecer' },
-      { v: 'S/24K', l: 'Brecha vs meta', h: '3.2× julio' },
-    ].map(k => `
-      <div style="background:${P.wineDark};padding:20px;border-top:4px solid ${P.smashYel}">
-        <div style="font-size:34px;color:${P.smashYel};font-weight:700;line-height:1">${k.v}</div>
-        <div style="font-size:10px;color:${P.gold};letter-spacing:2px;font-weight:700;margin-top:8px">${k.l}</div>
-        <div style="font-size:10px;color:${P.cream};font-style:italic;margin-top:4px">${k.h}</div>
-      </div>
-    `).join('')}
-  </div>
-</div>
-
-<!-- ═════ SECCIÓN 2: 7 ERRORES ═════ -->
-<div style="${S.section}">
-  <div style="${S.h2}">ACTO 1 · QUÉ ESTÁ MAL</div>
-  <div style="${S.h1}">Los 7 errores del delivery hoy</div>
-  <div style="${S.sub}">Ranking por impacto directo en el resultado del mes</div>
-  <div style="${S.accent}"></div>
-
-  <div style="${S.grid}">
-    ${errores.map(e => `
-      <div style="display:grid;grid-template-columns:60px 100px 1fr 200px;gap:16px;padding:16px 20px;background:${P.cream};border-left:6px solid ${e.c};align-items:center">
-        <div style="font-size:22px;font-weight:700;color:${e.c}">${String(e.n).padStart(2,'0')}</div>
-        <div><span style="${S.tag};background:${e.c};color:${P.white}">${e.area}</span></div>
-        <div>
-          <div style="font-size:14px;font-weight:700;color:${P.wine};margin-bottom:2px">${e.tit}</div>
-          <div style="font-size:11px;color:${P.charcoal};font-style:italic">${e.d}</div>
-        </div>
-        <div style="text-align:center"><span style="${S.yellow}">${e.imp}</span></div>
-      </div>
-    `).join('')}
-  </div>
-</div>
-
-<!-- ═════ SECCIÓN 3: EVOLUCIÓN 9 MESES ═════ -->
-<div style="${S.section};background:${P.cream}">
-  <div style="${S.h2}">ACTO 2 · DIAGNÓSTICO</div>
-  <div style="${S.h1}">Evolución del GMV · 9 meses</div>
-  <div style="${S.sub}">PedidosYa + Rappi combinados · delivery únicamente</div>
-  <div style="${S.accent}"></div>
-
-  <div style="background:${P.white};padding:24px;border-radius:6px">
-    <div style="display:flex;align-items:flex-end;gap:16px;height:280px;padding-bottom:8px">
-      ${meses.map(m => {
-        const total = m.peya + m.rappi;
-        const h = (total / maxGmv) * 240;
-        const peyaH = (m.peya / maxGmv) * 240;
-        const rappiH = (m.rappi / maxGmv) * 240;
-        return `
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center">
-            <div style="font-size:10px;font-weight:700;color:${P.wine};margin-bottom:6px">${money(total)}</div>
-            <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:240px">
-              <div style="background:${P.rappi};height:${rappiH}px;width:100%"></div>
-              <div style="background:${P.peya};height:${peyaH}px;width:100%"></div>
-            </div>
-            <div style="font-size:11px;color:${P.charcoal};margin-top:8px;font-weight:600">${m.m}</div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-    <div style="display:flex;gap:24px;justify-content:center;margin-top:12px;padding-top:12px;border-top:1px solid ${P.grayLight}">
-      <div style="display:flex;align-items:center;gap:8px"><div style="width:14px;height:14px;background:${P.peya}"></div><span style="font-size:11px;color:${P.charcoal}">PedidosYa</span></div>
-      <div style="display:flex;align-items:center;gap:8px"><div style="width:14px;height:14px;background:${P.rappi}"></div><span style="font-size:11px;color:${P.charcoal}">Rappi</span></div>
-    </div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px">
-    <div style="${S.cardRed}">
-      <div style="font-size:10px;color:${P.smashRed};font-weight:700;letter-spacing:2px">🔻 MARZO</div>
-      <div style="font-size:12px;color:${P.charcoal};margin-top:6px;font-style:italic">Solo 1 orden registrada · dato faltante o corte real de operación</div>
-    </div>
-    <div style="${S.card};border-left-color:${P.gold}">
-      <div style="font-size:10px;color:${P.gold};font-weight:700;letter-spacing:2px">🔄 MAYO-JUNIO</div>
-      <div style="font-size:12px;color:${P.charcoal};margin-top:6px;font-style:italic">Entra Rappi al mix · empieza recuperación gradual</div>
-    </div>
-    <div style="${S.card};border-left-color:${P.green}">
-      <div style="font-size:10px;color:${P.green};font-weight:700;letter-spacing:2px">🚀 JULIO</div>
-      <div style="font-size:12px;color:${P.charcoal};margin-top:6px;font-style:italic">Salto histórico a S/10,797 · impulsado por Surquillo (0→116 órd)</div>
-    </div>
-  </div>
-</div>
-
-<!-- ═════ SECCIÓN 4: MENÚ Y TOP PRODUCTOS ═════ -->
-<div style="${S.section}">
-  <div style="${S.h2}">MÓDULO · MENÚ</div>
-  <div style="${S.h1}">Top productos y roles del catálogo</div>
-  <div style="${S.sub}">Cada SKU tiene un rol · pero hoy sólo se vende el de "adquisición"</div>
-  <div style="${S.accent}"></div>
-
-  <table style="${S.tbl}">
-    <thead>
-      <tr>
-        <th style="${S.th};text-align:left">SKU</th>
-        <th style="${S.th}">ROL</th>
-        <th style="${S.th}">PRECIO</th>
-        <th style="${S.th}">% MIX HOY</th>
-        <th style="${S.th}">% MIX META</th>
-        <th style="${S.th}">MC PEYA</th>
-        <th style="${S.th}">MC RAPPI</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${skus.map((sku, i) => `
-        <tr style="background:${i % 2 === 0 ? P.cream : P.white}">
-          <td style="${S.tdName}">${sku.name}</td>
-          <td style="${S.td};text-align:center;font-style:italic;color:${P.charcoal};font-family:inherit">${sku.rol}</td>
-          <td style="${S.td};text-align:center;color:${P.wine};font-weight:700">S/${sku.price}</td>
-          <td style="${S.td};text-align:center;color:${sku.hoy === 61 ? P.smashRed : P.charcoal};font-weight:${sku.hoy === 61 ? 700 : 400}">${sku.hoy}%</td>
-          <td style="${S.td};text-align:center;color:${P.green};font-weight:700">${sku.meta}%</td>
-          <td style="${S.td};text-align:center">${sku.mcP}%</td>
-          <td style="${S.td};text-align:center;color:${P.green}">${sku.mcR}%</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-
-  <div style="margin-top:16px;padding:14px 20px;background:${P.wine};color:${P.white};border-left:6px solid ${P.smashYel}">
-    <span style="font-size:10px;color:${P.smashYel};font-weight:700;letter-spacing:2px">💡 INSIGHT</span>
-    <div style="font-size:12px;margin-top:6px;font-style:italic">
-      El Combo Mr Smash es el gancho de adquisición · pero también es el SKU con menor margen (19.4% PeYa vs 30% en Combo Para 3). Escalarlo sin escalar los demás destruye la contribución total.
-    </div>
-  </div>
-</div>
-
-<!-- ═════ SECCIÓN 5: PRECIOS Y DESCUENTOS ═════ -->
-<div style="${S.section};background:${P.cream}">
-  <div style="${S.h2}">MÓDULO · PRECIOS</div>
-  <div style="${S.h1}">Política de precios y descuentos</div>
-  <div style="${S.sub}">Piso mínimo MC≥5% · promo propuesta · guardrail por SKU</div>
-  <div style="${S.accent}"></div>
-
-  <table style="${S.tbl};background:${P.white}">
-    <thead>
-      <tr>
-        <th style="${S.th};text-align:left">SKU</th>
-        <th style="${S.th}">PRECIO LISTA</th>
-        <th style="${S.th}">PISO MC ≥5%</th>
-        <th style="${S.th}">PROMO HOY</th>
-        <th style="${S.th}">% DESC.</th>
-        <th style="${S.th}">FRANJA</th>
-        <th style="${S.th}">GUARDRAIL</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${[
-        { name: 'Combo Mr. Smash', lista: 48, piso: 29.28, promo: 34.90, desc: 27.3, fr: 'Almuerzo · nuevos', g: 'Solo nuevos' },
-        { name: 'Cheddar Bacon Burger', lista: 32, piso: 19.52, promo: 24.90, desc: 22.2, fr: 'Cena', g: 'Sin descuento masivo' },
-        { name: 'Oklahoma Burger', lista: 32, piso: 19.52, promo: 24.90, desc: 22.2, fr: 'Cena', g: 'Hero alternativo' },
-        { name: 'Shake It', lista: 54, piso: 32.94, promo: 42.90, desc: 20.6, fr: '16–17h', g: 'Target nuevos/inactivos' },
-        { name: 'Combo Para 2', lista: 86, piso: 52.46, promo: 69.90, desc: 18.7, fr: '18–21h', g: 'Priorizar AOV' },
-        { name: 'Combo Para 3', lista: 130, piso: 79.30, promo: 104.90, desc: 19.3, fr: 'Vie–dom', g: 'Sin % en carta' },
-      ].map((p, i) => `
-        <tr style="background:${i % 2 === 0 ? P.cream : P.white}">
-          <td style="${S.tdName}">${p.name}</td>
-          <td style="${S.td};text-align:center;color:${P.wine};font-weight:700">${money2(p.lista)}</td>
-          <td style="${S.td};text-align:center;color:${P.smashRed}">${money2(p.piso)}</td>
-          <td style="${S.td};text-align:center">${money2(p.promo)}</td>
-          <td style="${S.td};text-align:center;color:${P.amber};font-weight:700">${p.desc}%</td>
-          <td style="${S.td};text-align:center;font-style:italic;color:${P.charcoal};font-family:inherit">${p.fr}</td>
-          <td style="${S.td};text-align:center;color:${P.green};font-family:inherit">${p.g}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-</div>
-
-<!-- ═════ SECCIÓN 6: FINANCIERO ═════ -->
-<div style="${S.section}">
-  <div style="${S.h2}">MÓDULO · FINANCIERO</div>
-  <div style="${S.h1}">Estructura de costos real por sol vendido</div>
-  <div style="${S.sub}">Comparativa PeYa vs Rappi · qué le queda a Mr Smash de cada Combo Mr Smash</div>
-  <div style="${S.accent}"></div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-    ${[
-      { canal: 'PEDIDOSYA', color: P.peya, rows: [
-        ['Precio venta', 'S/48.00', P.wine, false],
-        ['− Descuento (20%)', '−S/9.60', P.smashRed, false],
-        ['= Venta post-descuento', 'S/38.40', P.charcoal, true],
-        ['− COGS (30%)', '−S/14.40', P.smashRed, false],
-        ['− Comisión + IVA (29.5%)', '−S/11.33', P.smashRed, false],
-        ['− Ads (7%)', '−S/3.36', P.smashRed, false],
-        ['= Contribución unitaria', 'S/9.31', P.green, true],
-        ['MC (%)', '19.4%', P.green, true],
-      ]},
-      { canal: 'RAPPI', color: P.rappi, rows: [
-        ['Precio venta', 'S/48.00', P.wine, false],
-        ['− Descuento (20%)', '−S/9.60', P.smashRed, false],
-        ['= Venta post-descuento', 'S/38.40', P.charcoal, true],
-        ['− COGS (30%)', '−S/14.40', P.smashRed, false],
-        ['− Comisión + IVA (23.6%)', '−S/9.06', P.smashRed, false],
-        ['− Ads (5%)', '−S/2.40', P.smashRed, false],
-        ['= Contribución unitaria', 'S/12.54', P.green, true],
-        ['MC (%)', '26.1%', P.green, true],
-      ]},
-    ].map(canal => `
-      <div style="background:${P.cream};padding:24px;border-top:4px solid ${canal.color}">
-        <div style="font-size:11px;color:${canal.color};letter-spacing:2px;font-weight:700">${canal.canal}</div>
-        <div style="font-size:16px;color:${P.wine};font-weight:700;font-style:italic;margin:6px 0 20px 0">Combo Mr Smash · S/48</div>
-        ${canal.rows.map(r => `
-          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid ${P.grayLight};font-size:12px;${r[3] ? 'font-weight:700' : ''}">
-            <span style="color:${P.charcoal}">${r[0]}</span>
-            <span style="color:${r[2]};font-family:'Consolas',monospace;font-weight:${r[3] ? 700 : 400}">${r[1]}</span>
-          </div>
-        `).join('')}
-      </div>
-    `).join('')}
-  </div>
-
-  <div style="margin-top:16px;padding:14px 20px;background:${P.smashYel};color:${P.smashRedD};font-size:12px;font-weight:700">
-    💡  Rappi deja 35% más margen unitario (S/12.54 vs S/9.31) · pero PeYa tiene 4× el volumen. Mezcla óptima 67/33 PeYa/Rappi.
-  </div>
-</div>
-
-<!-- ═════ SECCIÓN 7: ADS Y ROAS ═════ -->
-<div style="${S.section};background:${P.cream}">
-  <div style="${S.h2}">MÓDULO · ADS</div>
-  <div style="${S.h1}">Ads Rappi consumen 28.8% del GMV</div>
-  <div style="${S.sub}">Guardrail Sazón: ≤15%. Hoy están casi al doble del techo saludable</div>
-  <div style="${S.accent}"></div>
-
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px">
-    <div style="background:${P.white};padding:24px">
-      <div style="display:flex;align-items:flex-end;gap:24px;height:220px">
-        ${[
-          { l: 'GUARDRAIL', v: 15, c: P.green },
-          { l: 'PEYA', v: 4.5, c: P.peya },
-          { l: 'RAPPI', v: 28.8, c: P.smashRed },
-        ].map(bar => {
-          const h = (bar.v / 32) * 200;
-          return `
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center">
-              <div style="font-size:16px;font-weight:700;color:${P.wine};margin-bottom:6px">${bar.v}%</div>
-              <div style="width:100%;background:${bar.c};height:${h}px"></div>
-              <div style="font-size:11px;color:${P.charcoal};margin-top:8px;font-weight:600;letter-spacing:1px">${bar.l}</div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    </div>
-
-    <div style="background:${P.white};padding:24px;border-top:4px solid ${P.smashRed}">
-      <div style="font-size:10px;color:${P.smashRed};font-weight:700;letter-spacing:2px;margin-bottom:12px">POR QUÉ ESTAMOS AQUÍ</div>
-      ${[
-        { t: 'Sin ROAS medido', d: 'Rappi Ads corre sin verificar retorno' },
-        { t: 'Sin segmentación', d: 'Se paga por clicks fuera de hora pico' },
-        { t: 'Sin CPO objetivo', d: 'No hay umbral de "pausar si supera X"' },
-        { t: 'Fugaces + Gold Vip', d: 'S/195/sem PeYa sumado a Rappi' },
-      ].map(p => `
-        <div style="padding:10px 0;border-bottom:1px solid ${P.grayLight}">
-          <div style="font-size:12px;font-weight:700;color:${P.wine}">${p.t}</div>
-          <div style="font-size:11px;color:${P.charcoal};font-style:italic;margin-top:2px">${p.d}</div>
-        </div>
-      `).join('')}
-    </div>
-  </div>
-
-  <div style="margin-top:16px;padding:14px 20px;background:${P.wine};color:${P.white};border-left:6px solid ${P.smashYel}">
-    <span style="font-size:10px;color:${P.smashYel};font-weight:700;letter-spacing:2px">IMPACTO EN MARGEN</span>
-    <div style="font-size:12px;margin-top:6px">
-      Bajar Ads Rappi de 28.8% a 15% libera ~<strong>S/1,500/mes</strong> en margen contributivo · guardrail antes de escalar volumen.
-    </div>
-  </div>
-</div>
-
-<!-- ═════ SECCIÓN 8: SURQUILLO vs REFUGIO ═════ -->
-<div style="${S.section}">
-  <div style="${S.h2}">MÓDULO · OPERACIÓN</div>
-  <div style="${S.h1}">Surquillo vs El Refugio · el gap operativo</div>
-  <div style="${S.sub}">El local nuevo creció fuerte pero opera muy por debajo del maduro</div>
-  <div style="${S.accent}"></div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-    ${[
-      { tit: 'El Refugio', tag: 'LOCAL MADURO', color: P.green,
-        kpis: [
-          ['% Rechazo', '0.84%'], ['% Reclamos', '1.82%'],
-          ['Órdenes 9 meses', '~950'], ['GMV 9 meses', 'S/44K'],
-          ['Ticket promedio', 'S/44-47'],
-        ], footer: 'OPERA LIMPIO · CAJA CORE' },
-      { tit: 'Surquillo', tag: 'LOCAL NUEVO', color: P.smashRed,
-        kpis: [
-          ['% Rechazo', '5.74%'], ['% Reclamos', '9.84%'],
-          ['Órdenes jul', '116 (0→116)'], ['GMV jul', 'S/5.7K'],
-          ['Ticket promedio', 'S/36-49'],
-        ], footer: 'CRECE FUERTE PERO OPERA MAL' },
-    ].map(loc => `
-      <div style="background:${P.white};border:2px solid ${loc.color};border-radius:6px;overflow:hidden">
-        <div style="background:${loc.color};height:12px"></div>
-        <div style="padding:24px">
-          <div style="font-size:10px;color:${loc.color};letter-spacing:2px;font-weight:700">${loc.tag}</div>
-          <div style="font-size:22px;color:${P.wine};font-weight:700;margin:8px 0 16px 0">${loc.tit}</div>
-          ${loc.kpis.map(k => `
-            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid ${P.grayLight};font-size:12px">
-              <span style="color:${P.charcoal}">${k[0]}</span>
-              <span style="color:${loc.color};font-family:'Consolas',monospace;font-weight:700">${k[1]}</span>
-            </div>
-          `).join('')}
-          <div style="background:${loc.color};color:${P.white};padding:8px;text-align:center;font-size:10px;letter-spacing:2px;font-weight:700;margin-top:16px">${loc.footer}</div>
-        </div>
-      </div>
-    `).join('')}
-  </div>
-
-  <div style="margin-top:16px;padding:14px 20px;background:${P.smashYel};color:${P.smashRedD};font-size:12px;font-weight:700">
-    💡  Surquillo rechaza 6.8× más y se queja 5.4× más. Escalarlo con estos ratios es multiplicar el problema.
-  </div>
-</div>
-
-<!-- ═════ SECCIÓN 9: FUNNEL ═════ -->
-<div style="${S.section};background:${P.cream}">
-  <div style="${S.h2}">MÓDULO · ADQUISICIÓN</div>
-  <div style="${S.h1}">Funnel de conversión PedidosYa</div>
-  <div style="${S.sub}">El Refugio · últimos 30 días</div>
-  <div style="${S.accent}"></div>
-
-  <div style="background:${P.white};padding:24px">
-    ${[
-      { l: 'Impresiones', v: '329,112', w: 100, c: P.wine },
-      { l: 'Vieron menú', v: '30,145', w: 75, c: P.gold },
-      { l: 'Al carrito', v: '2,613', w: 45, c: P.amber },
-      { l: 'Ordenaron', v: '697', w: 22, c: P.green },
-    ].map((s, i, arr) => `
-      <div style="margin-bottom:10px">
-        <div style="width:${s.w}%;margin:0 auto;background:${s.c};padding:10px 20px;color:${P.white};font-size:13px;font-weight:700;text-align:center">
-          ${s.l}  ·  ${s.v}
-        </div>
-        ${i < arr.length - 1 ? `
-          <div style="text-align:right;padding-right:24px;font-size:10px;color:${['#E88B3A', '#2D6A4F', '#CE2D3B'][i]};font-weight:700;font-style:italic;font-family:'Consolas',monospace;margin-top:4px">
-            ▼ ${['9.2%', '8.7%', '26.7%'][i]}  ·  ${['Meta >12%', 'Correcto', 'Meta 45-55% · CRÍTICO'][i]}
-          </div>
-        ` : ''}
-      </div>
-    `).join('')}
-  </div>
-
-  <div style="margin-top:16px;padding:16px 20px;background:${P.cream};border-left:6px solid ${P.smashRed}">
-    <div style="font-size:10px;color:${P.smashRed};font-weight:700;letter-spacing:2px;margin-bottom:6px">EL FILTRO GRUESO ESTÁ ENTRE CARRITO Y ORDEN</div>
-    ${['Tiempos de entrega estimados largos o poco claros',
-       'Cargos que aparecen tarde en el checkout',
-       'Falta de urgencia · sin promo "sólo por hoy"',
-       'Descripciones débiles · no cierran la decisión'].map(p => `
-      <div style="font-size:11px;color:${P.charcoal};font-style:italic;margin:4px 0">• ${p}</div>
-    `).join('')}
-  </div>
-</div>
-
-<!-- ═════ SECCIÓN 10: ROADMAP 90D ═════ -->
-<div style="${S.sectionDark}">
-  <div style="${S.h2}">ACTO 4 · PLAN</div>
-  <div style="${S.h1White}">Roadmap del piloto · 90 días</div>
-  <div style="width:60px;height:3px;background:${P.gold};margin:20px 0"></div>
-
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px">
-    ${[
-      { tag: 'MES 1 · FIX', color: P.smashRed, gmv: 'S/15,000', focus: 'Estabilizar', todo: 'Surquillo ops · Ads Rappi ≤15% · Menú rework top-5 · Cupón 1ª compra', gate: 'Rechazo <2% · Reclamos <3%' },
-      { tag: 'MES 2 · SCALE', color: P.gold, gmv: 'S/24,000', focus: 'Escalar celdas ganadoras', todo: 'Combos 2/3 en primer scroll · Ads PY por franja · Winback 30D', gate: 'MC ≥5% · Conversión >35%' },
-      { tag: 'MES 3 · EXPAND', color: P.green, gmv: 'S/35,000', focus: 'Consolidar meta', todo: 'Programa 3ª compra · Escalado por local · Mix objetivo', gate: 'MC ≥5% semanal · S/35K' },
-    ].map(m => `
-      <div style="background:${P.wineDark};padding:20px;border-top:4px solid ${m.color}">
-        <div style="font-size:11px;color:${m.color};letter-spacing:2px;font-weight:700">${m.tag}</div>
-        <div style="font-size:28px;color:${P.smashYel};font-weight:700;margin:8px 0">${m.gmv}</div>
-        <div style="font-size:11px;color:${P.cream};font-style:italic;margin-bottom:12px">${m.focus}</div>
-        <div style="font-size:11px;color:${P.white};line-height:1.5;margin-bottom:16px">${m.todo}</div>
-        <div style="background:${m.color};color:${P.white};padding:8px;text-align:center;font-size:10px;font-weight:700;letter-spacing:1px">GATE: ${m.gate}</div>
-      </div>
-    `).join('')}
-  </div>
-</div>
-
-<!-- ═════ SECCIÓN 11: MIX OBJETIVO S/35K ═════ -->
-<div style="${S.section}">
-  <div style="${S.h2}">ACTO 4 · PLAN</div>
-  <div style="${S.h1}">Mix objetivo para llegar a S/35K</div>
-  <div style="${S.sub}">Unidades por SKU × precio · con MC ≥5% por celda</div>
-  <div style="${S.accent}"></div>
-
-  <table style="${S.tbl}">
-    <thead>
-      <tr>
-        <th style="${S.th};text-align:left">SKU</th>
-        <th style="${S.th}">PRECIO</th>
-        <th style="${S.th}">UNID PEYA</th>
-        <th style="${S.th}">UNID RAPPI</th>
-        <th style="${S.th}">UNID TOTAL</th>
-        <th style="${S.th}">GMV</th>
-        <th style="${S.th}">% GMV</th>
-        <th style="${S.th}">CONTRIB.</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${[
-        ['Combo Mr Smash', 'S/48', 180, 60, 240, 'S/11,520', '32.9%', 'S/2,428'],
-        ['Cheddar Bacon', 'S/32', 60, 20, 80, 'S/2,560', '7.3%', 'S/724'],
-        ['Oklahoma Burger', 'S/32', 50, 20, 70, 'S/2,240', '6.4%', 'S/639'],
-        ['Shake It', 'S/54', 35, 15, 50, 'S/2,700', '7.7%', 'S/812'],
-        ['Combo Para 2', 'S/86', 73, 45, 118, 'S/10,148', '29.0%', 'S/3,114'],
-        ['Combo Para 3', 'S/130', 25, 20, 45, 'S/5,850', '16.7%', 'S/1,951'],
-      ].map((r, i) => `
-        <tr style="background:${i % 2 === 0 ? P.cream : P.white}">
-          <td style="${S.tdName}">${r[0]}</td>
-          <td style="${S.td};text-align:center;color:${P.wine};font-weight:700">${r[1]}</td>
-          <td style="${S.td};text-align:center">${r[2]}</td>
-          <td style="${S.td};text-align:center">${r[3]}</td>
-          <td style="${S.td};text-align:center;font-weight:700">${r[4]}</td>
-          <td style="${S.td};text-align:center;color:${P.wine};font-weight:700">${r[5]}</td>
-          <td style="${S.td};text-align:center;color:${P.charcoal}">${r[6]}</td>
-          <td style="${S.td};text-align:center;color:${P.green};font-weight:700">${r[7]}</td>
-        </tr>
-      `).join('')}
-      <tr style="background:${P.wine};color:${P.white}">
-        <td style="padding:12px;font-weight:700">TOTAL</td>
-        <td style="padding:12px;text-align:center;color:${P.smashYel};font-weight:700"></td>
-        <td style="padding:12px;text-align:center;color:${P.smashYel};font-weight:700">423</td>
-        <td style="padding:12px;text-align:center;color:${P.smashYel};font-weight:700">180</td>
-        <td style="padding:12px;text-align:center;color:${P.smashYel};font-weight:700">603</td>
-        <td style="padding:12px;text-align:center;color:${P.smashYel};font-weight:700">S/35,018</td>
-        <td style="padding:12px;text-align:center;color:${P.smashYel};font-weight:700">100%</td>
-        <td style="padding:12px;text-align:center;color:${P.smashYel};font-weight:700">S/9,668</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<!-- ═════ FOOTER ═════ -->
-<div style="padding:32px 40px;background:${P.wineDark};text-align:center">
-  <div style="font-size:11px;color:${P.gold};letter-spacing:4px;font-weight:700">SAZÓN GROWTH PARTNER</div>
-  <div style="font-size:14px;color:${P.smashYel};font-style:italic;margin-top:12px">Diagnóstico agosto 2026 · datos precargados desde plataforma Sazón</div>
-  <div style="width:60px;height:2px;background:${P.smashRed};margin:16px auto"></div>
-  <div style="font-size:11px;color:${P.cream}">Este panel se actualiza automáticamente cuando cargas nuevos datos de Rappi + PedidosYa</div>
-</div>
-
-</div>
-  `;
-}
-
 function renderTabContent(tabId){
   // Sprint 2 A.2.1: paneles del v1 están en el DOM. Solo mostramos el activo.
   const welcome = $('welcomeEmpty');
@@ -4689,21 +4157,6 @@ function renderTabContent(tabId){
 
   // Desactivar todos los paneles
   document.querySelectorAll('#rptWrap .panel').forEach(p => p.classList.remove('active'));
-
-  // Caso especial: Diagnóstico Mr Smash — panel dinámico embebido
-  if (tabId === 'diagnostico') {
-    let panel = document.getElementById('p-diagnostico');
-    if (!panel) {
-      panel = document.createElement('div');
-      panel.className = 'panel';
-      panel.id = 'p-diagnostico';
-      rptWrap.appendChild(panel);
-    }
-    panel.classList.add('active');
-    panel.innerHTML = renderDiagnosticoMrSmash();
-    panel.dataset.hasEngine = 'true';
-    return;
-  }
 
   // Activar el panel del tab clickeado
   const targetPanel = document.getElementById('p-' + tabId);
@@ -4813,30 +4266,50 @@ Object.assign(APP, {
 const DAYS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 let branchCount = 0;
 
-// Supported platforms — add more here as needed
+// Supported platforms — sólo Rappi y PedidosYa activos (Sazón fix agosto 2026)
 const PLATFORMS = {
   rappi:    { name:'Rappi',       color:'#FF6900', tag:'pt-rappi',  label:'🟠 Rappi' },
   peya:     { name:'PedidosYa',   color:'#0064C8', tag:'pt-peya',   label:'🔵 PedidosYa' },
-  didi:     { name:'Didi Food',   color:'#FF8C00', tag:'pt-didi',   label:'🟡 Didi Food' },
-  glovo:    { name:'Glovo',       color:'#FFC244', tag:'pt-glovo',  label:'🟡 Glovo' },
-  ubereats: { name:'Uber Eats',   color:'#06C167', tag:'pt-uber',   label:'🟢 Uber Eats' },
-  ifood:    { name:'iFood',       color:'#EA1D2C', tag:'pt-ifood',  label:'🔴 iFood' },
-  other:    { name:'Plataforma',  color:'#6B6560', tag:'pt-unk',    label:'⚫ Otra' },
+  other:    { name:'Otro',        color:'#6B6560', tag:'pt-unk',    label:'⚫ Otra' },
 };
 
+// Fix agosto 2026: detectar por nombre de archivo y devolver Rappi/PeYa por default
+// para no clasificar archivos oficiales como "otro" solo por un nombre de archivo raro
 function detectPlat(name){
-  const n = name.toLowerCase();
-  if(/rappi/.test(n))            return 'rappi';
-  if(/pedidosya|peya|orderdetail|earnings/.test(n)) return 'peya';
-  if(/didi/.test(n))             return 'didi';
-  if(/glovo/.test(n))            return 'glovo';
-  if(/uber|ubereats/.test(n))    return 'ubereats';
-  if(/ifood/.test(n))            return 'ifood';
+  const n = (name || '').toLowerCase();
+
+  // ── Rappi patterns ─────────────────────────────────────
+  if(/rappi/.test(n))                       return 'rappi';
+  if(/service[_-]?level/.test(n))           return 'rappi';   // Nivel de Servicio
+  if(/^orders?-[0-9a-f]{8}/.test(n))        return 'rappi';   // orders-<uuid>.xlsx = OrderHistory
+  if(/^reviews?-[0-9a-f]{8}/.test(n))       return 'rappi';   // reviews-<uuid>.xlsx
+  if(/^earnings/.test(n))                   return 'rappi';   // earnings-summary-*.xlsx
+
+  // ── PedidosYa patterns ─────────────────────────────────
+  if(/pedidosya|peya/.test(n))              return 'peya';
+  if(/orderdetail/.test(n))                 return 'peya';   // orderDetails*.xlsx
+  if(/orderssummary|opssummary|customerssummary/.test(n)) return 'peya';
+  if(/ordersper?month/.test(n))             return 'peya';   // ordersPerMonth_*.xlsx
+  if(/reporte[_-]?detallado/.test(n))       return 'peya';
+  if(/detailed[_-]?report/.test(n))         return 'peya';   // detailed_report_*.xlsx (Ads PeYa)
+  if(/account[_-]?statement/.test(n))       return 'peya';
+
   return 'other';
 }
 
 function getPlatInfo(plat){
   return PLATFORMS[plat] || PLATFORMS.other;
+}
+
+// Fix agosto 2026: si detectPlat devuelve una plataforma no activa (didi/glovo/uber/ifood),
+// re-clasificar por contenido de las filas del sheet (detección secundaria)
+function reclassifyByContent(rows, currentPlat){
+  if (currentPlat === 'rappi' || currentPlat === 'peya') return currentPlat;
+  // Buscar headers típicos de Rappi
+  const text = (rows.slice(0, 5).flat().join(' ') || '').toLowerCase();
+  if (/rappi|paidlot|nombre de la tienda|tiempo de preparación/.test(text)) return 'rappi';
+  if (/pedidosya|order.?id|status|artículos|order value/.test(text)) return 'peya';
+  return currentPlat;
 }
 
 
@@ -5618,12 +5091,9 @@ function parseRappiServiceLevel(sheets) {
     periodStart: null,
     periodEnd: null,
     metrics: {},
-    cancellations: [],       // Con nombre del producto
-    complaints: [],          // Reclamos - Órdenes
-    productComplaints: [],   // Reclamos - Productos (con topping y categoría)
-    waitTimes: [],           // Tiempos de preparación real y espera
-    branchMetrics: [],       // Nivel de servicio por sucursal
-    availability: [],        // Cuándo cerró cada tienda
+    cancellations: [],
+    complaints: [],
+    waitTimes: [],
   };
 
   const toFloat = (v) => {
@@ -5710,7 +5180,7 @@ function parseRappiServiceLevel(sheets) {
         ordenId: headers.findIndex(v => /orden id/i.test(String(v || ''))),
         fecha: headers.findIndex(v => /^fecha$/i.test(String(v || ''))),
         descripcion: headers.findIndex(v => /descripci/i.test(String(v || ''))),
-        producto: headers.findIndex(v => /nombre del producto/i.test(String(v || ''))),
+        producto: headers.findIndex(v => /producto/i.test(String(v || ''))),
       };
       for (let i = hi + 1; i < rows.length; i++) {
         const r = rows[i];
@@ -5798,107 +5268,6 @@ function parseRappiServiceLevel(sheets) {
           courierWait: cols.espera >= 0 ? num(r[cols.espera]) : 0,
           prepReal: cols.prepReal >= 0 ? num(r[cols.prepReal]) : 0,
           totalTime: cols.total >= 0 ? num(r[cols.total]) : 0,
-        });
-      }
-    }
-  }
-
-  // Sheet "Reclamos - Productos" (NUEVO - Sprint 4)
-  const prodComplSheet = sheets.find(s => /reclamos.*producto/i.test(s.name) && !/orden/i.test(s.name));
-  if (prodComplSheet) {
-    const rows = prodComplSheet.rows;
-    const hi = rows.findIndex(r => r.some(v => /orden id/i.test(String(v || ''))));
-    if (hi >= 0) {
-      const headers = rows[hi];
-      const cols = {
-        ordenId: headers.findIndex(v => /orden id/i.test(String(v || ''))),
-        tiendaId: headers.findIndex(v => /tienda id/i.test(String(v || ''))),
-        tienda: headers.findIndex(v => /^tienda$/i.test(String(v || ''))),
-        fecha: headers.findIndex(v => /^fecha$/i.test(String(v || ''))),
-        motivo: headers.findIndex(v => /^motivo$/i.test(String(v || ''))),
-        detalle: headers.findIndex(v => /detalle del motivo/i.test(String(v || ''))),
-        producto: headers.findIndex(v => /^producto$/i.test(String(v || ''))),
-        topping: headers.findIndex(v => /^topping$/i.test(String(v || ''))),
-        categoria: headers.findIndex(v => /categor.a.*topping/i.test(String(v || ''))),
-      };
-      for (let i = hi + 1; i < rows.length; i++) {
-        const r = rows[i];
-        if (!r.some(v => v)) continue;
-        const orderId = cols.ordenId >= 0 ? String(r[cols.ordenId] || '').trim() : '';
-        if (!orderId) continue;
-        result.productComplaints.push({
-          orderId,
-          branchId: cols.tiendaId >= 0 ? String(r[cols.tiendaId] || '') : '',
-          branchName: cols.tienda >= 0 ? String(r[cols.tienda] || '') : '',
-          date: cols.fecha >= 0 ? String(r[cols.fecha] || '') : '',
-          reason: cols.motivo >= 0 ? String(r[cols.motivo] || '') : '',
-          detail: cols.detalle >= 0 ? String(r[cols.detalle] || '') : '',
-          product: cols.producto >= 0 ? String(r[cols.producto] || '') : '',
-          topping: cols.topping >= 0 ? String(r[cols.topping] || '') : '',
-          toppingCategory: cols.categoria >= 0 ? String(r[cols.categoria] || '') : '',
-        });
-      }
-    }
-  }
-
-  // Sheet "Resumen por tienda" (NUEVO - Sprint 4)
-  const branchSheet = sheets.find(s => /resumen por tienda/i.test(s.name));
-  if (branchSheet) {
-    const rows = branchSheet.rows;
-    const hi = rows.findIndex(r => r.some(v => /tiendas en el portal/i.test(String(v || ''))));
-    if (hi >= 0) {
-      const headers = rows[hi];
-      // Los headers son: Tiendas | ... | Cancelaciones % | órdenes canceladas | Reclamos % | Órdenes con reclamos | Órdenes Mal Estado | Órdenes Producto Diferente | Órdenes Producto Faltante | Disponibilidad | Órdenes con demora
-      const num = (v) => { const n = parseFloat(String(v || '').replace(/[%,]/g, '')); return isNaN(n) ? 0 : n; };
-      for (let i = hi + 1; i < rows.length; i++) {
-        const r = rows[i];
-        if (!r.some(v => v)) continue;
-        const branch = String(r[0] || '').trim();
-        if (!branch) continue;
-        result.branchMetrics.push({
-          branch,
-          cancelPct: num(r[3]),
-          cancelOrders: num(r[4]),
-          complaintPct: num(r[5]),
-          complaintOrders: num(r[6]),
-          badState: num(r[7]),
-          differentProduct: num(r[8]),
-          missingProduct: num(r[9]),
-          availability: num(r[10]),
-          delayPct: num(r[11]),
-        });
-      }
-    }
-  }
-
-  // Sheet "Disponibilidad de tiendas" (NUEVO - Sprint 4)
-  const availSheet = sheets.find(s => /disponibilidad de tiendas/i.test(s.name));
-  if (availSheet) {
-    const rows = availSheet.rows;
-    const hi = rows.findIndex(r => r.some(v => /^tienda id$/i.test(String(v || ''))));
-    if (hi >= 0) {
-      const headers = rows[hi];
-      const cols = {
-        tiendaId: headers.findIndex(v => /^tienda id$/i.test(String(v || ''))),
-        tienda: headers.findIndex(v => /^tienda$/i.test(String(v || ''))),
-        fecha: headers.findIndex(v => /^fecha$/i.test(String(v || ''))),
-        enHorario: headers.findIndex(v => /en horario/i.test(String(v || ''))),
-        inicio: headers.findIndex(v => /tiempo sin disponibilidad/i.test(String(v || ''))),
-      };
-      for (let i = hi + 1; i < rows.length; i++) {
-        const r = rows[i];
-        if (!r.some(v => v)) continue;
-        const branchId = cols.tiendaId >= 0 ? String(r[cols.tiendaId] || '').trim() : '';
-        if (!branchId || !/^\d+$/.test(branchId)) continue;
-        // El formato es: TIENDA ID | TIENDA | FECHA | EN HORARIO | HORA_INICIO | HORA_FIN | DURACIÓN
-        result.availability.push({
-          branchId,
-          branchName: cols.tienda >= 0 ? String(r[cols.tienda] || '') : '',
-          date: cols.fecha >= 0 ? String(r[cols.fecha] || '') : '',
-          inSchedule: cols.enHorario >= 0 ? String(r[cols.enHorario] || '') : '',
-          from: cols.inicio >= 0 ? String(r[cols.inicio] || '') : '',
-          to: cols.inicio >= 0 && r[cols.inicio + 1] ? String(r[cols.inicio + 1]) : '',
-          duration: cols.inicio >= 0 && r[cols.inicio + 2] ? String(r[cols.inicio + 2]) : '',
         });
       }
     }
@@ -6004,7 +5373,6 @@ function parsePeyaOrderDetails(rows) {
     paymentAmount: fi(/monto de pago/),
     fugacesDiscount: fi(/cargos por descuentos fugaces/),
     adsFee: fi(/tarifa por servicios de publicidad total/),
-    items: fi(/^art.culos$/),
   };
 
   const num = (v) => {
@@ -6076,7 +5444,7 @@ function parsePeyaOrderDetails(rows) {
       estado: status,
       comision: commission,
       ingreso: num(row[ci.estimatedIncome]),
-      items: ci.items >= 0 ? String(row[ci.items] || '') : '',
+      items: '',
       isPrime: false,
 
       // Timestamps
@@ -7553,7 +6921,7 @@ function populatePxSelectors(){
 function renderPrecios(){
   if(!APP.D || !APP.catalogData) return;
   const { catalog, platDisc } = APP.catalogData;
-  if (!catalog || catalog.length === 0) {
+  if (!Array.isArray(catalog) || catalog.length === 0) {
     const panel = document.getElementById('p-precios');
     if (panel && panel.querySelector('.mod-noData') == null) {
       // Solo mostrar mensaje si el panel está vacío
@@ -7945,7 +7313,7 @@ function priceRecommendation(item, plats, elas){
 function renderMenu(){
   if(!APP.catalogData || !APP.D) return;
   const { catalog, platDisc } = APP.catalogData;
-  if (!catalog || catalog.length === 0) return;
+  if (!Array.isArray(catalog) || catalog.length === 0) return;
   const bcg  = bcgClassify(catalog);
   const elas = estimateElasticity(catalog, APP.allOrders);
   APP.menuData = { catalog, platDisc, bcg, elas };
@@ -8403,7 +7771,7 @@ function genPromoLayers(){
 function renderCombos(){
   if(!APP.catalogData || !APP.D) return;
   const { catalog, comboOpts } = APP.catalogData;
-  if (!catalog || catalog.length === 0) return;
+  if (!Array.isArray(catalog) || catalog.length === 0) return;
   const coOcc = buildCoOccurrence(APP.allOrders);
   const newCombos = genNewCombos(catalog, coOcc, APP.allOrders);
 
@@ -8503,7 +7871,7 @@ function renderCombos(){
 function renderPromos(){
   if(!APP.catalogData || !APP.D) return;
   const catalog = APP.catalogData.catalog;
-  if (!catalog || catalog.length === 0) return;
+  if (!Array.isArray(catalog) || catalog.length === 0) return;
   const { l1, l2, l3 } = genPromoLayers();
 
   document.getElementById('promosInsight').innerHTML = `<div class="alert ok"><span class="alert-ico">📐</span><span class="alert-body">
@@ -9450,22 +8818,6 @@ function renderTabContent(tabId) {
   // Desactivar todos los paneles
   document.querySelectorAll('#rptWrap .panel').forEach(p => p.classList.remove('active'));
 
-  // Caso especial: Diagnóstico Mr Smash — panel dinámico embebido
-  if (tabId === 'diagnostico') {
-    const rptWrap = document.getElementById('rptWrap');
-    let panel = document.getElementById('p-diagnostico');
-    if (!panel) {
-      panel = document.createElement('div');
-      panel.className = 'panel';
-      panel.id = 'p-diagnostico';
-      rptWrap.appendChild(panel);
-    }
-    panel.classList.add('active');
-    panel.innerHTML = renderDiagnosticoMrSmash();
-    panel.dataset.hasEngine = 'true';
-    return;
-  }
-
   const targetPanel = document.getElementById('p-' + tabId);
   if (!targetPanel) return;
 
@@ -10205,11 +9557,35 @@ async function loadAnalysisFromHistory(analysisId) {
   if (sprint3 && sprint3.orders && sprint3.orders.length > 0) {
     console.log('[loadHistory] Restaurando snapshot Sprint 3:', sprint3.orders.length, 'órdenes');
 
-    // Deserializar fechas
-    const orders = sprint3.orders.map(o => ({
-      ...o,
-      date: o.date ? new Date(o.date) : null
-    }));
+    // Fix agosto 2026: migrar órdenes viejas con platform='other' o 'unknown'
+    // Regla: por sucursal + estructura de datos, inferir Rappi vs PeYa
+    const migrateOrder = (o) => {
+      if (o.platform === 'rappi' || o.platform === 'peya') return o;
+      // Heurísticas para clasificar
+      let plat = o.platform;
+      const suc = String(o.sucursal || '').toLowerCase();
+      const metodo = String(o.metodo || '').toLowerCase();
+      const estado = String(o.estado || '').toLowerCase();
+      // Rappi: usa "pending_review", ids largos, cc como método
+      if (/pending_review|delivered|cancelled/.test(estado)) plat = 'rappi';
+      // PeYa: usa "Terminada", "En camino", etc en español
+      else if (/terminada|entregada|rechazada|cancelada/.test(estado)) plat = 'peya';
+      // Fallback: si viene del formato Refugio, mirar sucursal
+      else if (suc.includes('refugio') || suc.includes('surquillo')) plat = 'peya';
+      else plat = 'peya'; // Default a PeYa (más común en Mr Smash histórico)
+      return { ...o, platform: plat, _migrated: true };
+    };
+
+    // Deserializar fechas + migrar plataforma
+    const orders = sprint3.orders.map(o => {
+      const migrated = migrateOrder(o);
+      return {
+        ...migrated,
+        date: migrated.date ? new Date(migrated.date) : null
+      };
+    });
+    const migratedCount = orders.filter(o => o._migrated).length;
+    if (migratedCount > 0) console.log('[Migration] Reclasificadas', migratedCount, 'órdenes de platform=other a rappi/peya');
 
     orders._peyaSummary = sprint3.peyaSummary || null;
     orders._peyaMonthlyHistory = sprint3.peyaMonthlyHistory || null;
@@ -12165,80 +11541,6 @@ function renderTiempos() {
         '<div>Sucursal</div><div>Volumen</div><div>Promedio</div></div>' + sucursalRows + '</div></div>'
       : '') +
     insightsHtml;
-
-  // Sprint 4 NUEVO: Disponibilidad de tiendas (cuándo cerró Rappi)
-  const rappiSL = APP.allOrders?._rappiServiceLevel || APP._unfilteredOrders?._rappiServiceLevel;
-  if (rappiSL?.availability?.length > 0) {
-    // Agregar por sucursal + convertir duración a minutos
-    const parseDuration = (d) => {
-      let mins = 0;
-      const h = String(d || '').match(/(\d+)\s*h/);
-      const m = String(d || '').match(/(\d+)\s*m/);
-      if (h) mins += parseInt(h[1]) * 60;
-      if (m) mins += parseInt(m[1]);
-      return mins;
-    };
-    const byBranch = {};
-    rappiSL.availability.forEach(a => {
-      const key = a.branchName.trim();
-      if (!byBranch[key]) byBranch[key] = { events: 0, totalMin: 0, longest: 0, longestDate: '' };
-      byBranch[key].events++;
-      const mins = parseDuration(a.duration);
-      byBranch[key].totalMin += mins;
-      if (mins > byBranch[key].longest) {
-        byBranch[key].longest = mins;
-        byBranch[key].longestDate = a.date;
-      }
-    });
-
-    const branches = Object.entries(byBranch).sort((a,b) => b[1].totalMin - a[1].totalMin);
-    const totalMin = branches.reduce((s, [,v]) => s + v.totalMin, 0);
-    const totalEvents = branches.reduce((s, [,v]) => s + v.events, 0);
-    const fmtMin = (m) => {
-      if (m < 60) return m + ' min';
-      const h = Math.floor(m/60);
-      const rest = m % 60;
-      return h + 'h' + (rest > 0 ? ' ' + rest + 'min' : '');
-    };
-
-    const branchRows = branches.map(([name, v]) => {
-      const clsRow = v.totalMin > 240 ? 'dn' : v.totalMin > 60 ? 'warn' : 'up';
-      return '<div class="mod-table-row" style="grid-template-columns:2fr 1fr 1fr 1fr">' +
-        '<div><strong>' + name + '</strong></div>' +
-        '<div style="text-align:center">' + v.events + '</div>' +
-        '<div style="text-align:center"><span class="mod-kpi-val ' + clsRow + '" style="font-size:.9rem">' + fmtMin(v.totalMin) + '</span></div>' +
-        '<div style="text-align:center;font-size:.72rem">' + fmtMin(v.longest) + '<br><span style="color:var(--m)">' + v.longestDate + '</span></div>' +
-      '</div>';
-    }).join('');
-
-    // Timeline de eventos (los últimos 15)
-    const recentEvents = rappiSL.availability.slice(0, 15).map(a => {
-      const mins = parseDuration(a.duration);
-      const clsEv = mins > 120 ? 'dn' : mins > 30 ? 'warn' : 'up';
-      return '<div style="display:grid;grid-template-columns:1fr 1.5fr 1fr 0.8fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--l);font-size:.75rem;align-items:center">' +
-        '<div style="color:var(--m)">' + a.date + '</div>' +
-        '<div>' + a.branchName + '</div>' +
-        '<div style="font-family:monospace">' + a.from + ' - ' + a.to + '</div>' +
-        '<div style="text-align:right"><span class="mod-kpi-val ' + clsEv + '" style="font-size:.85rem">' + fmtMin(mins) + '</span></div>' +
-      '</div>';
-    }).join('');
-
-    const closedHtml = '<div class="mod-chart-wrap" style="border-top:3px solid #FF6900;margin-top:20px">' +
-      '<div class="mod-chart-title">🚨 Tiendas cerradas / no disponibles (Rappi — últimos 15 días)</div>' +
-      '<div style="padding:10px 14px;background:rgba(255,105,0,.05);border-left:3px solid #FF6900;border-radius:0 4px 4px 0;margin-bottom:14px;font-size:.78rem">' +
-      '<strong>Impacto directo:</strong> ' + totalEvents + ' eventos de cierre acumulando <strong>' + fmtMin(totalMin) + '</strong>. Cada minuto cerrado son órdenes perdidas.' +
-      '</div>' +
-      '<div class="mod-table">' +
-        '<div class="mod-table-head" style="grid-template-columns:2fr 1fr 1fr 1fr"><div>Sucursal</div><div style="text-align:center">Eventos</div><div style="text-align:center">Total cerrado</div><div style="text-align:center">Cierre más largo</div></div>' +
-        branchRows +
-      '</div>' +
-      '<div style="margin-top:14px"><div style="font-weight:700;font-size:.85rem;margin-bottom:8px">📅 Últimos eventos</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1.5fr 1fr 0.8fr;gap:12px;padding:8px 0;border-bottom:2px solid var(--t);font-size:.62rem;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:1px">' +
-      '<div>Fecha</div><div>Sucursal</div><div>Horario</div><div style="text-align:right">Duración</div></div>' +
-      recentEvents + '</div></div>';
-
-    body.innerHTML += closedHtml;
-  }
 }
 
 // ─── RECLAMOS ─────────────────────────────────────────────
@@ -12390,7 +11692,7 @@ function renderReclamos() {
   // ─── Sprint 4: Bloques oficiales de plataforma ─────────
   let officialHtml = '';
 
-  if (rappiSL && rappiSL.metrics && (rappiSL.cancellations?.length > 0 || rappiSL.complaints?.length > 0 || rappiSL.productComplaints?.length > 0 || rappiSL.branchMetrics?.length > 0 || Object.keys(rappiSL.metrics).length > 0)) {
+  if (rappiSL && rappiSL.metrics && (rappiSL.cancellations?.length > 0 || rappiSL.complaints?.length > 0 || Object.keys(rappiSL.metrics).length > 0)) {
     const m = rappiSL.metrics;
     officialHtml += '<div class="mod-chart-wrap" style="border-top:3px solid #FF6900">' +
       '<div class="mod-chart-title">🟠 Rappi — Nivel de Servicio oficial (' + (rappiSL.periodStart || '') + ' → ' + (rappiSL.periodEnd || '') + ')</div>' +
@@ -12429,51 +11731,6 @@ function renderReclamos() {
         '<div class="mod-table-head" style="grid-template-columns:3fr 1fr"><div>Motivo reclamo</div><div style="text-align:right">Cantidad</div></div>' +
         rows + '</div>';
       officialHtml += '<div style="margin-top:10px;padding:10px 14px;background:rgba(200,57,43,.05);border-radius:4px;font-size:.75rem;color:var(--m)">Compensaciones: Rappi ' + money(totCompRappi) + ' · Restaurante ' + money(totCompRest) + '</div>';
-    }
-
-    // Sprint 4 NUEVO: Reclamos - Productos (con topping y categoría)
-    if (rappiSL.productComplaints?.length > 0) {
-      const prodMap = {};
-      rappiSL.productComplaints.forEach(pc => {
-        const key = pc.product || 'Sin producto';
-        if (!prodMap[key]) prodMap[key] = { count: 0, toppings: {}, categories: {} };
-        prodMap[key].count++;
-        if (pc.topping) prodMap[key].toppings[pc.topping] = (prodMap[key].toppings[pc.topping] || 0) + 1;
-        if (pc.toppingCategory) prodMap[key].categories[pc.toppingCategory] = (prodMap[key].categories[pc.toppingCategory] || 0) + 1;
-      });
-      const prodRows = Object.entries(prodMap).sort((a,b) => b[1].count - a[1].count).map(([prod, m]) => {
-        const topTopping = Object.entries(m.toppings).sort((a,b) => b[1]-a[1])[0];
-        const topCat = Object.entries(m.categories).sort((a,b) => b[1]-a[1])[0];
-        return '<div class="mod-table-row" style="grid-template-columns:2fr 1fr 1.5fr 1.5fr">' +
-          '<div><strong>' + prod + '</strong></div>' +
-          '<div style="text-align:center">' + m.count + '</div>' +
-          '<div style="font-size:.72rem">' + (topTopping ? topTopping[0] + ' (' + topTopping[1] + ')' : '—') + '</div>' +
-          '<div style="font-size:.72rem">' + (topCat ? topCat[0] + ' (' + topCat[1] + ')' : '—') + '</div>' +
-        '</div>';
-      }).join('');
-      officialHtml += '<div style="margin-top:16px"><div style="font-weight:700;font-size:.85rem;margin-bottom:8px">🧴 Reclamos por producto (con topping y categoría)</div>' +
-        '<div class="mod-table"><div class="mod-table-head" style="grid-template-columns:2fr 1fr 1.5fr 1.5fr"><div>Producto</div><div style="text-align:center">Reclamos</div><div>Topping frecuente</div><div>Categoría</div></div>' +
-        prodRows + '</div></div>';
-    }
-
-    // Sprint 4 NUEVO: Nivel de servicio por sucursal
-    if (rappiSL.branchMetrics?.length > 0) {
-      const bRows = rappiSL.branchMetrics.map(b => {
-        const clsAvail = b.availability > 98 ? 'up' : b.availability > 95 ? 'warn' : 'dn';
-        const clsDelay = b.delayPct < 15 ? 'up' : b.delayPct < 30 ? 'warn' : 'dn';
-        return '<div class="mod-table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr">' +
-          '<div><strong>' + b.branch + '</strong></div>' +
-          '<div style="text-align:center">' + b.cancelPct.toFixed(1) + '%</div>' +
-          '<div style="text-align:center">' + b.cancelOrders + '</div>' +
-          '<div style="text-align:center">' + b.complaintPct.toFixed(1) + '%</div>' +
-          '<div style="text-align:center"><span class="mod-kpi-val ' + clsAvail + '" style="font-size:.9rem">' + b.availability.toFixed(1) + '%</span></div>' +
-          '<div style="text-align:center"><span class="mod-kpi-val ' + clsDelay + '" style="font-size:.9rem">' + b.delayPct.toFixed(1) + '%</span></div>' +
-        '</div>';
-      }).join('');
-      officialHtml += '<div style="margin-top:16px"><div style="font-weight:700;font-size:.85rem;margin-bottom:8px">🏢 Nivel de servicio por sucursal</div>' +
-        '<div class="mod-table"><div class="mod-table-head" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr">' +
-        '<div>Sucursal</div><div style="text-align:center">Cancel%</div><div style="text-align:center">Canceladas</div><div style="text-align:center">Reclamos%</div><div style="text-align:center">Disponib.</div><div style="text-align:center">Demora%</div>' +
-        '</div>' + bRows + '</div></div>';
     }
 
     officialHtml += '</div>';
@@ -13024,243 +12281,70 @@ function renderProductos() {
   const body = document.getElementById('productosBody');
   if (!body) return;
 
-  const cd = APP.catalogData;
-  if (!cd || !cd.catalog || cd.catalog.length === 0) {
+  // Fix agosto 2026: APP.catalogData es { catalog: [], platDisc: {}, comboOpts: {} }
+  // Antes se accedía como array directamente causando "catalog.map is not a function"
+  const catalog = Array.isArray(APP.catalogData?.catalog) ? APP.catalogData.catalog : [];
+  if (catalog.length === 0) {
     body.innerHTML = '<div class="mod-noData"><div class="mod-noData-ico">🍔</div>' +
-      '<div class="mod-noData-title">Sin desglose de productos</div>' +
-      '<div class="mod-noData-desc">El análisis de productos usa la columna "Artículos" de PedidosYa (orderDetails.xlsx).<br><br>' +
-      '<strong>Rappi</strong>: no expone items por orden en el Reporte Financiero (limitación real).<br>' +
-      '<strong>PedidosYa</strong>: sí trae los productos con detalles de combos y opciones internas.<br><br>' +
-      'Sube <code>orderDetails.xlsx</code> de PeYa para ver este análisis.</div></div>';
+      '<div class="mod-noData-title">Análisis por producto no disponible aún</div>' +
+      '<div class="mod-noData-desc">Los reportes actuales de Rappi no desglosan qué productos se vendieron en cada orden. ' +
+      'Para PedidosYa se necesita el archivo <code>orderDetails.xlsx</code> que sí trae la columna "Artículos".' +
+      '<br><br>Sube ese archivo para activar este análisis.</div></div>';
     return;
   }
 
-  const catalog = cd.catalog;
-  const comboOpts = cd.comboOpts || {};
-  const platDisc = cd.platDisc || {};
-
-  const money = n => 'S/' + (n||0).toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const money = n => 'S/' + Math.round(n).toLocaleString('es-PE');
   const num = n => Math.round(n).toLocaleString('es-PE');
-  const pct = n => (n||0).toFixed(1) + '%';
 
-  // Ordenar por revenue
-  const items = catalog.slice().sort((a,b) => (b.revenue||0) - (a.revenue||0));
+  // Ordenar productos por revenue total
+  const items = catalog.map(item => {
+    const totalRev = (item.paidEst || 0) * (item.freq?.rappi || 0 + item.freq?.peya || 0);
+    return { ...item, totalRev };
+  }).sort((a,b) => b.totalRev - a.totalRev).slice(0, 30);
 
-  // Detectar dónde vende mejor cada producto
-  const detectBestChannel = (item) => {
-    const plats = item.plats || {};
-    const r = plats.rappi || 0;
-    const p = plats.peya || 0;
-    const d = plats.didi || 0;
-    const total = r + p + d;
-    if (total === 0) return { label: 'Sin canal', color: '#999' };
-    if (r > p * 1.5 && r > d) return { label: '🟠 Rappi (' + Math.round(r/total*100) + '%)', color: '#FF6900' };
-    if (p > r * 1.5 && p > d) return { label: '🔵 PeYa (' + Math.round(p/total*100) + '%)', color: '#0064C8' };
-    if (d > 0 && d > r && d > p) return { label: '🟡 Didi', color: '#f4d000' };
-    return { label: 'Múltiples canales', color: '#666' };
-  };
+  const rowsHtml = items.map(item => {
+    const rappiFreq = item.freq?.rappi || 0;
+    const peyaFreq = item.freq?.peya || 0;
+    const totalFreq = rappiFreq + peyaFreq;
+    if (totalFreq === 0) return '';
 
-  // Detectar precio pagado vs precio base inferido
-  const getPricingInfo = (item) => {
-    if (item.baseSource === 'menu') {
-      // Precio del menú
-      const platsWithPrice = Object.entries(item.base || {}).filter(([p,v]) => v > 0);
-      if (platsWithPrice.length > 0) {
-        const avgBase = platsWithPrice.reduce((s,[,v]) => s+v, 0) / platsWithPrice.length;
-        const discPct = avgBase > 0 ? ((avgBase - item.paidEst) / avgBase) * 100 : 0;
-        return { base: avgBase, paid: item.paidEst, disc: discPct };
-      }
-    }
-    // Inferido de órdenes
-    return { base: item.base?.peya || item.base?.rappi || 0, paid: item.paidEst, disc: 0 };
-  };
+    // Detectar dónde vende mejor
+    let bestChannel = '';
+    if (rappiFreq > peyaFreq * 1.5) bestChannel = '<span class="chan-badge rappi">🟠 Rappi</span>';
+    else if (peyaFreq > rappiFreq * 1.5) bestChannel = '<span class="chan-badge peya">🔵 PeYa</span>';
+    else bestChannel = '<span class="chan-badge neutral">Ambos</span>';
 
-  // TOP 30 productos
-  const topRows = items.slice(0, 30).map(item => {
-    if (item.orders === 0) return '';
-    const chan = detectBestChannel(item);
-    const px = getPricingInfo(item);
-    const typeIcons = { main: '🍔', side: '🍟', drink: '🥤', dessert: '🍦', combo: '📦', addon: '➕', other: '•' };
-    const ico = typeIcons[item.type] || '•';
-
-    return '<div class="mod-table-row" style="grid-template-columns:0.4fr 2.5fr 1fr 1fr 1fr 1fr 1fr">' +
-      '<div style="font-size:1.1rem;text-align:center">' + ico + '</div>' +
-      '<div><strong>' + item.name + '</strong><div style="font-size:.65rem;color:var(--m)">' + item.type + '</div></div>' +
-      '<div style="font-family:\'DM Mono\',monospace">' + num(item.orders) + '</div>' +
-      '<div>' + money(item.revenue) + '</div>' +
-      '<div>' + money(px.paid) + (px.disc > 0 ? '<div style="font-size:.6rem;color:var(--m)">-' + px.disc.toFixed(0) + '% desc.</div>' : '') + '</div>' +
-      '<div><span style="color:' + chan.color + ';font-weight:700;font-size:.72rem">' + chan.label + '</span></div>' +
-      '<div style="font-size:.68rem;color:var(--m)">' + (item.baseSource === 'menu' ? 'del menú' : 'inferido') + '</div>' +
-      '</div>';
+    return `<div class="mod-table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">
+      <div><strong>${item.name || 'Sin nombre'}</strong></div>
+      <div>${num(rappiFreq)}</div>
+      <div>${num(peyaFreq)}</div>
+      <div>${bestChannel}</div>
+      <div>${money(item.paidEst || 0)}</div>
+    </div>`;
   }).filter(r => r).join('');
 
-  // Análisis de combos - qué opciones internas se piden más
-  let comboAnalysis = '';
-  const combosWithOpts = Object.entries(comboOpts).filter(([k, opts]) => Object.keys(opts).length > 0);
-
-  if (combosWithOpts.length > 0) {
-    comboAnalysis = '<div class="mod-chart-wrap" style="margin-top:20px;border-top:3px solid #e88b3a">' +
-      '<div class="mod-chart-title">📦 Composición interna de combos (qué se elige dentro de cada combo)</div>';
-
-    combosWithOpts.forEach(([comboKey, opts]) => {
-      const combo = catalog.find(c => itemKey(c.name) === comboKey);
-      if (!combo) return;
-
-      const sortedOpts = Object.entries(opts).sort((a,b) => b[1].count - a[1].count);
-      const totalCount = sortedOpts.reduce((s, [,v]) => s + v.count, 0);
-      const maxCount = sortedOpts[0]?.[1].count || 1;
-
-      comboAnalysis += '<div style="margin:14px 0;padding:14px;background:var(--w);border-radius:6px">' +
-        '<div style="font-weight:700;color:var(--t);margin-bottom:10px">📦 ' + combo.name + ' <span style="font-size:.7rem;color:var(--m);font-weight:400">(' + combo.orders + ' órdenes)</span></div>';
-
-      sortedOpts.slice(0, 12).forEach(([optKey, opt]) => {
-        const p = (opt.count / totalCount) * 100;
-        const barW = (opt.count / maxCount) * 100;
-        comboAnalysis += '<div style="display:grid;grid-template-columns:200px 1fr 60px 50px;gap:12px;align-items:center;padding:5px 0;font-size:.75rem">' +
-          '<div>' + opt.name + '</div>' +
-          '<div style="background:rgba(232,139,58,.1);border-radius:100px;height:12px;overflow:hidden">' +
-            '<div style="height:100%;width:' + barW + '%;background:#e88b3a"></div>' +
-          '</div>' +
-          '<div style="text-align:right;font-family:\'DM Mono\',monospace">' + opt.count + '×</div>' +
-          '<div style="text-align:right;color:var(--m)">' + p.toFixed(1) + '%</div>' +
-        '</div>';
-      });
-
-      comboAnalysis += '</div>';
-    });
-
-    comboAnalysis += '</div>';
-  }
-
-  // Cross-basket: buscar qué productos se piden juntos
-  // Usar el motor v1 - buildCoOccurrence si existe
-  let crossBasket = '';
-  if (typeof buildCoOccurrence === 'function') {
-    try {
-      const orders = APP.allOrders || [];
-      const coOcc = buildCoOccurrence(orders);
-
-      // Filtrar top pares
-      const pairs = [];
-      Object.entries(coOcc).forEach(([k1, others]) => {
-        Object.entries(others).forEach(([k2, count]) => {
-          if (k1 < k2 && count >= 2) {
-            const item1 = catalog.find(c => itemKey(c.name) === k1);
-            const item2 = catalog.find(c => itemKey(c.name) === k2);
-            if (item1 && item2) pairs.push({ item1, item2, count });
-          }
-        });
-      });
-      pairs.sort((a,b) => b.count - a.count);
-
-      if (pairs.length > 0) {
-        crossBasket = '<div class="mod-chart-wrap" style="margin-top:20px;border-top:3px solid #2d6a4f">' +
-          '<div class="mod-chart-title">🎯 Se piden juntos (cross-basket) — TOP ' + Math.min(pairs.length, 15) + '</div>' +
-          '<div class="mod-table">' +
-            '<div class="mod-table-head" style="grid-template-columns:2fr 2fr 1fr">' +
-              '<div>Producto A</div><div>Producto B</div><div style="text-align:right">Veces juntos</div>' +
-            '</div>';
-        pairs.slice(0, 15).forEach(p => {
-          crossBasket += '<div class="mod-table-row" style="grid-template-columns:2fr 2fr 1fr">' +
-            '<div>' + p.item1.name + '</div>' +
-            '<div>' + p.item2.name + '</div>' +
-            '<div style="text-align:right;font-family:\'DM Mono\',monospace"><strong>' + p.count + '</strong></div>' +
-          '</div>';
-        });
-        crossBasket += '</div></div>';
-      }
-    } catch (e) {
-      console.warn('[Productos] Error cross-basket:', e);
-    }
-  }
-
-  // Performance por canal (agregado)
-  const byPlat = { rappi: 0, peya: 0, didi: 0 };
-  const revByPlat = { rappi: 0, peya: 0, didi: 0 };
-  items.forEach(item => {
-    Object.entries(item.plats || {}).forEach(([p, c]) => {
-      byPlat[p] = (byPlat[p] || 0) + c;
-      revByPlat[p] = (revByPlat[p] || 0) + (item.revenue * (c / item.orders || 0));
-    });
-  });
-
-  // KPIs top
-  const totalItems = items.filter(i => i.orders > 0).length;
-  const totalOrdersWithItems = items.reduce((s, i) => s + (i.orders || 0), 0);
-  const totalRevenue = items.reduce((s, i) => s + (i.revenue || 0), 0);
-  const topItem = items[0];
-
-  // Sprint 4 NUEVO: productos con reclamos en Rappi (Service_Level)
-  const rappiSL = APP.allOrders?._rappiServiceLevel || APP._unfilteredOrders?._rappiServiceLevel;
-  let rappiProdsHtml = '';
-  if (rappiSL?.productComplaints?.length > 0 || rappiSL?.cancellations?.some(c => c.product)) {
-    // Consolidar productos con problemas de Rappi
-    const rappiProdIssues = {};
-    (rappiSL.productComplaints || []).forEach(pc => {
-      const p = pc.product || 'Sin producto';
-      if (!rappiProdIssues[p]) rappiProdIssues[p] = { complaints: 0, cancellations: 0, toppings: {} };
-      rappiProdIssues[p].complaints++;
-      if (pc.topping) rappiProdIssues[p].toppings[pc.topping] = (rappiProdIssues[p].toppings[pc.topping] || 0) + 1;
-    });
-    (rappiSL.cancellations || []).forEach(c => {
-      if (!c.product) return;
-      const p = c.product;
-      if (!rappiProdIssues[p]) rappiProdIssues[p] = { complaints: 0, cancellations: 0, toppings: {} };
-      rappiProdIssues[p].cancellations++;
-    });
-
-    const issues = Object.entries(rappiProdIssues).sort((a,b) => (b[1].complaints + b[1].cancellations) - (a[1].complaints + a[1].cancellations));
-    if (issues.length > 0) {
-      const rows = issues.map(([prod, m]) => {
-        const topTopping = Object.entries(m.toppings).sort((a,b) => b[1]-a[1])[0];
-        return '<div class="mod-table-row" style="grid-template-columns:2fr 1fr 1fr 1.5fr">' +
-          '<div><strong>' + prod + '</strong></div>' +
-          '<div style="text-align:center">' + m.complaints + '</div>' +
-          '<div style="text-align:center">' + m.cancellations + '</div>' +
-          '<div style="font-size:.72rem">' + (topTopping ? topTopping[0] + ' (' + topTopping[1] + 'x)' : '—') + '</div>' +
-        '</div>';
-      }).join('');
-      rappiProdsHtml = '<div class="mod-chart-wrap" style="margin-top:20px;border-top:3px solid #FF6900">' +
-        '<div class="mod-chart-title">🚨 Productos con problemas en Rappi (Service Level)</div>' +
-        '<div style="padding:10px 14px;background:rgba(255,105,0,.05);border-left:3px solid #FF6900;border-radius:0 4px 4px 0;margin-bottom:14px;font-size:.78rem">' +
-        'Estos productos generaron reclamos o cancelaciones. Revisa si hay patrones (topping específico, sucursal, categoría).' +
-        '</div>' +
-        '<div class="mod-table">' +
-          '<div class="mod-table-head" style="grid-template-columns:2fr 1fr 1fr 1.5fr">' +
-          '<div>Producto</div><div style="text-align:center">Reclamos</div><div style="text-align:center">Cancelaciones</div><div>Topping problemático</div>' +
-          '</div>' + rows +
-        '</div></div>';
-    }
-  }
-
-  body.innerHTML =
-    '<div class="mod-hero" style="border-top:4px solid #c8392b">' +
-      '<div class="mod-hero-title">🍔 Productos y canasta</div>' +
-      '<div class="mod-hero-desc">Análisis de ' + totalItems + ' productos únicos · ' + num(totalOrdersWithItems) + ' órdenes con detalle · basado en PedidosYa (Rappi no expone items por orden)</div>' +
-    '</div>' +
-    '<div class="mod-kpi-grid">' +
-      '<div class="mod-kpi"><div class="mod-kpi-label">Productos únicos</div>' +
-      '<div class="mod-kpi-val">' + totalItems + '</div>' +
-      '<div class="mod-kpi-hint">Con al menos 1 orden</div></div>' +
-      '<div class="mod-kpi"><div class="mod-kpi-label">Producto top</div>' +
-      '<div class="mod-kpi-val" style="font-size:.95rem">' + (topItem?.name?.substring(0, 22) || '—') + '</div>' +
-      '<div class="mod-kpi-hint">' + (topItem?.orders || 0) + ' órdenes</div></div>' +
-      '<div class="mod-kpi"><div class="mod-kpi-label">Combos detectados</div>' +
-      '<div class="mod-kpi-val">' + combosWithOpts.length + '</div>' +
-      '<div class="mod-kpi-hint">Con opciones internas</div></div>' +
-      '<div class="mod-kpi"><div class="mod-kpi-label">Revenue analizado</div>' +
-      '<div class="mod-kpi-val">' + money(totalRevenue) + '</div>' +
-      '<div class="mod-kpi-hint">GMV atribuido a productos</div></div>' +
-    '</div>' +
-    '<div class="mod-chart-wrap"><div class="mod-chart-title">🏆 TOP productos por revenue</div>' +
-    '<div class="mod-table">' +
-      '<div class="mod-table-head" style="grid-template-columns:0.4fr 2.5fr 1fr 1fr 1fr 1fr 1fr">' +
-      '<div></div><div>Producto</div><div>Órdenes</div><div>Revenue</div><div>Precio pagado</div><div>Canal dominante</div><div>Fuente precio</div>' +
-      '</div>' + topRows +
-    '</div></div>' +
-    comboAnalysis +
-    crossBasket +
-    rappiProdsHtml;
+  body.innerHTML = `
+    <div class="mod-hero" style="border-top:4px solid #c8392b">
+      <div class="mod-hero-title">🍔 Productos por canal</div>
+      <div class="mod-hero-desc">Top ${items.length} productos · dónde vende mejor cada uno</div>
+    </div>
+    <div class="mod-table">
+      <div class="mod-table-head" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">
+        <div>Producto</div>
+        <div>Órdenes Rappi</div>
+        <div>Órdenes PeYa</div>
+        <div>Vende mejor en</div>
+        <div>Precio est.</div>
+      </div>
+      ${rowsHtml}
+    </div>
+    <style>
+      .chan-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:.65rem;font-weight:700}
+      .chan-badge.rappi{background:rgba(255,81,0,.15);color:#8a3400}
+      .chan-badge.peya{background:rgba(0,100,200,.15);color:#003d75}
+      .chan-badge.neutral{background:rgba(0,0,0,.06);color:var(--m)}
+    </style>
+  `;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
