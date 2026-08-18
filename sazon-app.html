@@ -6814,11 +6814,23 @@ function renderPatrones(){
 }
 
 function renderPatternCards(P, branch){
-  const { catalog, platDisc } = APP.catalogData || buildCatalog(APP.allOrders);
+  // Sazón fix agosto 2026: defensive check para catalog vacío
+  const cd = APP.catalogData || buildCatalog(APP.allOrders);
+  const catalog = Array.isArray(cd?.catalog) ? cd.catalog : [];
+  const platDisc = cd?.platDisc || {};
+  const patCardsEl = document.getElementById('patCards');
+  if (catalog.length === 0) {
+    if (patCardsEl) {
+      patCardsEl.innerHTML = '<div style="padding:20px 24px;text-align:center;background:var(--w);border-radius:6px;border:1px dashed var(--l);color:var(--m);font-size:.78rem;margin-top:14px">' +
+        'Las tarjetas de acción por bloque necesitan detalle de productos. La matriz de patrones (arriba) sí está funcionando con las órdenes cargadas.' +
+        '</div>';
+    }
+    return;
+  }
   const mains = catalog.filter(i=>i.type==='main'||i.type==='combo');
   const topItem = mains[0] || catalog[0];
   const lowItem = mains.length>1 ? mains[mains.length-1] : topItem;
-  const plats = Object.keys(APP.D.byPlat);
+  const plats = Object.keys(APP.D?.byPlat || {});
   const domPlat = plats.sort((a,b)=>(APP.D.byPlat[b]?.gmv||0)-(APP.D.byPlat[a]?.gmv||0))[0]||'peya';
   const dBase = platDisc[domPlat]!==undefined ? platDisc[domPlat] : (APP.D.avgDiscPct||0.25);
   const dayOrder=[1,2,3,4,5,6,0];
@@ -6926,8 +6938,15 @@ function renderPrecios(){
   const { catalog, platDisc } = APP.catalogData;
   if (!Array.isArray(catalog) || catalog.length === 0) {
     const panel = document.getElementById('p-precios');
-    if (panel && panel.querySelector('.mod-noData') == null) {
-      // Solo mostrar mensaje si el panel está vacío
+    if (panel) {
+      panel.innerHTML = '<div class="mod-noData" style="padding:40px 24px;text-align:center;background:var(--w);border-radius:6px;border:1px dashed var(--l);margin:20px 0">' +
+        '<div style="font-size:2rem;margin-bottom:10px">💰</div>' +
+        '<h3 style="font-family:\'Playfair Display\',serif;margin-bottom:8px;color:var(--t)">Análisis de precios pendiente</h3>' +
+        '<p style="font-size:.8rem;color:var(--m);max-width:520px;margin:0 auto;line-height:1.55">' +
+        'Este módulo necesita el <strong>detalle de productos por orden</strong> para poder sugerir precios por bloque y día. ' +
+        'Sube el archivo <code style="background:#eee6d3;padding:2px 6px;border-radius:3px">orderDetails.xlsx</code> de PedidosYa (trae la columna "Artículos") ' +
+        'para activarlo. Rappi no expone el detalle de items en sus reportes actuales.' +
+        '</p></div>';
     }
     return;
   }
@@ -7316,7 +7335,25 @@ function priceRecommendation(item, plats, elas){
 function renderMenu(){
   if(!APP.catalogData || !APP.D) return;
   const { catalog, platDisc } = APP.catalogData;
-  if (!Array.isArray(catalog) || catalog.length === 0) return;
+  if (!Array.isArray(catalog) || catalog.length === 0) {
+    // Sazón fix agosto 2026: mensaje explicativo en lugar de panel en blanco
+    const insight = document.getElementById('menuInsight');
+    const overview = document.getElementById('menuOverview');
+    const filter = document.getElementById('menuFilterBar');
+    const cards = document.getElementById('menuCards');
+    const emptyMsg = '<div class="mod-noData" style="padding:40px 24px;text-align:center;background:var(--w);border-radius:6px;border:1px dashed var(--l);grid-column:1/-1">' +
+      '<div style="font-size:2rem;margin-bottom:10px">🍔</div>' +
+      '<h3 style="font-family:\'Playfair Display\',serif;margin-bottom:8px;color:var(--t)">Análisis de menú pendiente</h3>' +
+      '<p style="font-size:.8rem;color:var(--m);max-width:520px;margin:0 auto;line-height:1.55">' +
+      'Necesitamos el <strong>detalle de productos por orden</strong> para clasificar el catálogo (estrellas, perros, vacas). ' +
+      'Sube el archivo <code style="background:#eee6d3;padding:2px 6px;border-radius:3px">orderDetails.xlsx</code> de PedidosYa para activar este módulo.' +
+      '</p></div>';
+    if (insight) insight.innerHTML = emptyMsg;
+    if (overview) overview.innerHTML = '';
+    if (filter) filter.innerHTML = '';
+    if (cards) cards.innerHTML = '';
+    return;
+  }
   const bcg  = bcgClassify(catalog);
   const elas = estimateElasticity(catalog, APP.allOrders);
   APP.menuData = { catalog, platDisc, bcg, elas };
