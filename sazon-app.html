@@ -1159,7 +1159,7 @@ input[type=file]{display:none;}
     </div>
     <div class="auth-body">
       <div class="auth-title">Ingresa a tu cuenta</div>
-      <div class="auth-sub">Te enviaremos un código de acceso a tu correo</div>
+      <div class="auth-sub">Te enviaremos un código de 6 dígitos a tu correo</div>
       <div class="auth-msg" id="authMsgEmail"></div>
       <input type="email" id="authEmail" class="auth-input" placeholder="tu@correo.com" autocomplete="email">
       <button class="auth-btn" id="authEmailBtn">Continuar</button>
@@ -1867,6 +1867,7 @@ const showAuthStep = (step) => {
 };
 
 const TAB_META = {
+  diagnostico: { icon: '🩺', label: 'Diagnóstico' },
   marca:      { icon: '🏷️', label: 'Marca' },
   dashboard:  { icon: '📊', label: 'Dashboard' },
   patrones:   { icon: '⏰', label: 'Patrones' },
@@ -4094,10 +4095,12 @@ function renderSubBanner(){
 function renderTabBar(){
   const tabBar = $('tabBar');
   const allowedTabs = new Set(APP.tier.tabs);
+  // Sazón: Diagnóstico Mr Smash siempre visible como cortesía del piloto
+  allowedTabs.add('diagnostico');
   const groups = [
     ['dashboard'],
     ['marca'],
-    ['patrones', 'precios'],
+    ['diagnostico', 'patrones', 'precios'],
     ['menu', 'productos', 'combos', 'promos'],
     ['adq', 'ticket', 'retencion'],
     ['tendencias', 'tiempos', 'reclamos'],
@@ -8807,6 +8810,233 @@ function hideUploadFlow() {
   setStyle('uploadFlow', 'display', 'none');
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+//  DIAGNÓSTICO EMBEBIDO — Mr Smash
+//  Análisis completo pre-cargado, sin dependencia de archivos
+// ═══════════════════════════════════════════════════════════════════════
+function renderDiagnosticoMrSmash() {
+  const P = {
+    wine: '#722F37', wineDark: '#4A1E24', gold: '#C89F5E', cream: '#F4EFE7',
+    ink: '#1A1A1A', charcoal: '#3D3D3D', gray: '#757575', grayLight: '#D9D9D9',
+    white: '#FFFFFF', smashRed: '#CE2D3B', smashRedD: '#9E1F2C', smashYel: '#FDDA2A',
+    peya: '#E60064', rappi: '#FF6900', green: '#2D6A4F', amber: '#E88B3A',
+  };
+  const S = {
+    page: `background:${P.white};padding:0;font-family:'Helvetica Neue',Arial,sans-serif;color:${P.ink}`,
+    section: `padding:32px 40px;border-bottom:1px solid ${P.grayLight}`,
+    sectionDark: `padding:40px;background:${P.wine};color:${P.white}`,
+    h1: `font-size:26px;font-weight:700;color:${P.wine};margin:0 0 6px 0;letter-spacing:-.5px`,
+    h1White: `font-size:32px;font-weight:700;color:${P.smashYel};margin:0 0 6px 0;font-style:italic;letter-spacing:-.5px`,
+    h2: `font-size:11px;font-weight:700;color:${P.gold};letter-spacing:2px;text-transform:uppercase;margin:0 0 20px 0`,
+    sub: `font-size:13px;color:${P.gray};font-style:italic;margin:0 0 24px 0`,
+    accent: `width:40px;height:3px;background:${P.gold};margin:0 0 20px 0`,
+    card: `background:${P.cream};padding:20px;border-radius:6px;border-left:6px solid ${P.wine}`,
+    cardRed: `background:${P.cream};padding:20px;border-radius:6px;border-left:6px solid ${P.smashRed}`,
+    tbl: `width:100%;border-collapse:collapse;font-size:12px`,
+    th: `background:${P.wine};color:${P.gold};padding:10px;text-align:center;font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase`,
+    td: `padding:10px;border-bottom:1px solid ${P.grayLight};font-family:'Consolas','Courier New',monospace`,
+    tdName: `padding:10px;border-bottom:1px solid ${P.grayLight};font-weight:700;color:${P.wine}`,
+    tag: `display:inline-block;padding:3px 10px;border-radius:12px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase`,
+    yellow: `background:${P.smashYel};color:${P.smashRedD};padding:8px 14px;border-radius:4px;font-size:12px;font-weight:700`,
+  };
+  const money = n => 'S/' + (Math.round(n)).toLocaleString('es-PE');
+  const money2 = n => 'S/' + n.toFixed(2);
+
+  const errores = [
+    { n: 1, area: 'OPS', tit: 'Surquillo escala mal', d: 'Rechazo 5.74% · reclamos 9.84%', imp: '~40 órd/mes perdidas', c: P.smashRed },
+    { n: 2, area: 'ADS', tit: 'Ads Rappi sin control', d: '28.8% del GMV · sin ROAS medido', imp: '~S/1.5K margen/mes', c: P.smashRed },
+    { n: 3, area: 'MENÚ', tit: 'Concentración 61% en 1 SKU', d: 'Combo Mr Smash = todo el riesgo', imp: 'Vulnerabilidad estructural', c: P.amber },
+    { n: 4, area: 'PRECIOS', tit: 'Descuentos sin política', d: 'Fugaces + Gold Vip = S/195/sem', imp: 'Margen perdido no medido', c: P.amber },
+    { n: 5, area: 'CATÁLOGO', tit: 'Funnel 26.7% carrito→orden', d: 'La mitad del benchmark', imp: '~60 órd/mes perdidas', c: P.gold },
+    { n: 6, area: 'MIX', tit: 'Combos 2 y 3 escondidos', d: 'Ticket S/54 estancado', imp: '+S/4 ticket sin capturar', c: P.gold },
+    { n: 7, area: 'RETENCIÓN', tit: 'Sin plan 1ª/2ª compra', d: '631 nuevos vs 198 recurrentes', imp: 'LTV bajo · adq. cara', c: P.gold },
+  ];
+  const meses = [
+    { m: 'Nov 25', peya: 4425, rappi: 0 }, { m: 'Dic 25', peya: 3427, rappi: 0 },
+    { m: 'Ene 26', peya: 4301, rappi: 0 }, { m: 'Feb 26', peya: 5636, rappi: 0 },
+    { m: 'Mar 26', peya: 34, rappi: 0 },   { m: 'Abr 26', peya: 3022, rappi: 0 },
+    { m: 'May 26', peya: 1613, rappi: 2215 }, { m: 'Jun 26', peya: 3320, rappi: 2441 },
+    { m: 'Jul 26', peya: 9057, rappi: 1740 },
+  ];
+  const maxGmv = Math.max(...meses.map(m => m.peya + m.rappi));
+  const skus = [
+    { name: 'Combo Mr. Smash', rol: 'Adquisición', price: 48, hoy: 61, meta: 40, mcP: 19.4, mcR: 26.1 },
+    { name: 'Cheddar Bacon Burger', rol: 'Entrada / margen', price: 32, hoy: 9, meta: 13, mcP: 26.5, mcR: 33.8 },
+    { name: 'Oklahoma Burger', rol: 'Entrada / margen', price: 32, hoy: 9, meta: 12, mcP: 26.5, mcR: 33.8 },
+    { name: 'Shake It', rol: 'Valle / upsell', price: 54, hoy: 6, meta: 8, mcP: 27.9, mcR: 35.3 },
+    { name: 'Combo Para 2', rol: 'Cena · AOV', price: 86, hoy: 10, meta: 20, mcP: 27.9, mcR: 35.3 },
+    { name: 'Combo Para 3', rol: 'Grupos', price: 130, hoy: 4, meta: 7, mcP: 30.0, mcR: 37.6 },
+  ];
+
+  return `
+<div style="${S.page}">
+
+<div style="${S.sectionDark}">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:32px">
+    <div>
+      <div style="font-size:12px;color:${P.gold};letter-spacing:4px;font-weight:700">SAZÓN × MR SMASH</div>
+      <div style="font-size:11px;color:${P.cream};margin-top:4px">Diagnóstico Growth Partner · agosto 2026</div>
+    </div>
+    <div style="background:${P.smashYel};padding:8px 16px;color:${P.smashRed};font-weight:700;letter-spacing:2px">MR SMASH</div>
+  </div>
+  <div style="${S.h1White}">De S/11K a S/35K en 90 días</div>
+  <div style="width:60px;height:3px;background:${P.gold};margin:20px 0"></div>
+  <div style="font-size:14px;color:${P.cream};font-style:italic;max-width:800px">
+    Análisis histórico nov 2025 – jul 2026 · PedidosYa + Rappi delivery · Surquillo + Refugio.
+    Un fix por módulo: menú, precios, financiero, ads, operación, adquisición.
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:32px">
+    ${[
+      { v: 'S/10.8K', l: 'GMV Julio', h: 'Mejor mes desde febrero' },
+      { v: '212', l: 'Órdenes/mes', h: '+177% vs junio' },
+      { v: 'S/54', l: 'Ticket promedio', h: 'Sano · sin crecer' },
+      { v: 'S/24K', l: 'Brecha vs meta', h: '3.2× julio' },
+    ].map(k => `
+      <div style="background:${P.wineDark};padding:20px;border-top:4px solid ${P.smashYel}">
+        <div style="font-size:34px;color:${P.smashYel};font-weight:700;line-height:1">${k.v}</div>
+        <div style="font-size:10px;color:${P.gold};letter-spacing:2px;font-weight:700;margin-top:8px">${k.l}</div>
+        <div style="font-size:10px;color:${P.cream};font-style:italic;margin-top:4px">${k.h}</div>
+      </div>
+    `).join('')}
+  </div>
+</div>
+
+<div style="${S.section}">
+  <div style="${S.h2}">ACTO 1 · QUÉ ESTÁ MAL</div>
+  <div style="${S.h1}">Los 7 errores del delivery hoy</div>
+  <div style="${S.sub}">Ranking por impacto directo en el resultado del mes</div>
+  <div style="${S.accent}"></div>
+  <div style="display:grid;gap:12px">
+    ${errores.map(e => `
+      <div style="display:grid;grid-template-columns:60px 100px 1fr 200px;gap:16px;padding:14px 20px;background:${P.cream};border-left:6px solid ${e.c};align-items:center">
+        <div style="font-size:22px;font-weight:700;color:${e.c}">${String(e.n).padStart(2,'0')}</div>
+        <div><span style="${S.tag};background:${e.c};color:${P.white}">${e.area}</span></div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:${P.wine};margin-bottom:2px">${e.tit}</div>
+          <div style="font-size:11px;color:${P.charcoal};font-style:italic">${e.d}</div>
+        </div>
+        <div style="text-align:center"><span style="${S.yellow}">${e.imp}</span></div>
+      </div>
+    `).join('')}
+  </div>
+</div>
+
+<div style="${S.section};background:${P.cream}">
+  <div style="${S.h2}">EVOLUCIÓN</div>
+  <div style="${S.h1}">GMV mensual · nov 2025 – jul 2026</div>
+  <div style="${S.sub}">PedidosYa + Rappi combinados</div>
+  <div style="${S.accent}"></div>
+  <div style="background:${P.white};padding:24px;border-radius:6px">
+    <div style="display:flex;align-items:flex-end;gap:16px;height:280px;padding-bottom:8px">
+      ${meses.map(m => {
+        const total = m.peya + m.rappi;
+        const peyaH = (m.peya / maxGmv) * 240;
+        const rappiH = (m.rappi / maxGmv) * 240;
+        return `
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+            <div style="font-size:10px;font-weight:700;color:${P.wine};margin-bottom:6px">${money(total)}</div>
+            <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:240px">
+              <div style="background:${P.rappi};height:${rappiH}px;width:100%"></div>
+              <div style="background:${P.peya};height:${peyaH}px;width:100%"></div>
+            </div>
+            <div style="font-size:11px;color:${P.charcoal};margin-top:8px;font-weight:600">${m.m}</div>
+          </div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:24px;justify-content:center;margin-top:12px;padding-top:12px;border-top:1px solid ${P.grayLight}">
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:14px;height:14px;background:${P.peya}"></div><span style="font-size:11px;color:${P.charcoal}">PedidosYa</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:14px;height:14px;background:${P.rappi}"></div><span style="font-size:11px;color:${P.charcoal}">Rappi</span></div>
+    </div>
+  </div>
+</div>
+
+<div style="${S.section}">
+  <div style="${S.h2}">MÓDULO · MENÚ</div>
+  <div style="${S.h1}">Top productos y roles del catálogo</div>
+  <div style="${S.sub}">Cada SKU tiene un rol · pero hoy sólo se vende el de "adquisición"</div>
+  <div style="${S.accent}"></div>
+  <table style="${S.tbl}">
+    <thead><tr>
+      <th style="${S.th};text-align:left">SKU</th><th style="${S.th}">ROL</th><th style="${S.th}">PRECIO</th>
+      <th style="${S.th}">% MIX HOY</th><th style="${S.th}">% MIX META</th><th style="${S.th}">MC PEYA</th><th style="${S.th}">MC RAPPI</th>
+    </tr></thead>
+    <tbody>
+      ${skus.map((sku, i) => `
+        <tr style="background:${i % 2 === 0 ? P.cream : P.white}">
+          <td style="${S.tdName}">${sku.name}</td>
+          <td style="${S.td};text-align:center;font-style:italic;color:${P.charcoal};font-family:inherit">${sku.rol}</td>
+          <td style="${S.td};text-align:center;color:${P.wine};font-weight:700">S/${sku.price}</td>
+          <td style="${S.td};text-align:center;color:${sku.hoy === 61 ? P.smashRed : P.charcoal};font-weight:${sku.hoy === 61 ? 700 : 400}">${sku.hoy}%</td>
+          <td style="${S.td};text-align:center;color:${P.green};font-weight:700">${sku.meta}%</td>
+          <td style="${S.td};text-align:center">${sku.mcP}%</td>
+          <td style="${S.td};text-align:center;color:${P.green}">${sku.mcR}%</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+</div>
+
+<div style="${S.section};background:${P.cream}">
+  <div style="${S.h2}">MÓDULO · OPERACIÓN</div>
+  <div style="${S.h1}">Surquillo vs El Refugio · el gap operativo</div>
+  <div style="${S.sub}">El local nuevo creció fuerte pero opera muy por debajo del maduro</div>
+  <div style="${S.accent}"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    ${[
+      { tit: 'El Refugio', tag: 'LOCAL MADURO', color: P.green,
+        kpis: [['% Rechazo', '0.84%'], ['% Reclamos', '1.82%'], ['Órdenes 9 meses', '~950'], ['GMV 9 meses', 'S/44K'], ['Ticket promedio', 'S/44-47']],
+        footer: 'OPERA LIMPIO · CAJA CORE' },
+      { tit: 'Surquillo', tag: 'LOCAL NUEVO', color: P.smashRed,
+        kpis: [['% Rechazo', '5.74%'], ['% Reclamos', '9.84%'], ['Órdenes jul', '116 (0→116)'], ['GMV jul', 'S/5.7K'], ['Ticket promedio', 'S/36-49']],
+        footer: 'CRECE FUERTE PERO OPERA MAL' },
+    ].map(loc => `
+      <div style="background:${P.white};border:2px solid ${loc.color};border-radius:6px;overflow:hidden">
+        <div style="background:${loc.color};height:12px"></div>
+        <div style="padding:24px">
+          <div style="font-size:10px;color:${loc.color};letter-spacing:2px;font-weight:700">${loc.tag}</div>
+          <div style="font-size:22px;color:${P.wine};font-weight:700;margin:8px 0 16px 0">${loc.tit}</div>
+          ${loc.kpis.map(k => `
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid ${P.grayLight};font-size:12px">
+              <span style="color:${P.charcoal}">${k[0]}</span>
+              <span style="color:${loc.color};font-family:'Consolas',monospace;font-weight:700">${k[1]}</span>
+            </div>`).join('')}
+          <div style="background:${loc.color};color:${P.white};padding:8px;text-align:center;font-size:10px;letter-spacing:2px;font-weight:700;margin-top:16px">${loc.footer}</div>
+        </div>
+      </div>
+    `).join('')}
+  </div>
+</div>
+
+<div style="${S.sectionDark}">
+  <div style="${S.h2}">ACTO 4 · PLAN</div>
+  <div style="${S.h1White}">Roadmap del piloto · 90 días</div>
+  <div style="width:60px;height:3px;background:${P.gold};margin:20px 0"></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px">
+    ${[
+      { tag: 'MES 1 · FIX', color: P.smashRed, gmv: 'S/15,000', focus: 'Estabilizar', todo: 'Surquillo ops · Ads Rappi ≤15% · Menú rework · Cupón 1ª compra', gate: 'Rechazo <2% · Reclamos <3%' },
+      { tag: 'MES 2 · SCALE', color: P.gold, gmv: 'S/24,000', focus: 'Escalar celdas ganadoras', todo: 'Combos 2/3 · Ads PY por franja · Winback 30D', gate: 'MC ≥5% · Conversión >35%' },
+      { tag: 'MES 3 · EXPAND', color: P.green, gmv: 'S/35,000', focus: 'Consolidar meta', todo: 'Programa 3ª compra · Escalado por local · Mix objetivo', gate: 'MC ≥5% semanal · S/35K' },
+    ].map(m => `
+      <div style="background:${P.wineDark};padding:20px;border-top:4px solid ${m.color}">
+        <div style="font-size:11px;color:${m.color};letter-spacing:2px;font-weight:700">${m.tag}</div>
+        <div style="font-size:28px;color:${P.smashYel};font-weight:700;margin:8px 0">${m.gmv}</div>
+        <div style="font-size:11px;color:${P.cream};font-style:italic;margin-bottom:12px">${m.focus}</div>
+        <div style="font-size:11px;color:${P.white};line-height:1.5;margin-bottom:16px">${m.todo}</div>
+        <div style="background:${m.color};color:${P.white};padding:8px;text-align:center;font-size:10px;font-weight:700;letter-spacing:1px">GATE: ${m.gate}</div>
+      </div>`).join('')}
+  </div>
+</div>
+
+<div style="padding:32px 40px;background:${P.wineDark};text-align:center">
+  <div style="font-size:11px;color:${P.gold};letter-spacing:4px;font-weight:700">SAZÓN GROWTH PARTNER</div>
+  <div style="font-size:14px;color:${P.smashYel};font-style:italic;margin-top:12px">Diagnóstico agosto 2026 · datos pre-cargados</div>
+  <div style="width:60px;height:2px;background:${P.smashRed};margin:16px auto"></div>
+  <div style="font-size:11px;color:${P.cream}">Este panel se actualiza cuando cargas nuevos reportes de Rappi + PedidosYa</div>
+</div>
+
+</div>`;
+}
+
 /**
  * Sobrescribe el renderTabContent original para manejar el flujo con motor
  */
@@ -8817,6 +9047,22 @@ function renderTabContent(tabId) {
 
   // Desactivar todos los paneles
   document.querySelectorAll('#rptWrap .panel').forEach(p => p.classList.remove('active'));
+
+  // Caso especial: Diagnóstico Mr Smash — panel dinámico embebido
+  if (tabId === 'diagnostico') {
+    const rptWrap = document.getElementById('rptWrap');
+    let panel = document.getElementById('p-diagnostico');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.className = 'panel';
+      panel.id = 'p-diagnostico';
+      rptWrap.appendChild(panel);
+    }
+    panel.classList.add('active');
+    panel.innerHTML = renderDiagnosticoMrSmash();
+    panel.dataset.hasEngine = 'true';
+    return;
+  }
 
   const targetPanel = document.getElementById('p-' + tabId);
   if (!targetPanel) return;
