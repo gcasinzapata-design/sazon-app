@@ -1855,6 +1855,21 @@ const setBoot = msg => setText('bootStatus', msg);
 
 // ─── Tiempo límite y error de arranque ───────────────────────────
 // Si Supabase está pausado o sin red, la pantalla de carga no debe girar para siempre.
+// Seguridad: todo texto que entra desde Excel/CSV pierde '<' y '>' (evita HTML inyectado
+// en nombres de producto, categorías o descripciones que luego se pintan con innerHTML).
+const cleanCellText = v => typeof v === 'string' ? v.replace(/[<>]/g, '') : v;
+(function patchSheetToJson(){
+  if (typeof XLSX === 'undefined' || !XLSX.utils || XLSX.utils.__sazonClean) return;
+  const orig = XLSX.utils.sheet_to_json;
+  XLSX.utils.sheet_to_json = function(){
+    const out = orig.apply(this, arguments);
+    return out.map(r => {
+      if (Array.isArray(r)) return r.map(cleanCellText);
+      const o = {}; Object.keys(r).forEach(k => { o[cleanCellText(k)] = cleanCellText(r[k]); }); return o;
+    });
+  };
+  XLSX.utils.__sazonClean = true;
+})();
 const BOOT_TIMEOUT_MS = 12000;
 function withTimeout(promise, ms, label){
   let timer;
@@ -4214,44 +4229,6 @@ function selectTab(tabId, el){
   renderTabContent(tabId);
 }
 
-function renderTabContent(tabId){
-  // Sprint 2 A.2.1: paneles del v1 están en el DOM. Solo mostramos el activo.
-  const welcome = $('welcomeEmpty');
-  const rptWrap = $('rptWrap');
-
-  // Ocultar welcome, mostrar el contenedor de paneles
-  if (welcome) welcome.style.display = 'none';
-  if (rptWrap) rptWrap.style.display = 'block';
-
-  // Desactivar todos los paneles
-  document.querySelectorAll('#rptWrap .panel').forEach(p => p.classList.remove('active'));
-
-  // Activar el panel del tab clickeado
-  const targetPanel = document.getElementById('p-' + tabId);
-  if (targetPanel) {
-    targetPanel.classList.add('active');
-    // Mostrar mensaje de "esperando motor" en el panel si no tiene contenido dinámico
-    if (!targetPanel.dataset.hasEngine) {
-      const placeholder = document.createElement('div');
-      placeholder.className = 'engine-placeholder';
-      placeholder.style.cssText = 'text-align:center;padding:24px;margin-top:20px;background:var(--w);border-radius:3px;font-size:.75rem;color:var(--m);border:1px dashed var(--l);';
-      placeholder.innerHTML = '<strong style="color:var(--gr);display:block;margin-bottom:5px">🚧 Estructura visual lista</strong> Motor de análisis se integra en Sprint 2 A.2.2. Este panel es solo layout por ahora.';
-      // Solo agregar si no existe ya
-      if (!targetPanel.querySelector('.engine-placeholder')) {
-        targetPanel.appendChild(placeholder);
-      }
-    }
-  } else {
-    // Si el panel no existe todavía, mostrar mensaje
-    $('appPanel').innerHTML = `
-      <div class="stub-panel">
-        <h2>${TAB_META[tabId].icon} ${TAB_META[tabId].label}</h2>
-        <p>Panel no encontrado — verificar A.2.1.</p>
-      </div>
-    `;
-  }
-}
-
 function showUpgradeModal(tabId){
   const meta = TAB_META[tabId];
   // ¿En qué plan aparece este tab?
@@ -4446,11 +4423,6 @@ function addBranch(data){
   document.getElementById('branchList').appendChild(div);
 }
 
-function removeBranch(id){
-  document.getElementById(id)?.remove();
-  saveConfig();
-}
-
 function saveConfig(){
   const branches = [];
   document.querySelectorAll('.branch-block').forEach(block=>{
@@ -4507,7 +4479,7 @@ function handleMenuFile(e){
       APP.menu = menu;
       saveLS('sazon_menu', menu);
       document.getElementById('menuStatus').innerHTML =
-        `<div class="menu-status"><div class="dot"></div><strong>${menu.length} productos cargados</strong> de "${file.name}"</div>`;
+        `<div class="menu-status"><div class="dot"></div><strong>${menu.length} productos cargados</strong> de "${escapeAttr(file.name)}"</div>`;
     } catch(err){
       alert('Error al leer menú: '+err.message);
     }
@@ -4524,7 +4496,7 @@ function parseCSVLine(line){
     else cur+=c;
   }
   result.push(cur.trim());
-  return result;
+  return result.map(cleanCellText);
 }
 
 function normalizeMenuItem(obj){
@@ -4636,7 +4608,7 @@ function renderOrderFileList(){
     const info = FILE_TYPE_LABELS[detected] || FILE_TYPE_LABELS.unknown;
     return `<div class="fitem" style="border-left: 3px solid ${info.color}">
       <span>📄</span>
-      <span class="fitem-name" title="${f.name}">${f.name}</span>
+      <span class="fitem-name" title="${escapeAttr(f.name)}">${escapeAttr(f.name)}</span>
       <span class="ptag" style="background:${info.color}22;color:${info.color};font-size:.6rem">${info.label}</span>
       <span style="font-size:.6rem;color:var(--m);flex:1;text-align:right" title="Alimenta: ${info.tab}">→ ${info.tab}</span>
       <span style="font-size:.65rem;color:var(--m)">${(f.size/1024).toFixed(0)}KB</span>
@@ -6347,15 +6319,6 @@ function setPlatFilter(plat, el){
 // ════════════════════════════════════════════════════════
 //  NAVIGATION
 // ════════════════════════════════════════════════════════
-function showPanel(id, el){
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  const panel=document.getElementById('p-'+id);
-  if(panel) panel.classList.add('active');
-  if(el&&!el.classList.contains('tab-coming')) el.classList.add('active');
-  if(el) el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
-}
-
 // ════════════════════════════════════════════════════════
 //  MAIN FLOW
 // ════════════════════════════════════════════════════════
@@ -9230,11 +9193,6 @@ renderApp = function() {
 /**
  * initEngine actualizado - se invoca desde el flujo boot cuando el cliente entra
  */
-function initEngine() {
-  console.log('[Engine] initEngine() invocado (A.2.2.b)');
-  hydrateEngineConfig();
-}
-
 
 function initEngine() {
   console.log('[Engine] initEngine() invocado - motor cargado en memoria (A.2.2.a)');
