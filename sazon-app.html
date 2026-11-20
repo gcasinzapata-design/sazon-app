@@ -1851,6 +1851,46 @@ const setHtml = (id, htm) => { const el = $(id); if(el) el.innerHTML = htm; };
 const setAttr = (id, attr, val) => { const el = $(id); if(el) el.setAttribute(attr, val); };
 const setStyle = (id, key, val) => { const el = $(id); if(el) el.style[key] = val; };
 const setBoot = msg => setText('bootStatus', msg);
+
+// ─── Tiempo límite y error de arranque ───────────────────────────
+// Si Supabase está pausado o sin red, la pantalla de carga no debe girar para siempre.
+const BOOT_TIMEOUT_MS = 12000;
+function withTimeout(promise, ms, label){
+  let timer;
+  const limit = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error((label || 'La operación') + ' tardó más de ' + Math.round(ms/1000) + ' segundos')), ms);
+  });
+  return Promise.race([Promise.resolve(promise), limit]).finally(() => clearTimeout(timer));
+}
+function showBootError(detail){
+  const boot = $('bootScreen');
+  if(!boot) return;
+  boot.style.display = 'flex';
+  const spinner = boot.querySelector('.boot-spinner');
+  if(spinner) spinner.style.display = 'none';
+  setText('bootStatus', 'No pudimos conectar con el servidor. ' + (detail || ''));
+  if(!$('bootRetryBtn')){
+    const wa = (window.SAZON_CONFIG && SAZON_CONFIG.contact && SAZON_CONFIG.contact.whatsapp || '').replace(/[^0-9]/g, '');
+    const box = document.createElement('div');
+    box.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:4px;';
+    const btn = document.createElement('button');
+    btn.id = 'bootRetryBtn';
+    btn.textContent = 'Reintentar';
+    btn.style.cssText = 'padding:10px 20px;border:0;border-radius:6px;background:var(--r);color:#fff;font-weight:600;cursor:pointer;';
+    btn.addEventListener('click', () => location.reload());
+    box.appendChild(btn);
+    if(wa){
+      const link = document.createElement('a');
+      link.textContent = 'Avisar a Sazón';
+      link.href = 'https://wa.me/' + wa + '?text=' + encodeURIComponent('Hola, la app de Sazón no carga.');
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.style.cssText = 'padding:10px 20px;border-radius:6px;border:1px solid var(--l);color:var(--t);text-decoration:none;font-weight:600;';
+      box.appendChild(link);
+    }
+    boot.appendChild(box);
+  }
+}
 const authMsg = (targetId, msg, type) => {
   const el = $(targetId);
   if(!el) return;
@@ -1906,7 +1946,15 @@ async function boot(){
   }
 
   setBoot('Verificando sesión...');
-  const { data: { session } } = await APP.supabase.auth.getSession();
+  let session = null;
+  try {
+    const res = await withTimeout(APP.supabase.auth.getSession(), BOOT_TIMEOUT_MS, 'La verificación de sesión');
+    session = res && res.data ? res.data.session : null;
+  } catch(err) {
+    console.error('boot getSession error:', err);
+    showBootError(err.message);
+    return;
+  }
 
   if(session) {
     // Ya hay sesión, cargar datos del usuario
@@ -2067,11 +2115,23 @@ async function loadUserProfile(){
 
   try {
     // 1. Get user record
-    const { data: userData, error: userErr } = await APP.supabase
-      .from('users')
-      .select('*')
-      .eq('id', APP.session.user.id)
-      .single();
+    const { data: userData, error: userErr } = await withTimeout(
+      APP.supabase
+        .from('users')
+        .select('*')
+        .eq('id', APP.session.user.id)
+        .single(),
+      BOOT_TIMEOUT_MS,
+      'La carga del perfil'
+    );
+
+    // Un fallo de red o del servidor NO significa "usuario no autorizado":
+    // solo PGRST116 (sin filas) debe sacar al usuario.
+    if(userErr && userErr.code !== 'PGRST116') {
+      console.error('loadUserProfile server error:', userErr);
+      showBootError(userErr.message || '');
+      return;
+    }
 
     if(userErr || !userData) {
       // Usuario en auth pero no en tabla users → no autorizado (whitelist real)
@@ -2146,6 +2206,10 @@ async function loadUserProfile(){
     renderApp();
   } catch(err) {
     console.error('loadUserProfile error:', err);
+    if(/tardó más de/.test(err.message || '') || /Failed to fetch|NetworkError/i.test(err.message || '')) {
+      showBootError(err.message);
+      return;
+    }
     showLoginError('Error al cargar tu perfil: ' + err.message);
   }
 }
