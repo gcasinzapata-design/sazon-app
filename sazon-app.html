@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Sazón · Growth Engine</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script>if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";}</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<!-- Supabase JS SDK v2 -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Librerías propias del repo (versión fija, sin CDN): ver /vendor -->
+<script src="./vendor/xlsx-0.20.3.full.min.js"></script>
+  <script src="./vendor/pdf-3.11.174.min.js"></script>
+  <script>if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc = "./vendor/pdf.worker-3.11.174.min.js";}</script>
+<script src="./vendor/chart-4.4.1.umd.min.js"></script>
+<!-- Supabase JS SDK v2.119.2 -->
+<script src="./vendor/supabase-js-2.119.2.min.js"></script>
 <!-- Sazón config -->
 <script src="./sazon-config.js"></script>
 <script src="./sazon-persistence.js"></script>
