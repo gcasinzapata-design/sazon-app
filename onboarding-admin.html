@@ -38,7 +38,7 @@ const CFG=window.SAZON_CONFIG;
 const sb=window.supabase.createClient(CFG.supabase.url,CFG.supabase.anonKey,{auth:{persistSession:true,autoRefreshToken:true}});
 const root=document.getElementById('root');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const BASE=location.origin+'/onboarding?t=';
+const BASE='https://onboarding.sazonpartner.com/?t=';
 const LBL={pendiente:'Pendiente',en_curso:'En curso',completo:'Completo'};
 let rows=[], open=null, pendingEmail='';
 
