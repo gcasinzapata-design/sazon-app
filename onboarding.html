@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Bienvenido a Sazón</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--r:#C8392B;--t:#1A1814;--m:#6B6560;--l:#E6E1DA;--bg:#FAF8F5;--w:#fff;--ok:#2E7D4F;--err:#B3261E}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--t);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 120px}
+.logo{font-family:'Playfair Display',serif;font-weight:900;font-size:1.5rem;margin-bottom:6px}
+.logo span{color:var(--r)}
+h1{font-family:'Playfair Display',serif;font-size:1.7rem;margin:.2em 0 .3em;line-height:1.15}
+h2{font-size:1.05rem;margin:1.4em 0 .4em}
+p.sub{color:var(--m);margin:.2em 0 1em}
+.bar{height:6px;background:var(--l);border-radius:9px;overflow:hidden;margin:14px 0 4px}
+.bar i{display:block;height:100%;background:var(--r);transition:width .3s}
+.steplbl{font-size:.8rem;color:var(--m);display:flex;justify-content:space-between}
+.saved{color:var(--ok)}
+.card{background:var(--w);border:1px solid var(--l);border-radius:12px;padding:16px;margin:14px 0}
+label{display:block;font-weight:600;font-size:.9rem;margin:12px 0 4px}
+label small{font-weight:400;color:var(--m)}
+.req{color:var(--r)}
+input[type=text],input[type=tel],input[type=url],textarea,input[type=time]{width:100%;padding:12px;border:1px solid #cfc8bf;border-radius:9px;font:inherit;background:#fff}
+input:focus,textarea:focus{outline:2px solid var(--r);outline-offset:-1px;border-color:var(--r)}
+textarea{min-height:80px;resize:vertical}
+.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
+.drop{display:block;border:2px dashed #cfc8bf;border-radius:12px;padding:18px;text-align:center;background:#fff;cursor:pointer;color:var(--m);font-weight:500}
+.drop:hover{border-color:var(--r);color:var(--t)}
+.drop input{display:none}
+.files{margin:8px 0 0;padding:0;list-style:none}
+.files li{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--l);border-radius:9px;margin-top:6px;background:#fff;font-size:.88rem}
+.files li img{width:40px;height:40px;object-fit:cover;border-radius:6px}
+.files li .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.files li button{border:0;background:none;color:var(--m);font-size:1.2rem;cursor:pointer;padding:4px 8px}
+.files li.up{color:var(--m)}
+.hint{font-size:.8rem;color:var(--m);margin-top:4px}
+.btns{position:fixed;left:0;right:0;bottom:0;background:var(--w);border-top:1px solid var(--l);padding:12px 16px calc(12px + env(safe-area-inset-bottom));z-index:5}
+.btns div{max-width:640px;margin:0 auto;display:flex;gap:10px}
+button.b{flex:1;padding:14px;border-radius:10px;border:1px solid var(--t);background:#fff;font:inherit;font-weight:600;cursor:pointer}
+button.b.p{background:var(--r);border-color:var(--r);color:#fff}
+button.b:disabled{opacity:.5}
+.err{color:var(--err);font-size:.85rem;margin-top:6px}
+.box-err{background:#FDECEA;border:1px solid #F5C2BE;border-radius:10px;padding:12px 14px;margin:12px 0;color:var(--err);font-size:.9rem}
+.box-err ul{margin:6px 0 0 18px;padding:0}
+.chk{display:flex;gap:10px;align-items:flex-start;font-weight:500;margin:12px 0}
+.chk input{margin-top:4px;width:18px;height:18px}
+.hor{display:grid;grid-template-columns:64px minmax(0,1fr) minmax(0,1fr) auto;gap:6px;align-items:center;margin:6px 0;font-size:.85rem}
+.hor input[type=time]{padding:8px 4px;min-width:0;width:100%;font-size:.9rem}
+input[type=time]{min-width:0}
+.hor label input{width:auto}
+.hor label{margin:0;font-weight:400;font-size:.8rem;display:flex;gap:4px;align-items:center}
+.rm{color:var(--err);background:none;border:0;font:inherit;font-size:.85rem;cursor:pointer;float:right}
+.add{width:100%;padding:12px;border:1.5px dashed #cfc8bf;border-radius:10px;background:none;font:inherit;font-weight:600;cursor:pointer;color:var(--t)}
+.rev li{margin:6px 0}.rev .ok{color:var(--ok)}.rev .no{color:var(--err)}
+.center{text-align:center;padding-top:40px}
+.big{font-size:3rem}
+a.wa{display:inline-block;margin-top:16px;padding:14px 22px;border-radius:10px;background:var(--r);color:#fff;text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="logo">Sazón<span>.</span></div><p class="sub">Cargando…</p></div>
+<div class="btns" id="nav" hidden><div><button class="b" id="bBack">Atrás</button><button class="b p" id="bNext">Siguiente</button></div></div>
+
+<script src="./vendor/supabase-js-2.119.2.min.js"></script>
+<script src="./sazon-config.js"></script>
+<script>
+(function(){
+'use strict';
+const CFG = window.SAZON_CONFIG;
+const sb = window.supabase.createClient(CFG.supabase.url, CFG.supabase.anonKey, { auth:{ persistSession:false, autoRefreshToken:false } });
+const TOKEN = new URLSearchParams(location.search).get('t') || '';
+const WA = (CFG.contact.whatsapp||'').replace(/\D/g,'');
+const DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+const STEPS = ['Tu restaurante','Logo','Carta','Fotos','Locales y delivery','Revisar y enviar'];
+const $app = document.getElementById('app'), $nav = document.getElementById('nav');
+let S = { brand:'', data:{}, files:[] }, step = 0, saveTimer = null, saving = 0, uploading = 0, lastShown = {};
+
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const emptyLocal = () => ({ nombre:'', direccion:'', telefono:'', horarios: DAYS.map(d=>({d, abre:'', cierra:'', cerrado:false})) });
+function getp(o,p){ return p.split('.').reduce((a,k)=>a==null?a:a[k],o); }
+function setp(o,p,v){ const ks=p.split('.'); let a=o; for(let i=0;i<ks.length-1;i++){ const k=ks[i]; if(a[k]==null) a[k]=/^\d+$/.test(ks[i+1])?[]:{}; a=a[k]; } a[ks[ks.length-1]]=v; }
+
+function header(){
+  const pct = Math.round(step/(STEPS.length-1)*100);
+  return `<div class="logo">Sazón<span>.</span></div>
+  <div class="bar"><i style="width:${Math.max(pct,6)}%"></i></div>
+  <div class="steplbl"><span>Paso ${step+1} de ${STEPS.length} · ${STEPS[step]}</span><span class="saved" id="saveLbl"></span></div>`;
+}
+function setSaveLbl(t){ const e=document.getElementById('saveLbl'); if(e) e.textContent=t; }
+
+// ───────── guardado automático
+function scheduleSave(){
+  setSaveLbl('');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 700);
+}
+async function doSave(){
+  saving++;
+  try{
+    const { error } = await sb.rpc('onboarding_save', { p_token:TOKEN, p_data:S.data, p_files:S.files.map(({thumb,_t,...r})=>r) });
+    setSaveLbl(error ? 'No se pudo guardar. Revisa tu conexión.' : 'Guardado ✓');
+  }catch(e){ setSaveLbl('No se pudo guardar. Revisa tu conexión.'); }
+  saving--;
+}
+
+// ───────── validación (igual que en el servidor)
+function hasFile(k){ return S.files.some(f=>f.kind===k); }
+function problems(){
+  const d=S.data, out=[]; const add=(s,m)=>out.push({s,m});
+  if(!(getp(d,'restaurante.nombre')||'').trim()) add(0,'Nombre del restaurante');
+  if(!(getp(d,'contacto.nombre')||'').trim()) add(0,'Tu nombre');
+  if(!(getp(d,'contacto.whatsapp')||'').trim()) add(0,'Tu WhatsApp');
+  if(!hasFile('logo')) add(1,'Logo');
+  if(!hasFile('carta') && !(getp(d,'carta.link')||'').trim()) add(2,'Carta (sube un archivo o pega un link)');
+  if(!hasFile('plato')) add(3,'Al menos 1 foto de tus platos');
+  if(!hasFile('local')) add(3,'Al menos 1 foto de tu local');
+  const dl=d.delivery||{};
+  if(!dl.ninguno && !(dl.pedidosya||'').trim() && !(dl.rappi||'').trim() && !(dl.didi||'').trim()) add(4,'Links de delivery (o marca que no estás en apps)');
+  const locs=d.locales||[];
+  if(!locs.length) add(4,'Al menos 1 local');
+  locs.forEach((l,i)=>{
+    const n=locs.length>1?` del local ${i+1}`:'';
+    if(!(l.direccion||'').trim()) add(4,'Dirección'+n);
+    if(!(l.telefono||'').trim()) add(4,'Teléfono de atención al cliente'+n);
+    if(!(l.horarios||[]).some(h=>!h.cerrado&&h.abre&&h.cierra)) add(4,'Horarios'+n);
+  });
+  return out;
+}
+const problemsOf = s => problems().filter(p=>p.s===s);
+
+// ───────── componentes
+function inp(path,type,ph,extra){ const v=getp(S.data,path)||''; return `<input type="${type}" data-p="${path}" value="${esc(v)}" placeholder="${esc(ph||'')}" ${extra||''}>`; }
+function fileList(kind){
+  const fs=S.files.map((f,i)=>({f,i})).filter(x=>x.f.kind===kind);
+  return `<ul class="files" id="fl-${kind}">${fs.map(({f,i})=>`<li>${f.thumb?`<img src="${esc(f.thumb)}" alt="">`:'<span>📄</span>'}<span class="n">${esc(f.name)}</span><button type="button" data-rm="${i}" aria-label="Quitar">×</button></li>`).join('')}${(lastShown[kind]||0)>0?`<li class="up">Subiendo ${lastShown[kind]} archivo(s)…</li>`:''}</ul>`;
+}
+function uploader(kind,label,accept,multiple){
+  return `<label class="drop"><input type="file" data-up="${kind}" accept="${accept}" ${multiple?'multiple':''}>${label}</label>${fileList(kind)}`;
+}
+function refreshList(kind){ const e=document.getElementById('fl-'+kind); if(e) e.outerHTML=fileList(kind); }
+
+// ───────── pasos
+function viewStep(){
+  const e=(s)=>{ const p=showErr?problemsOf(s):[]; return p.length?`<div class="box-err">Falta:<ul>${p.map(x=>`<li>${esc(x.m)}</li>`).join('')}</ul></div>`:''; };
+  if(step===0) return `<h1>¡Hola! Armemos tu página</h1><p class="sub">Son 6 pasos cortos, de unos 10 minutos. Lo que escribas se guarda solo: puedes cerrar y volver con este mismo link.</p>
+    ${e(0)}<div class="card">
+    <label>Nombre del restaurante <span class="req">*</span></label>${inp('restaurante.nombre','text','Ej: Mr. Smash Burger','autocomplete="organization"')}
+    <label>Tu nombre <span class="req">*</span></label>${inp('contacto.nombre','text','Quién nos atiende','autocomplete="name"')}
+    <label>Tu WhatsApp <span class="req">*</span></label>${inp('contacto.whatsapp','tel','+51 999 999 999','autocomplete="tel"')}</div>`;
+  if(step===1) return `<h1>Tu logo</h1><p class="sub">Lo ideal es PNG sin fondo o SVG. Si solo tienes una foto o un PDF, también sirve.</p>${e(1)}
+    <div class="card">${uploader('logo','📎 Subir logo','image/*,.svg,.pdf',false)}<div class="hint">Un solo archivo. Si subes otro, reemplaza al anterior.</div></div>`;
+  if(step===2) return `<h1>Tu carta</h1><p class="sub">Sube tu carta como esté: Excel, PDF o una foto clara. Si ya la tienes en línea, pega el link.</p>${e(2)}
+    <div class="card">${uploader('carta','📎 Subir carta (PDF, Excel o fotos)','image/*,.pdf,.csv,.xls,.xlsx',true)}
+    <label>…o pega el link de tu carta <small>(Drive, Google Sheets, web)</small></label>${inp('carta.link','url','https://')}</div>`;
+  if(step===3) return `<h1>Fotos</h1><p class="sub">Desde tu celular está bien. Mejor con luz natural, sin filtros ni texto encima.</p>${e(3)}
+    <div class="card"><label>Tus platos <span class="req">*</span> <small>(sube 5 o más si puedes)</small></label>${uploader('plato','📷 Subir fotos de platos','image/*',true)}
+    <label style="margin-top:20px">Tu local <span class="req">*</span> <small>(fachada o interior)</small></label>${uploader('local','📷 Subir fotos del local','image/*',true)}</div>`;
+  if(step===4) return `<h1>Locales y delivery</h1><p class="sub">Dirección, horarios y teléfono de atención de cada local.</p>${e(4)}
+    <div class="card"><h2 style="margin-top:0">Tus apps de delivery <span class="req">*</span></h2>
+    <label>PedidosYa <small>(link de tu restaurante)</small></label>${inp('delivery.pedidosya','url','https://www.pedidosya.com.pe/...')}
+    <label>Rappi</label>${inp('delivery.rappi','url','https://www.rappi.com.pe/...')}
+    <label>DiDi Food</label>${inp('delivery.didi','url','https://...')}
+    <label class="chk"><input type="checkbox" data-c="delivery.ninguno" ${getp(S.data,'delivery.ninguno')?'checked':''}> Todavía no estoy en ninguna app</label></div>
+    <div id="locs">${(S.data.locales||[]).map(locCard).join('')}</div>
+    <button type="button" class="add" id="addLoc">+ Agregar otro local</button>`;
+  if(step===5){
+    const ps=problems();
+    const groups=[['Nombre y contacto',0],['Logo',1],['Carta',2],['Fotos',3],['Locales y delivery',4]];
+    return `<h1>Último paso</h1><p class="sub">Revisa que esté todo y envíalo.</p>
+    <div class="card"><ul class="rev" style="list-style:none;padding:0;margin:0">${groups.map(([n,s])=>{const p=problemsOf(s);return `<li class="${p.length?'no':'ok'}">${p.length?'✗':'✓'} <b>${n}</b>${p.length?`<div style="font-size:.85rem;margin-left:20px">${p.map(x=>esc(x.m)).join(' · ')} — <a href="#" data-go="${s}">completar</a></div>`:''}</li>`;}).join('')}</ul></div>
+    <div class="card"><label>¿Algo más que debamos saber? <small>(opcional)</small></label><textarea data-p="comentarios" placeholder="Platos estrella, promos, lo que quieras contarnos">${esc(S.data.comentarios||'')}</textarea></div>
+    <div id="subErr"></div>`;
+  }
+}
+function locCard(l,i){
+  const n=(S.data.locales||[]).length;
+  return `<div class="card"><h2 style="margin-top:0">Local ${i+1} ${n>1?`<button type="button" class="rm" data-rmloc="${i}">Quitar</button>`:''}</h2>
+  <label>Nombre del local <small>(ej. Miraflores)</small></label>${inp(`locales.${i}.nombre`,'text','')}
+  <label>Dirección <span class="req">*</span></label>${inp(`locales.${i}.direccion`,'text','Calle, número y distrito','autocomplete="street-address"')}
+  <label>Teléfono de atención al cliente <span class="req">*</span></label>${inp(`locales.${i}.telefono`,'tel','+51 ...')}
+  <label>Horarios de atención <span class="req">*</span></label>
+  <div class="row" style="align-items:center;margin-bottom:8px"><input type="time" id="qa${i}"><input type="time" id="qc${i}"><button type="button" class="b" style="flex:1.2;padding:9px;font-size:.8rem" data-all="${i}">Todos los días</button></div>
+  ${(l.horarios||[]).map((h,j)=>`<div class="hor"><span>${h.d}</span>
+    <input type="time" data-p="locales.${i}.horarios.${j}.abre" value="${esc(h.abre)}" ${h.cerrado?'disabled':''}>
+    <input type="time" data-p="locales.${i}.horarios.${j}.cierra" value="${esc(h.cierra)}" ${h.cerrado?'disabled':''}>
+    <label><input type="checkbox" data-c="locales.${i}.horarios.${j}.cerrado" data-rr="1" ${h.cerrado?'checked':''}> Cerrado</label></div>`).join('')}
+  </div>`;
+}
+
+let showErr=false;
+function render(){
+  if(step===4 && !(S.data.locales&&S.data.locales.length)) S.data.locales=[emptyLocal()];
+  $app.innerHTML = header()+viewStep();
+  $nav.hidden=false;
+  document.getElementById('bBack').style.visibility = step===0?'hidden':'visible';
+  const nx=document.getElementById('bNext');
+  nx.textContent = step===STEPS.length-1 ? 'Enviar a Sazón' : 'Siguiente';
+  window.scrollTo(0,0);
+}
+
+// ───────── eventos (delegación)
+$app.addEventListener('input',e=>{
+  const t=e.target; const p=t.dataset&&t.dataset.p;
+  if(p){ setp(S.data,p,t.value); scheduleSave(); }
+});
+$app.addEventListener('change',async e=>{
+  const t=e.target;
+  if(t.dataset.c){ setp(S.data,t.dataset.c,t.checked); scheduleSave(); if(t.dataset.rr) render(); return; }
+  if(t.dataset.up){ await handleUpload(t.dataset.up,[...t.files]); t.value=''; }
+});
+$app.addEventListener('click',e=>{
+  const t=e.target.closest('button,a'); if(!t) return;
+  if(t.dataset.rm!=null){ S.files.splice(+t.dataset.rm,1); refreshList(t.closest('ul').id.slice(3)); scheduleSave(); }
+  else if(t.id==='addLoc'){ S.data.locales.push(emptyLocal()); scheduleSave(); render(); }
+  else if(t.dataset.rmloc!=null){ S.data.locales.splice(+t.dataset.rmloc,1); scheduleSave(); render(); }
+  else if(t.dataset.all!=null){
+    const i=+t.dataset.all, a=document.getElementById('qa'+i).value, c=document.getElementById('qc'+i).value;
+    if(!a||!c) return;
+    S.data.locales[i].horarios.forEach(h=>{ if(!h.cerrado){ h.abre=a; h.cierra=c; } });
+    scheduleSave(); render();
+  }
+  else if(t.dataset.go!=null){ e.preventDefault(); step=+t.dataset.go; showErr=true; render(); }
+});
+
+// ───────── subida de archivos
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2,10));
+const safe = n => n.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(-80)||'archivo';
+async function shrink(file){
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type)) return file;
+  try{
+    const bmp=await createImageBitmap(file); const M=2000, k=Math.min(1,M/Math.max(bmp.width,bmp.height));
+    if(k===1 && file.size<2.5e6){ bmp.close&&bmp.close(); return file; }
+    const c=document.createElement('canvas'); c.width=Math.round(bmp.width*k); c.height=Math.round(bmp.height*k);
+    c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+    const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.86));
+    return blob? new File([blob], file.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'}) : file;
+  }catch(_){ return file; }
+}
+async function handleUpload(kind,list){
+  if(!list.length) return;
+  if(kind==='logo') S.files=S.files.filter(f=>f.kind!=='logo');
+  lastShown[kind]=(lastShown[kind]||0)+list.length; refreshList(kind);
+  const errs=[];
+  for(const raw of list){
+    try{
+      const f = (kind==='plato'||kind==='local') ? await shrink(raw) : raw;
+      if(f.size>25*1024*1024) throw new Error('pesa más de 25 MB');
+      const path=`${TOKEN}/${kind}/${uid()}-${safe(f.name)}`;
+      uploading++;
+      let error;
+      try{ ({ error } = await sb.storage.from('onboarding').upload(path,f,{ contentType:f.type||undefined, upsert:false })); }
+      catch(ex){ error=ex; }
+      finally{ uploading--; }
+      if(error) throw error;
+      const entry={ kind, path, name:raw.name, size:f.size };
+      if(/^image\/(jpeg|png|webp|svg\+xml)$/.test(f.type)) entry.thumb=URL.createObjectURL(f);
+      S.files.push(entry);
+    }catch(err){ errs.push(`${raw.name}: ${err.message||'no se pudo subir'}`); }
+    lastShown[kind]--; refreshList(kind);
+  }
+  scheduleSave();
+  if(errs.length) alert('Algunos archivos no se subieron:\n'+errs.join('\n'));
+}
+
+// ───────── navegación
+document.getElementById('bBack').onclick=()=>{ if(step>0){ step--; showErr=false; render(); } };
+document.getElementById('bNext').onclick=async()=>{
+  if(uploading>0){ alert('Espera a que terminen de subir los archivos.'); return; }
+  if(step<STEPS.length-1){
+    if(problemsOf(step).length){ showErr=true; render(); return; }
+    showErr=false; step++; render(); return;
+  }
+  const btn=document.getElementById('bNext'); btn.disabled=true; btn.textContent='Enviando…';
+  clearTimeout(saveTimer); await doSave();
+  const { data, error } = await sb.rpc('onboarding_submit',{ p_token:TOKEN });
+  btn.disabled=false; btn.textContent='Enviar a Sazón';
+  if(error){ document.getElementById('subErr').innerHTML='<div class="box-err">No pudimos enviar. Revisa tu conexión e inténtalo de nuevo.</div>'; return; }
+  if(!data.ok){ document.getElementById('subErr').innerHTML=`<div class="box-err">Falta:<ul>${data.missing.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>`; return; }
+  done();
+};
+function done(){
+  $nav.hidden=true;
+  const nombre=esc(getp(S.data,'restaurante.nombre')||S.brand);
+  $app.innerHTML=`<div class="logo">Sazón<span>.</span></div><div class="center"><div class="big">🎉</div><h1>¡Listo, ${nombre}!</h1>
+  <p class="sub">Recibimos todo. Te escribimos por WhatsApp en las próximas 48 horas hábiles con el avance de tu página.</p>
+  <a class="wa" href="https://wa.me/${WA}?text=${encodeURIComponent('Hola, soy de '+(getp(S.data,'restaurante.nombre')||S.brand)+'. Ya envié mi información.')}">Escribir a Sazón</a></div>`;
+}
+function fail(msg){
+  $nav.hidden=true;
+  $app.innerHTML=`<div class="logo">Sazón<span>.</span></div><div class="center"><h1>${esc(msg)}</h1><p class="sub">Escríbenos y te ayudamos.</p><a class="wa" href="https://wa.me/${WA}">Hablar con Sazón</a></div>`;
+}
+
+// ───────── arranque
+(async function init(){
+  if(!/^[a-f0-9]{32}$/.test(TOKEN)) return fail('Este link no es válido');
+  const { data, error } = await sb.rpc('onboarding_get',{ p_token:TOKEN });
+  if(error) return fail('No pudimos cargar tu formulario');
+  if(!data) return fail('Este link no es válido');
+  S.brand=data.brand_name; S.data=data.data||{}; S.files=data.files||[];
+  if(!getp(S.data,'restaurante.nombre')) setp(S.data,'restaurante.nombre',data.brand_name);
+  if(data.status==='completo') return done();
+  render();
+})();
+})();
+</script>
+</body>
+</html>
