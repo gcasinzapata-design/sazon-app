@@ -1,313 +1,430 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="robots" content="noindex,nofollow">
-<title>Bienvenido a Sazón</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sazón Growth Partner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--r:#C8392B;--t:#1A1814;--m:#6B6560;--l:#E6E1DA;--bg:#FAF8F5;--w:#fff;--ok:#2E7D4F;--err:#B3261E}
-*{box-sizing:border-box}
-html,body{margin:0}
-body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--t);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
-.wrap{max-width:640px;margin:0 auto;padding:20px 16px 120px}
-.logo{font-family:'Playfair Display',serif;font-weight:900;font-size:1.5rem;margin-bottom:6px}
-.logo span{color:var(--r)}
-h1{font-family:'Playfair Display',serif;font-size:1.7rem;margin:.2em 0 .3em;line-height:1.15}
-h2{font-size:1.05rem;margin:1.4em 0 .4em}
-p.sub{color:var(--m);margin:.2em 0 1em}
-.bar{height:6px;background:var(--l);border-radius:9px;overflow:hidden;margin:14px 0 4px}
-.bar i{display:block;height:100%;background:var(--r);transition:width .3s}
-.steplbl{font-size:.8rem;color:var(--m);display:flex;justify-content:space-between}
-.saved{color:var(--ok)}
-.card{background:var(--w);border:1px solid var(--l);border-radius:12px;padding:16px;margin:14px 0}
-label{display:block;font-weight:600;font-size:.9rem;margin:12px 0 4px}
-label small{font-weight:400;color:var(--m)}
-.req{color:var(--r)}
-input[type=text],input[type=tel],input[type=url],textarea,input[type=time]{width:100%;padding:12px;border:1px solid #cfc8bf;border-radius:9px;font:inherit;background:#fff}
-input:focus,textarea:focus{outline:2px solid var(--r);outline-offset:-1px;border-color:var(--r)}
-textarea{min-height:80px;resize:vertical}
-.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
-.drop{display:block;border:2px dashed #cfc8bf;border-radius:12px;padding:18px;text-align:center;background:#fff;cursor:pointer;color:var(--m);font-weight:500}
-.drop:hover{border-color:var(--r);color:var(--t)}
-.drop input{display:none}
-.files{margin:8px 0 0;padding:0;list-style:none}
-.files li{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--l);border-radius:9px;margin-top:6px;background:#fff;font-size:.88rem}
-.files li img{width:40px;height:40px;object-fit:cover;border-radius:6px}
-.files li .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.files li button{border:0;background:none;color:var(--m);font-size:1.2rem;cursor:pointer;padding:4px 8px}
-.files li.up{color:var(--m)}
-.hint{font-size:.8rem;color:var(--m);margin-top:4px}
-.btns{position:fixed;left:0;right:0;bottom:0;background:var(--w);border-top:1px solid var(--l);padding:12px 16px calc(12px + env(safe-area-inset-bottom));z-index:5}
-.btns div{max-width:640px;margin:0 auto;display:flex;gap:10px}
-button.b{flex:1;padding:14px;border-radius:10px;border:1px solid var(--t);background:#fff;font:inherit;font-weight:600;cursor:pointer}
-button.b.p{background:var(--r);border-color:var(--r);color:#fff}
-button.b:disabled{opacity:.5}
-.err{color:var(--err);font-size:.85rem;margin-top:6px}
-.box-err{background:#FDECEA;border:1px solid #F5C2BE;border-radius:10px;padding:12px 14px;margin:12px 0;color:var(--err);font-size:.9rem}
-.box-err ul{margin:6px 0 0 18px;padding:0}
-.chk{display:flex;gap:10px;align-items:flex-start;font-weight:500;margin:12px 0}
-.chk input{margin-top:4px;width:18px;height:18px}
-.hor{display:grid;grid-template-columns:64px minmax(0,1fr) minmax(0,1fr) auto;gap:6px;align-items:center;margin:6px 0;font-size:.85rem}
-.hor input[type=time]{padding:8px 4px;min-width:0;width:100%;font-size:.9rem}
-input[type=time]{min-width:0}
-.hor label input{width:auto}
-.hor label{margin:0;font-weight:400;font-size:.8rem;display:flex;gap:4px;align-items:center}
-.rm{color:var(--err);background:none;border:0;font:inherit;font-size:.85rem;cursor:pointer;float:right}
-.add{width:100%;padding:12px;border:1.5px dashed #cfc8bf;border-radius:10px;background:none;font:inherit;font-weight:600;cursor:pointer;color:var(--t)}
-.rev li{margin:6px 0}.rev .ok{color:var(--ok)}.rev .no{color:var(--err)}
-.center{text-align:center;padding-top:40px}
-.big{font-size:3rem}
-a.wa{display:inline-block;margin-top:16px;padding:14px 22px;border-radius:10px;background:var(--r);color:#fff;text-decoration:none;font-weight:600}
+/* VOICE: confident, warm, editorial agency — monochrome like the references, food is the only colour.
+   IDEA: a kitchen ticket rail — process steps hang like order tickets; the fries photo is the "plato" that fills the screen.
+   PICTURE: the fries photo, in the hero card and in a pinned scroll scene that grows from a card to full-bleed and goes from grey to colour.
+   COLOUR and TYPE: white / near-black / one grey; colour comes only from the photo. Inter Tight + Caveat for hand notes.
+   LAYOUT: pill labels, rounded image cards, black service band, hanging tickets, black contact card, clean footer. */
+:root{color-scheme:light;--bg:#fff;--soft:#f2f2f2;--ink:#0d0d0d;--mut:#6b6b6b;--line:#e3e3e3;--blk:#0d0d0d;--r:28px}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth;scroll-padding-top:84px;overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Inter Tight",system-ui,sans-serif;overflow-x:clip}
+a{color:inherit}
+img{display:block;max-width:100%}
+.wrap{max-width:1240px;margin:0 auto;padding:0 max(5vw,18px)}
+.band{padding:clamp(56px,8vw,112px) 0}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
+h1{font-size:clamp(40px,6.2vw,76px);line-height:1;text-transform:uppercase;font-weight:700}
+h2{font-size:clamp(30px,4vw,48px);line-height:1.05}
+h3{font-size:19px;line-height:1.25}
+p{margin:0}
+.lead{color:var(--mut);max-width:52ch;font-size:17px}
+.pill{display:inline-block;border:1px solid currentColor;border-radius:99px;padding:3px 13px;font-size:14px;opacity:.85;margin-bottom:18px}
+.hand{font-family:Caveat,cursive;font-size:26px;line-height:1}
+.btn{display:inline-flex;align-items:center;gap:12px;background:var(--blk);color:#fff;text-decoration:none;border:0;border-radius:99px;padding:8px 8px 8px 22px;min-height:48px;font:600 16px "Inter Tight",sans-serif;cursor:pointer;transition:transform .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn i{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#fff;color:#000;font-style:normal}
+.btn.inv{background:#fff;color:#000}.btn.inv i{background:#000;color:#fff}
+:focus-visible{outline:3px solid #ff7a1a;outline-offset:3px}
+/* nav */
+nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:border-color .3s}
+nav.on{border-color:var(--line)}
+nav .wrap{display:flex;align-items:center;gap:24px;height:72px}
+.logo{font-size:26px;font-weight:700;letter-spacing:-.04em;text-decoration:none}
+nav ul{display:flex;gap:26px;list-style:none;margin:0 auto;padding:0;font-size:15px}
+nav ul a{text-decoration:none;color:var(--mut)}nav ul a:hover{color:var(--ink)}
+nav .btn{padding:0 22px;min-height:42px;font-size:15px}
+@media(max-width:900px){nav ul{display:none}nav .btn{margin-left:auto}}
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(28px,4vw,56px);align-items:center;padding-top:clamp(36px,5vw,64px);padding-bottom:48px}
+.hero h1 .star{display:inline-block;width:.8em;vertical-align:-.05em;margin-left:.15em}
+.hero .lead{margin:24px 0 32px}
+.cta-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.cta-row .hand{color:var(--mut)}
+.heroimg{position:relative;aspect-ratio:4/4.6;border-radius:var(--r);overflow:hidden;background:#222}
+.heroimg img{position:absolute;inset:-12% 0 0;width:100%;height:124%;object-fit:cover;will-change:transform}
+.badge{position:absolute;background:#fff;border-radius:18px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.18);font-size:14px;line-height:1.25}
+.badge b{display:block;font-size:26px;letter-spacing:-.02em}
+.b1{top:20px;left:20px}
+.b2{bottom:20px;left:50%;transform:translateX(-50%);background:#000;color:#fff;border-radius:99px;padding:13px 22px;white-space:nowrap;font-weight:500}
+@media(max-width:820px){.hero{grid-template-columns:1fr}.heroimg{aspect-ratio:4/3.6}}
+/* marquee */
+.marq{border-block:1px solid var(--line);overflow:hidden;padding:20px 0}
+.marq div{display:flex;gap:44px;width:max-content;animation:mq 26s linear infinite;font-weight:700;font-size:22px;letter-spacing:-.02em;white-space:nowrap}
+.marq span::after{content:"+";margin-left:44px;font-weight:400}
+@keyframes mq{to{transform:translateX(-50%)}}
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;padding-top:44px;padding-bottom:44px}
+.stats div{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.stats b{font-size:clamp(32px,4vw,46px);font-weight:600;letter-spacing:-.03em;white-space:nowrap}
+.stats small{font-size:14px;color:var(--mut);line-height:1.3;max-width:22ch}
+@media(max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:28px}}
+/* zoom scene */
+.zoom{height:320vh;position:relative;background:var(--bg)}
+.zoom .stick{position:sticky;top:0;height:100vh;overflow:hidden}
+.zoom .frame{position:absolute;inset:0;will-change:clip-path}
+.zoom img{width:100%;height:100%;object-fit:cover;will-change:transform,filter}
+.zoom .shade{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,.25),rgba(0,0,0,.72));opacity:0}
+.zoom .copy{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#fff;padding:0 6vw;opacity:0}
+.zoom .copy h2{font-size:clamp(36px,6.5vw,88px);line-height:1;max-width:14ch;margin:0 auto}
+.zoom .copy .hand{font-size:clamp(26px,3vw,36px);margin-top:18px;display:block}
+.zoom .intro{position:absolute;top:9vh;left:0;right:0;text-align:center}
+.zoom .intro h2{max-width:20ch;margin:0 auto}
+.chip{position:absolute;background:#fff;color:#000;border-radius:99px;padding:10px 18px;font-weight:600;font-size:15px;box-shadow:0 10px 26px rgba(0,0,0,.25);opacity:0;white-space:nowrap}
+/* about */
+.about{background:var(--soft)}
+.ab-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:end;margin-bottom:28px}
+.ab-top .lead{margin-top:18px}
+.ab-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.why{background:#fff;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:10px}
+.why svg{width:30px;height:30px}
+.why p{color:var(--mut);font-size:15px}
+.big{grid-column:span 2;background:var(--blk);color:#fff;border-radius:var(--r);padding:28px;position:relative;overflow:hidden;min-height:260px}
+.big svg.waves{position:absolute;right:-60px;top:-40px;width:520px;opacity:.5}
+.big b{font-size:44px;letter-spacing:-.03em;display:block;position:relative}
+.big p{position:relative;color:#bbb;max-width:28ch}
+.tags{position:absolute;left:24px;bottom:24px;right:24px;display:flex;flex-wrap:wrap;gap:8px}
+.tags span{background:#fff;color:#000;border-radius:99px;padding:7px 16px;font-size:14px;font-weight:600;transform:rotate(var(--t,0deg))}
+.quote{grid-column:span 2;background:#fff;border-radius:var(--r);padding:28px;display:flex;flex-direction:column;justify-content:space-between;gap:20px}
+.quote q{font-size:clamp(19px,2vw,23px);line-height:1.35;letter-spacing:-.01em}
+.quote small{color:var(--mut);font-size:14px}
+@media(max-width:900px){.ab-top{grid-template-columns:1fr}.ab-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.ab-grid{grid-template-columns:1fr}.big,.quote{grid-column:auto}.big{min-height:300px}}
+/* process tickets */
+.proc-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px}
+.rail{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:56px 64px;margin-top:56px;padding-top:12px}
+.rail svg.path{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.ticket{position:relative;background:#fff;border-radius:26px;padding:16px;box-shadow:0 22px 50px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.06);transform:rotate(var(--r));transform-origin:50% 0;max-width:430px;align-self:start}
+.ticket:nth-child(odd){justify-self:end}.ticket:nth-child(3n+2){margin-top:70px}
+.ticket::before{content:"";position:absolute;top:-8px;left:50%;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#888,#111 70%);box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.ticket .in{background:var(--soft);border-radius:18px;padding:26px 24px 28px}
+.ticket .n{font-family:Caveat,cursive;font-size:30px;color:var(--mut)}
+.ticket h3{font-size:24px;margin:4px 0 10px}
+.ticket p{color:#555;font-size:15px}
+.ticket small{display:block;font-weight:600;font-size:13px;color:var(--mut);margin-bottom:2px}
+.done{grid-column:1/-1;text-align:center;margin-top:-10px}
+.ticket.pre{opacity:0;transform:rotate(calc(var(--r) - 14deg)) translateY(-40px)}
+.ticket.go{transition:opacity .6s,transform 1.1s cubic-bezier(.34,1.7,.5,1)}
+@media(max-width:760px){.proc-head{grid-template-columns:1fr}.rail{grid-template-columns:1fr;gap:44px}.ticket,.ticket:nth-child(odd){justify-self:center}.ticket:nth-child(3n+2){margin-top:0}.rail svg.path{display:none}}
+/* services */
+.dark{background:var(--blk);color:#fff}
+.dark .lead{color:#a9a9a9}
+.sv-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:end;margin-bottom:40px}
+.sv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{border:1px solid #333;border-radius:22px;padding:26px;display:flex;flex-direction:column;gap:12px;transition:background .3s,border-color .3s}
+.card:hover{background:#181818;border-color:#555}
+.card .ic{width:44px;height:44px;border-radius:12px;background:#fff;color:#000;display:grid;place-items:center}
+.card .ic svg{width:22px;height:22px}
+.card p{color:#a9a9a9;font-size:15px}
+.card.wide{grid-column:1/-1;flex-direction:row;align-items:center;gap:22px}
+.card.wide p{max-width:70ch}
+@media(max-width:560px){.card.wide{flex-direction:column;align-items:flex-start}}
+@media(max-width:900px){.sv-head{grid-template-columns:1fr}}
+@media(max-width:760px){.sv{grid-template-columns:1fr}}
+/* IA */
+.ia-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:end;margin-bottom:36px}
+.ia{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.auto{border:1px solid var(--line);border-radius:22px;padding:24px;display:grid;gap:12px}
+.auto header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.auto header b{font-size:14px;white-space:nowrap}
+.auto p{color:var(--mut);font-size:15px}
+.meter{height:6px;border-radius:9px;background:var(--soft);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ink);width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
+.auto ul{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.auto li{font-size:13px;border:1px solid var(--line);border-radius:99px;padding:3px 11px}
+@media(max-width:760px){.ia,.ia-head{grid-template-columns:1fr}}
+/* clients */
+.clients{background:var(--soft)}
+.cl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:36px}
+.cl div{background:#fff;border-radius:20px;padding:26px 18px;text-align:center;font-weight:600;font-size:18px;letter-spacing:-.01em}
+.cl small{display:block;font-weight:400;font-size:13px;color:var(--mut);margin-top:4px}
+@media(max-width:820px){.cl{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* contact */
+.ct{background:radial-gradient(ellipse at 20% 0%,#2b2b2b,#0b0b0b 60%);color:#fff;border-radius:32px;padding:clamp(28px,5vw,56px);display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(28px,5vw,64px)}
+.ct .lead{color:#b5b5b5;margin:18px 0 28px}
+.ct .mail{display:inline-block;margin-top:18px;color:#ddd;font-size:15px}
+form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+label{display:grid;gap:6px;font-size:14px;color:#cfcfcf}
+label.full{grid-column:1/-1}
+input,select,textarea{font:16px "Inter Tight",sans-serif;background:#1a1a1a;color:#fff;border:1px solid #3a3a3a;border-radius:14px;padding:12px 14px;min-height:48px;width:100%}
+textarea{min-height:96px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:#fff;outline:none}
+form .btn{grid-column:1/-1;justify-self:start}
+.note{grid-column:1/-1;font-size:14px;color:#cfcfcf;min-height:1.4em}
+@media(max-width:820px){.ct{grid-template-columns:1fr}}
+@media(max-width:480px){form{grid-template-columns:1fr}}
+/* footer */
+footer{padding:56px 0 32px}
+.ft{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,1fr));gap:32px}
+.ft ul{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:15px}
+.ft ul a{text-decoration:none;color:var(--mut)}.ft ul a:hover{color:var(--ink)}
+.ft h4{margin:0 0 12px;font-size:15px}
+.legal{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid var(--line);margin-top:40px;padding-top:20px;font-size:13px;color:var(--mut)}
+@media(max-width:640px){.ft{grid-template-columns:1fr 1fr}.ft>div:first-child{grid-column:1/-1}}
+/* reveal */
+.rv{opacity:0;transform:translateY(28px);transition:opacity .8s,transform .8s cubic-bezier(.2,.8,.2,1)}
+.rv.in{opacity:1;transform:none}
+/* whatsapp */
+.wa-float{position:fixed;right:20px;bottom:calc(96px + env(safe-area-inset-bottom));z-index:60;width:58px;height:58px;border-radius:50%;background:#25d366;color:#fff;display:grid;place-items:center;box-shadow:0 10px 28px rgba(0,0,0,.25);transition:transform .2s}
+.wa-float:hover{transform:scale(1.07)}
+.wa-float svg,.btn .wa-ic{width:30px;height:30px}
+.btn .wa-ic{width:18px;height:18px}
+.ct-btns{display:flex;flex-wrap:wrap;gap:12px}
+@media(prefers-reduced-motion:reduce){.rv,.ticket.pre{opacity:1;transform:rotate(var(--r,0deg))}.marq div{animation:none}html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
-<div class="wrap" id="app"><div class="logo">Sazón<span>.</span></div><p class="sub">Cargando…</p></div>
-<div class="btns" id="nav" hidden><div><button class="b" id="bBack">Atrás</button><button class="b p" id="bNext">Siguiente</button></div></div>
 
-<script src="./vendor/supabase-js-2.119.2.min.js"></script>
-<script>window.SAZON_CONFIG={supabase:{url:"https://qetiugzeqyhicgwxxxvv.supabase.co",anonKey:"sb_publishable_4GWSQLtpamKi0rI_cELbJw_JS5B86Pc"},contact:{whatsapp:"+51952363643"}};</script>
+<nav id="nav"><div class="wrap">
+  <a class="logo" href="#top">Sazón.</a>
+  <ul>
+    <li><a href="#como">Cómo trabajamos</a></li>
+    <li><a href="#servicios">Servicios</a></li>
+    <li><a href="#ia">Sistema IA</a></li>
+    <li><a href="#clientes">Clientes</a></li>
+  </ul>
+  <a class="btn" href="#contacto">Contáctanos</a>
+</div></nav>
+
+<header id="top" class="wrap hero">
+  <div class="rv">
+    <span class="pill">Growth partner para restaurantes</span>
+    <h1>Tu delivery, al máximo <span style="white-space:nowrap">rendimiento<svg class="star" viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M30 4 L35 24 L56 20 L38 32 L50 52 L30 39 L12 54 L22 32 L4 22 L25 24 Z"/></svg></span></h1>
+    <p class="lead">Somos tu equipo especializado en hacer crecer tus ventas en Rappi, PedidosYa, Didi Food y más. No somos consultores: somos tu partner real de crecimiento.</p>
+    <div class="cta-row">
+      <a class="btn" href="#contacto">Agenda tu diagnóstico gratis <i>↗</i></a>
+      <span class="hand">sin costo · respuesta en 24h</span>
+    </div>
+  </div>
+  <div class="heroimg rv">
+    <img id="heroImg" src="fries.jpg" alt="Papas fritas sazonadas con salsa al centro">
+    <div class="badge b1"><b>+40%</b>ventas promedio</div>
+    <div class="badge b2">Más pedidos, mejor ticket</div>
+  </div>
+</header>
+
+<div class="marq" aria-label="Plataformas con las que trabajamos"><div>
+  <span>Rappi</span><span>PedidosYa</span><span>Didi Food</span><span>Uber Eats</span><span>iFood</span><span>Glovo</span>
+  <span>Rappi</span><span>PedidosYa</span><span>Didi Food</span><span>Uber Eats</span><span>iFood</span><span>Glovo</span>
+</div></div>
+
+<section class="wrap stats">
+  <div class="rv"><b>+40%</b><small>ventas promedio en 90 días</small></div>
+  <div class="rv"><b>16+</b><small>restaurantes activos</small></div>
+  <div class="rv"><b>Top 10%</b><small>en sus categorías</small></div>
+  <div class="rv"><b>24h</b><small>para responderte</small></div>
+</section>
+
+<!-- pinned scroll scene -->
+<section class="zoom" id="zoom" aria-label="Tú cocinas, nosotros hacemos que se venda">
+  <div class="stick">
+    <div class="intro" id="zIntro"><span class="pill">Nuestra receta</span><h2>Cada plato merece llegar a más mesas.</h2></div>
+    <div class="frame" id="zFrame">
+      <img id="zImg" src="fries.jpg" alt="">
+      <div class="shade" id="zShade"></div>
+    </div>
+    <span class="chip" style="left:8%;top:26%">Website profesional</span>
+    <span class="chip" style="right:7%;top:34%">Más pedidos cada semana</span>
+    <span class="chip" style="left:12%;bottom:22%">Mejor tiempo de respuesta</span>
+    <span class="chip" style="right:10%;bottom:16%">Clientes que vuelven</span>
+    <div class="copy" id="zCopy"><div><h2>Tú cocinas. Nosotros hacemos que se venda.</h2><span class="hand">— el equipo Sazón</span></div></div>
+  </div>
+</section>
+
+<section class="about band" id="nosotros">
+  <div class="wrap">
+    <div class="ab-top rv">
+      <div><span class="pill">Por qué Sazón</span><h2>Los ingredientes de nuestro éxito.</h2></div>
+      <p class="lead">No somos una agencia más. Somos expertos en el ecosistema de food apps, con relaciones directas con sus equipos comerciales.</p>
+    </div>
+    <div class="ab-grid">
+      <div class="big rv">
+        <svg class="waves" viewBox="0 0 400 300" fill="none" stroke="#fff" stroke-width="1">
+          <g id="wv"><path d="M0 150 C100 40 300 260 400 150"/></g>
+          <use href="#wv" transform="translate(0 12)"/><use href="#wv" transform="translate(0 24)"/><use href="#wv" transform="translate(0 36)"/><use href="#wv" transform="translate(0 48)"/><use href="#wv" transform="translate(0 60)"/><use href="#wv" transform="translate(0 72)"/><use href="#wv" transform="translate(0 84)"/><use href="#wv" transform="translate(0 -12)"/><use href="#wv" transform="translate(0 -24)"/><use href="#wv" transform="translate(0 -36)"/>
+        </svg>
+        <b>+40%</b><p>Incremento promedio en ventas en los primeros 90 días, basado en 16+ restaurantes activos.</p>
+      </div>
+      <div class="why rv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="M16 16l5 5"/></svg><h3>Expertise en foodtech</h3><p>Conocemos los algoritmos de cada plataforma y las palancas que mueven el volumen de pedidos.</p></div>
+      <div class="why rv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><h3>100% data-driven</h3><p>Cada decisión se basa en métricas. Solo acciones que generan ROI comprobable.</p></div>
+      <div class="why rv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 12l3 3 5-6"/><rect x="3" y="3" width="18" height="18" rx="5"/></svg><h3>Acceso directo a las apps</h3><p>Relaciones directas con Rappi, PedidosYa y Didi. Condiciones exclusivas para nuestros clientes.</p></div>
+      <div class="why rv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><h3>Transparencia total</h3><p>Reportes claros y acceso completo a tus datos. Sin letra chica ni sorpresas.</p></div>
+      <div class="quote rv"><q>Con Sazón pasamos de 80 a 340 pedidos diarios en solo tres meses. Su equipo conoce cada detalle de las plataformas y sabe exactamente qué palancas mover para crecer.</q><small><b style="color:var(--ink)">Mauricio Águila</b> · Fundador, Mr Smash</small></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="como">
+  <div class="wrap">
+    <div class="proc-head rv">
+      <div><span class="pill">Cómo trabajamos</span><h2>La receta del crecimiento en 4 pasos.</h2></div>
+      <p class="lead" style="align-self:end">Un proceso claro, medible y sin sorpresas. Del diagnóstico al resultado. <span class="hand" style="display:inline-block;transform:rotate(-4deg)">↘ así de simple</span></p>
+    </div>
+    <div class="rail" id="rail">
+      <svg class="path" preserveAspectRatio="none" viewBox="0 0 100 100" fill="none" stroke="#999" stroke-width=".25" stroke-dasharray="1 1.2"><path d="M60 8 C40 10 35 18 30 30 S 65 45 70 60 S 40 75 30 88" vector-effect="non-scaling-stroke" style="stroke-width:1.4"/></svg>
+      <article class="ticket pre" style="--r:5deg"><div class="in"><span class="n">01</span><small>Analizamos</small><h3>Diagnóstico profundo</h3><p>Auditamos tu operación en todas las plataformas. Detectamos qué frena tus ventas y dónde están las oportunidades sin explotar.</p></div></article>
+      <article class="ticket pre" style="--r:-6deg"><div class="in"><span class="n">02</span><small>Diseñamos</small><h3>Estrategia personalizada</h3><p>Un plan a medida: precios, menú digital, campañas y negociaciones. Cada acción respaldada en datos reales.</p></div></article>
+      <article class="ticket pre" style="--r:4deg"><div class="in"><span class="n">03</span><small>Ejecutamos</small><h3>Gestión integral</h3><p>Un Growth Manager dedicado opera tu presencia en los aplicativos. Tú cocinas, nosotros hacemos que se venda.</p></div></article>
+      <article class="ticket pre" style="--r:-5deg"><div class="in"><span class="n">04</span><small>Optimizamos</small><h3>Mejora continua</h3><p>Medimos ticket, conversión, recompra y visibilidad. Ajustamos en tiempo real para maximizar resultados cada semana.</p></div></article>
+      <p class="done hand rv">¡Listo para vender más!</p>
+    </div>
+  </div>
+</section>
+
+<section class="dark band" id="servicios">
+  <div class="wrap">
+    <div class="sv-head rv">
+      <div><span class="pill">Servicios</span><h2>Tres servicios para vender más.</h2></div>
+      <p class="lead">Tu website, tus campañas y tu menú digital trabajando juntos para traer más pedidos.</p>
+    </div>
+    <div class="sv" id="sv"></div>
+  </div>
+</section>
+
+<section class="band" id="ia">
+  <div class="wrap">
+    <div class="ia-head rv">
+      <div><span class="pill">Sistema operativo de delivery</span><h2>Automatización que trabaja las 24 horas.</h2></div>
+      <p class="lead">Cada servicio corre sobre un sistema que elimina el trabajo manual. Tú creces, nosotros escalamos sin agregar costo.</p>
+    </div>
+    <div class="ia" id="iaList"></div>
+  </div>
+</section>
+
+<section class="clients band" id="clientes">
+  <div class="wrap">
+    <div class="rv"><span class="pill">Clientes</span><h2>Restaurantes que ya le pusieron sazón a su delivery.</h2></div>
+    <div class="cl">
+      <div class="rv">Mr Smash<small>Smash burgers</small></div>
+      <div class="rv">D'Tinto y Bife<small>Carnes y vinos</small></div>
+      <div class="rv">Amaia Bakery<small>Panadería</small></div>
+      <div class="rv">Terminal Pesquero<small>Pescados y mariscos</small></div>
+      <div class="rv">Tokuyo<small>Cocina japonesa</small></div>
+      <div class="rv">La Dosis Dulce<small>Café y postres</small></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="contacto">
+  <div class="wrap">
+    <div class="ct rv">
+      <div>
+        <span class="pill">Contacto</span>
+        <h2>¿Listo para que tu delivery despegue?</h2>
+        <p class="lead">Cuéntanos sobre tu restaurante y nuestro equipo te contacta en menos de 24 horas para una sesión de diagnóstico gratuita.</p>
+        <div class="ct-btns">
+          <a class="btn inv" href="https://wa.me/51913813063?text=Hola%20Saz%C3%B3n%2C%20quiero%20mi%20diagn%C3%B3stico%20gratis" target="_blank" rel="noopener">WhatsApp <i><svg class="wa-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.2c0-.1-.2-.2-.5-.3z"/></svg></i></a>
+          <a class="btn inv" href="mailto:comercial@sazonpartner.com">Escríbenos <i>↗</i></a>
+        </div>
+        <span class="mail">comercial@sazonpartner.com · WhatsApp +51 913 813 063</span>
+      </div>
+      <form id="form" novalidate>
+        <label>Nombre<input id="f-nombre" required autocomplete="name"></label>
+        <label>Restaurante<input id="f-rest" required></label>
+        <label>Email<input id="f-email" type="email" required autocomplete="email"></label>
+        <label>WhatsApp<input id="f-wa" type="tel" autocomplete="tel"></label>
+        <label class="full">Plataformas activas
+          <select id="f-plat"><option>Solo Rappi</option><option>Rappi + PedidosYa</option><option>3 o más plataformas</option><option>Ninguna aún</option></select></label>
+        <label class="full">Cuéntanos sobre tu operación (opcional)<textarea id="f-msg"></textarea></label>
+        <button class="btn inv" type="submit">Contáctanos <i>→</i></button>
+        <p class="note" id="note" role="status"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="ft">
+      <div><a class="logo" href="#top">Sazón.</a><p class="lead" style="font-size:15px;margin-top:10px;max-width:34ch">Growth partner para restaurantes en Rappi, PedidosYa, Didi Food y más.</p></div>
+      <div><h4>Sitio</h4><ul><li><a href="#como">Cómo trabajamos</a></li><li><a href="#servicios">Servicios</a></li><li><a href="#ia">Sistema IA</a></li><li><a href="#clientes">Clientes</a></li></ul></div>
+      <div><h4>Contacto</h4><ul><li><a href="mailto:comercial@sazonpartner.com">comercial@sazonpartner.com</a></li><li><a href="https://wa.me/51913813063" target="_blank" rel="noopener">WhatsApp +51 913 813 063</a></li><li><a href="#">Privacidad</a></li><li><a href="#">Libro de reclamaciones</a></li></ul></div>
+    </div>
+    <div class="legal"><span>© 2026 Sazón Growth Partner. Todos los derechos reservados.</span><span>Hecho con sazón.</span></div>
+  </div>
+</footer>
+
+<a class="wa-float" href="https://wa.me/51913813063?text=Hola%20Saz%C3%B3n%2C%20quiero%20mi%20diagn%C3%B3stico%20gratis" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.2c0-.1-.2-.2-.5-.3z"/></svg></a>
+
 <script>
-(function(){
-'use strict';
-const CFG = window.SAZON_CONFIG;
-const sb = window.supabase.createClient(CFG.supabase.url, CFG.supabase.anonKey, { auth:{ persistSession:false, autoRefreshToken:false } });
-const TOKEN = new URLSearchParams(location.search).get('t') || '';
-const WA = (CFG.contact.whatsapp||'').replace(/\D/g,'');
-const DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
-const STEPS = ['Tu restaurante','Logo','Carta','Fotos','Locales y delivery','Revisar y enviar'];
-const $app = document.getElementById('app'), $nav = document.getElementById('nav');
-let S = { brand:'', data:{}, files:[] }, step = 0, saveTimer = null, saving = 0, uploading = 0, lastShown = {};
-
-const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const emptyLocal = () => ({ nombre:'', direccion:'', telefono:'', horarios: DAYS.map(d=>({d, abre:'', cierra:'', cerrado:false})) });
-function getp(o,p){ return p.split('.').reduce((a,k)=>a==null?a:a[k],o); }
-function setp(o,p,v){ const ks=p.split('.'); let a=o; for(let i=0;i<ks.length-1;i++){ const k=ks[i]; if(a[k]==null) a[k]=/^\d+$/.test(ks[i+1])?[]:{}; a=a[k]; } a[ks[ks.length-1]]=v; }
-
-function header(){
-  const pct = Math.round(step/(STEPS.length-1)*100);
-  return `<div class="logo">Sazón<span>.</span></div>
-  <div class="bar"><i style="width:${Math.max(pct,6)}%"></i></div>
-  <div class="steplbl"><span>Paso ${step+1} de ${STEPS.length} · ${STEPS[step]}</span><span class="saved" id="saveLbl"></span></div>`;
-}
-function setSaveLbl(t){ const e=document.getElementById('saveLbl'); if(e) e.textContent=t; }
-
-// ───────── guardado automático
-function scheduleSave(){
-  setSaveLbl('');
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(doSave, 700);
-}
-async function doSave(){
-  saving++;
-  try{
-    const { error } = await sb.rpc('onboarding_save', { p_token:TOKEN, p_data:S.data, p_files:S.files.map(({thumb,_t,...r})=>r) });
-    setSaveLbl(error ? 'No se pudo guardar. Revisa tu conexión.' : 'Guardado ✓');
-  }catch(e){ setSaveLbl('No se pudo guardar. Revisa tu conexión.'); }
-  saving--;
-}
-
-// ───────── validación (igual que en el servidor)
-function hasFile(k){ return S.files.some(f=>f.kind===k); }
-function problems(){
-  const d=S.data, out=[]; const add=(s,m)=>out.push({s,m});
-  if(!(getp(d,'restaurante.nombre')||'').trim()) add(0,'Nombre del restaurante');
-  if(!(getp(d,'contacto.nombre')||'').trim()) add(0,'Tu nombre');
-  if(!(getp(d,'contacto.whatsapp')||'').trim()) add(0,'Tu WhatsApp');
-  if(!hasFile('logo')) add(1,'Logo');
-  if(!hasFile('carta') && !(getp(d,'carta.link')||'').trim()) add(2,'Carta (sube un archivo o pega un link)');
-  if(!hasFile('plato')) add(3,'Al menos 1 foto de tus platos');
-  if(!hasFile('local')) add(3,'Al menos 1 foto de tu local');
-  const dl=d.delivery||{};
-  if(!dl.ninguno && !(dl.pedidosya||'').trim() && !(dl.rappi||'').trim() && !(dl.didi||'').trim()) add(4,'Links de delivery (o marca que no estás en apps)');
-  const locs=d.locales||[];
-  if(!locs.length) add(4,'Al menos 1 local');
-  locs.forEach((l,i)=>{
-    const n=locs.length>1?` del local ${i+1}`:'';
-    if(!(l.direccion||'').trim()) add(4,'Dirección'+n);
-    if(!(l.telefono||'').trim()) add(4,'Teléfono de atención al cliente'+n);
-    if(!(l.horarios||[]).some(h=>!h.cerrado&&h.abre&&h.cierra)) add(4,'Horarios'+n);
-  });
-  return out;
-}
-const problemsOf = s => problems().filter(p=>p.s===s);
-
-// ───────── componentes
-function inp(path,type,ph,extra){ const v=getp(S.data,path)||''; return `<input type="${type}" data-p="${path}" value="${esc(v)}" placeholder="${esc(ph||'')}" ${extra||''}>`; }
-function fileList(kind){
-  const fs=S.files.map((f,i)=>({f,i})).filter(x=>x.f.kind===kind);
-  return `<ul class="files" id="fl-${kind}">${fs.map(({f,i})=>`<li>${f.thumb?`<img src="${esc(f.thumb)}" alt="">`:'<span>📄</span>'}<span class="n">${esc(f.name)}</span><button type="button" data-rm="${i}" aria-label="Quitar">×</button></li>`).join('')}${(lastShown[kind]||0)>0?`<li class="up">Subiendo ${lastShown[kind]} archivo(s)…</li>`:''}</ul>`;
-}
-function uploader(kind,label,accept,multiple){
-  return `<label class="drop"><input type="file" data-up="${kind}" accept="${accept}" ${multiple?'multiple':''}>${label}</label>${fileList(kind)}`;
-}
-function refreshList(kind){ const e=document.getElementById('fl-'+kind); if(e) e.outerHTML=fileList(kind); }
-
-// ───────── pasos
-function viewStep(){
-  const e=(s)=>{ const p=showErr?problemsOf(s):[]; return p.length?`<div class="box-err">Falta:<ul>${p.map(x=>`<li>${esc(x.m)}</li>`).join('')}</ul></div>`:''; };
-  if(step===0) return `<h1>¡Hola! Armemos tu página</h1><p class="sub">Son 6 pasos cortos, de unos 10 minutos. Lo que escribas se guarda solo: puedes cerrar y volver con este mismo link.</p>
-    ${e(0)}<div class="card">
-    <label>Nombre del restaurante <span class="req">*</span></label>${inp('restaurante.nombre','text','Ej: Mr. Smash Burger','autocomplete="organization"')}
-    <label>Tu nombre <span class="req">*</span></label>${inp('contacto.nombre','text','Quién nos atiende','autocomplete="name"')}
-    <label>Tu WhatsApp <span class="req">*</span></label>${inp('contacto.whatsapp','tel','+51 999 999 999','autocomplete="tel"')}</div>`;
-  if(step===1) return `<h1>Tu logo</h1><p class="sub">Lo ideal es PNG sin fondo o SVG. Si solo tienes una foto o un PDF, también sirve.</p>${e(1)}
-    <div class="card">${uploader('logo','📎 Subir logo','image/*,.svg,.pdf',false)}<div class="hint">Un solo archivo. Si subes otro, reemplaza al anterior.</div></div>`;
-  if(step===2) return `<h1>Tu carta</h1><p class="sub">Sube tu carta como esté: Excel, PDF o una foto clara. Si ya la tienes en línea, pega el link.</p>${e(2)}
-    <div class="card">${uploader('carta','📎 Subir carta (PDF, Excel o fotos)','image/*,.pdf,.csv,.xls,.xlsx',true)}
-    <label>…o pega el link de tu carta <small>(Drive, Google Sheets, web)</small></label>${inp('carta.link','url','https://')}</div>`;
-  if(step===3) return `<h1>Fotos</h1><p class="sub">Desde tu celular está bien. Mejor con luz natural, sin filtros ni texto encima.</p>${e(3)}
-    <div class="card"><label>Tus platos <span class="req">*</span> <small>(sube 5 o más si puedes)</small></label>${uploader('plato','📷 Subir fotos de platos','image/*',true)}
-    <label style="margin-top:20px">Tu local <span class="req">*</span> <small>(fachada o interior)</small></label>${uploader('local','📷 Subir fotos del local','image/*',true)}</div>`;
-  if(step===4) return `<h1>Locales y delivery</h1><p class="sub">Dirección, horarios y teléfono de atención de cada local.</p>${e(4)}
-    <div class="card"><h2 style="margin-top:0">Tus apps de delivery <span class="req">*</span></h2>
-    <label>PedidosYa <small>(link de tu restaurante)</small></label>${inp('delivery.pedidosya','url','https://www.pedidosya.com.pe/...')}
-    <label>Rappi</label>${inp('delivery.rappi','url','https://www.rappi.com.pe/...')}
-    <label>DiDi Food</label>${inp('delivery.didi','url','https://...')}
-    <label class="chk"><input type="checkbox" data-c="delivery.ninguno" ${getp(S.data,'delivery.ninguno')?'checked':''}> Todavía no estoy en ninguna app</label></div>
-    <div id="locs">${(S.data.locales||[]).map(locCard).join('')}</div>
-    <button type="button" class="add" id="addLoc">+ Agregar otro local</button>`;
-  if(step===5){
-    const ps=problems();
-    const groups=[['Nombre y contacto',0],['Logo',1],['Carta',2],['Fotos',3],['Locales y delivery',4]];
-    return `<h1>Último paso</h1><p class="sub">Revisa que esté todo y envíalo.</p>
-    <div class="card"><ul class="rev" style="list-style:none;padding:0;margin:0">${groups.map(([n,s])=>{const p=problemsOf(s);return `<li class="${p.length?'no':'ok'}">${p.length?'✗':'✓'} <b>${n}</b>${p.length?`<div style="font-size:.85rem;margin-left:20px">${p.map(x=>esc(x.m)).join(' · ')} — <a href="#" data-go="${s}">completar</a></div>`:''}</li>`;}).join('')}</ul></div>
-    <div class="card"><label>¿Algo más que debamos saber? <small>(opcional)</small></label><textarea data-p="comentarios" placeholder="Platos estrella, promos, lo que quieras contarnos">${esc(S.data.comentarios||'')}</textarea></div>
-    <div id="subErr"></div>`;
-  }
-}
-function locCard(l,i){
-  const n=(S.data.locales||[]).length;
-  return `<div class="card"><h2 style="margin-top:0">Local ${i+1} ${n>1?`<button type="button" class="rm" data-rmloc="${i}">Quitar</button>`:''}</h2>
-  <label>Nombre del local <small>(ej. Miraflores)</small></label>${inp(`locales.${i}.nombre`,'text','')}
-  <label>Dirección <span class="req">*</span></label>${inp(`locales.${i}.direccion`,'text','Calle, número y distrito','autocomplete="street-address"')}
-  <label>Teléfono de atención al cliente <span class="req">*</span></label>${inp(`locales.${i}.telefono`,'tel','+51 ...')}
-  <label>Horarios de atención <span class="req">*</span></label>
-  <div class="row" style="align-items:center;margin-bottom:8px"><input type="time" id="qa${i}"><input type="time" id="qc${i}"><button type="button" class="b" style="flex:1.2;padding:9px;font-size:.8rem" data-all="${i}">Todos los días</button></div>
-  ${(l.horarios||[]).map((h,j)=>`<div class="hor"><span>${h.d}</span>
-    <input type="time" data-p="locales.${i}.horarios.${j}.abre" value="${esc(h.abre)}" ${h.cerrado?'disabled':''}>
-    <input type="time" data-p="locales.${i}.horarios.${j}.cierra" value="${esc(h.cierra)}" ${h.cerrado?'disabled':''}>
-    <label><input type="checkbox" data-c="locales.${i}.horarios.${j}.cerrado" data-rr="1" ${h.cerrado?'checked':''}> Cerrado</label></div>`).join('')}
-  </div>`;
-}
-
-let showErr=false;
-function render(){
-  if(step===4 && !(S.data.locales&&S.data.locales.length)) S.data.locales=[emptyLocal()];
-  $app.innerHTML = header()+viewStep();
-  $nav.hidden=false;
-  document.getElementById('bBack').style.visibility = step===0?'hidden':'visible';
-  const nx=document.getElementById('bNext');
-  nx.textContent = step===STEPS.length-1 ? 'Enviar a Sazón' : 'Siguiente';
-  window.scrollTo(0,0);
-}
-
-// ───────── eventos (delegación)
-$app.addEventListener('input',e=>{
-  const t=e.target; const p=t.dataset&&t.dataset.p;
-  if(p){ setp(S.data,p,t.value); scheduleSave(); }
-});
-$app.addEventListener('change',async e=>{
-  const t=e.target;
-  if(t.dataset.c){ setp(S.data,t.dataset.c,t.checked); scheduleSave(); if(t.dataset.rr) render(); return; }
-  if(t.dataset.up){ await handleUpload(t.dataset.up,[...t.files]); t.value=''; }
-});
-$app.addEventListener('click',e=>{
-  const t=e.target.closest('button,a'); if(!t) return;
-  if(t.dataset.rm!=null){ S.files.splice(+t.dataset.rm,1); refreshList(t.closest('ul').id.slice(3)); scheduleSave(); }
-  else if(t.id==='addLoc'){ S.data.locales.push(emptyLocal()); scheduleSave(); render(); }
-  else if(t.dataset.rmloc!=null){ S.data.locales.splice(+t.dataset.rmloc,1); scheduleSave(); render(); }
-  else if(t.dataset.all!=null){
-    const i=+t.dataset.all, a=document.getElementById('qa'+i).value, c=document.getElementById('qc'+i).value;
-    if(!a||!c) return;
-    S.data.locales[i].horarios.forEach(h=>{ if(!h.cerrado){ h.abre=a; h.cierra=c; } });
-    scheduleSave(); render();
-  }
-  else if(t.dataset.go!=null){ e.preventDefault(); step=+t.dataset.go; showErr=true; render(); }
-});
-
-// ───────── subida de archivos
-const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2,10));
-const safe = n => n.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(-80)||'archivo';
-async function shrink(file){
-  if(!/^image\/(jpeg|png|webp)$/.test(file.type)) return file;
-  try{
-    const bmp=await createImageBitmap(file); const M=2000, k=Math.min(1,M/Math.max(bmp.width,bmp.height));
-    if(k===1 && file.size<2.5e6){ bmp.close&&bmp.close(); return file; }
-    const c=document.createElement('canvas'); c.width=Math.round(bmp.width*k); c.height=Math.round(bmp.height*k);
-    c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
-    const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.86));
-    return blob? new File([blob], file.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'}) : file;
-  }catch(_){ return file; }
-}
-async function handleUpload(kind,list){
-  if(!list.length) return;
-  if(kind==='logo') S.files=S.files.filter(f=>f.kind!=='logo');
-  lastShown[kind]=(lastShown[kind]||0)+list.length; refreshList(kind);
-  const errs=[];
-  for(const raw of list){
-    try{
-      const f = (kind==='plato'||kind==='local') ? await shrink(raw) : raw;
-      if(f.size>25*1024*1024) throw new Error('pesa más de 25 MB');
-      const path=`${TOKEN}/${kind}/${uid()}-${safe(f.name)}`;
-      uploading++;
-      let error;
-      try{ ({ error } = await sb.storage.from('onboarding').upload(path,f,{ contentType:f.type||undefined, upsert:false })); }
-      catch(ex){ error=ex; }
-      finally{ uploading--; }
-      if(error) throw error;
-      const entry={ kind, path, name:raw.name, size:f.size };
-      if(/^image\/(jpeg|png|webp|svg\+xml)$/.test(f.type)) entry.thumb=URL.createObjectURL(f);
-      S.files.push(entry);
-    }catch(err){ errs.push(`${raw.name}: ${err.message||'no se pudo subir'}`); }
-    lastShown[kind]--; refreshList(kind);
-  }
-  scheduleSave();
-  if(errs.length) alert('Algunos archivos no se subieron:\n'+errs.join('\n'));
-}
-
-// ───────── navegación
-document.getElementById('bBack').onclick=()=>{ if(step>0){ step--; showErr=false; render(); } };
-document.getElementById('bNext').onclick=async()=>{
-  if(uploading>0){ alert('Espera a que terminen de subir los archivos.'); return; }
-  if(step<STEPS.length-1){
-    if(problemsOf(step).length){ showErr=true; render(); return; }
-    showErr=false; step++; render(); return;
-  }
-  const btn=document.getElementById('bNext'); btn.disabled=true; btn.textContent='Enviando…';
-  clearTimeout(saveTimer); await doSave();
-  const { data, error } = await sb.rpc('onboarding_submit',{ p_token:TOKEN });
-  btn.disabled=false; btn.textContent='Enviar a Sazón';
-  if(error){ document.getElementById('subErr').innerHTML='<div class="box-err">No pudimos enviar. Revisa tu conexión e inténtalo de nuevo.</div>'; return; }
-  if(!data.ok){ document.getElementById('subErr').innerHTML=`<div class="box-err">Falta:<ul>${data.missing.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>`; return; }
-  done();
+{
+const I={
+ grid:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
+ plug:'<path d="M12 3v6M8 9h8v3a4 4 0 0 1-8 0zM12 16v5"/>',
+ menu:'<path d="M5 3v18M5 9h4V3M15 3c-2 0-3 3-3 6s1 4 3 4v8"/>',
+ mega:'<path d="M3 10v4l11 5V5zM14 8a4 4 0 0 1 0 8M6 14l1 6h3"/>',
+ chart:'<path d="M3 20h18M6 16l4-5 3 3 5-7"/>',
+ cal:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+ web:'<rect x="2" y="4" width="20" height="16" rx="3"/><path d="M2 9h20M6 6.5h.01M9 6.5h.01M8 14l-2 2 2 2M16 14l2 2-2 2"/>'
 };
-function done(){
-  $nav.hidden=true;
-  const nombre=esc(getp(S.data,'restaurante.nombre')||S.brand);
-  $app.innerHTML=`<div class="logo">Sazón<span>.</span></div><div class="center"><div class="big">🎉</div><h1>¡Listo, ${nombre}!</h1>
-  <p class="sub">Recibimos todo. Te escribimos por WhatsApp en las próximas 48 horas hábiles con el avance de tu página.</p>
-  <a class="wa" href="https://wa.me/${WA}?text=${encodeURIComponent('Hola, soy de '+(getp(S.data,'restaurante.nombre')||S.brand)+'. Ya envié mi información.')}">Escribir a Sazón</a></div>`;
-}
-function fail(msg){
-  $nav.hidden=true;
-  $app.innerHTML=`<div class="logo">Sazón<span>.</span></div><div class="center"><h1>${esc(msg)}</h1><p class="sub">Escríbenos y te ayudamos.</p><a class="wa" href="https://wa.me/${WA}">Hablar con Sazón</a></div>`;
-}
+const sv=[
+ ['web','Websites','Diseño y desarrollo del website de tu restaurante: carta, ubicación, horarios, reservas y pedidos directos. Rápido, pensado para celular y optimizado para aparecer en Google.'],
+ ['mega','Ads','Campañas pagas en Meta, Google y las food apps para maximizar visibilidad, conversión y volumen de pedidos, medidas por su retorno real.'],
+ ['menu','Optimización de menú digital','Rediseñamos tu carta: fotografías, descripciones persuasivas y precios ancla que incrementan el ticket promedio.']
+];
+document.getElementById('sv').innerHTML=sv.map(([i,t,d])=>`<div class="card rv"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${I[i]}</svg></span><div><h3>${t}</h3><p style="margin-top:8px">${d}</p></div></div>`).join('');
 
-// ───────── arranque
-(async function init(){
-  if(!/^[a-f0-9]{32}$/.test(TOKEN)) return fail('Este link no es válido');
-  const { data, error } = await sb.rpc('onboarding_get',{ p_token:TOKEN });
-  if(error) return fail('No pudimos cargar tu formulario');
-  if(!data) return fail('Este link no es válido');
-  S.brand=data.brand_name; S.data=data.data||{}; S.files=data.files||[];
-  if(!getp(S.data,'restaurante.nombre')) setp(S.data,'restaurante.nombre',data.brand_name);
-  if(data.status==='completo') return done();
-  render();
-})();
-})();
+const ia=[
+ ['Carlos, agente de ventas IA',100,'Responde consultas 24/7, calcula un ROI estimado para tu restaurante y agenda tu diagnóstico con el equipo.',['Chat en web','ROI automático','Agenda directa']],
+ ['Motor de campañas automático',80,'Lanza, pausa y optimiza campañas según el ROAS en tiempo real. Si una campaña baja del umbral, se ajusta sola.',['Auto-optimización','ROAS en vivo','Alertas']],
+ ['Optimizador de menú digital',75,'Analiza qué platos generan más clics y conversión, y sugiere ajustes de precio, descripción y orden de aparición.',['A/B de precios','Score de foto','Copy IA']],
+ ['Gestión automática de reseñas',85,'Detecta reseñas negativas y prepara respuestas personalizadas para revisión. Las positivas se responden solas.',['Detección auto','Respuesta IA','Alertas críticas']]
+];
+document.getElementById('iaList').innerHTML=ia.map(([t,p,d,tags])=>`<article class="auto rv"><header><h3>${t}</h3><b>${p}% auto</b></header><div class="meter"><i data-w="${p}"></i></div><p>${d}</p><ul>${tags.map(x=>`<li>${x}</li>`).join('')}</ul></article>`).join('');
+
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* reveal on scroll */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const el=e.target;
+  if(el.classList.contains('ticket')){el.classList.add('go');el.classList.remove('pre')}else el.classList.add('in');
+  el.querySelectorAll('.meter i').forEach(m=>m.style.width=m.dataset.w+'%');io.unobserve(el)}),{threshold:.18});
+document.querySelectorAll('.rv,.ticket').forEach((el,i)=>{el.style.transitionDelay=(i%4)*70+'ms';io.observe(el)});
+if(reduce)document.querySelectorAll('.meter i').forEach(m=>m.style.width=m.dataset.w+'%');
+
+/* scroll-driven motion */
+const nav=document.getElementById('nav'),hero=document.getElementById('heroImg'),
+ zoom=document.getElementById('zoom'),frame=document.getElementById('zFrame'),zImg=document.getElementById('zImg'),
+ shade=document.getElementById('zShade'),copy=document.getElementById('zCopy'),intro=document.getElementById('zIntro'),
+ chips=[...zoom.querySelectorAll('.chip')];
+const cl=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),seg=(p,a,b)=>cl((p-a)/(b-a)),ease=t=>1-(1-t)**3;
+let ticking=false;
+const frameFn=()=>{
+  ticking=false;const y=scrollY,vh=innerHeight;
+  nav.classList.toggle('on',y>10);
+  if(reduce){frame.style.clipPath='none';zImg.style.filter='none';shade.style.opacity=.75;copy.style.opacity=1;intro.style.opacity=0;chips.forEach(c=>c.style.opacity=0);return}
+  hero.style.transform=`translateY(${cl(y*0.12,0,120)}px) scale(${1+cl(y/2500,0,.12)})`;
+  const r=zoom.getBoundingClientRect(),p=cl(-r.top/(r.height-vh));
+  const g=ease(seg(p,.05,.6)),narrow=innerWidth<700;
+  const iy=(1-g)*(narrow?30:28),ix=(1-g)*(narrow?10:34),rad=(1-g)*28;
+  frame.style.clipPath=`inset(${iy+ (1-g)*6}% ${ix}% ${iy-(1-g)*6}% ${ix}% round ${rad}px)`;
+  zImg.style.transform=`scale(${1.35-g*.35}) rotate(${(1-g)*-6}deg)`;
+  zImg.style.filter=`grayscale(${1-ease(seg(p,.1,.5))})`;
+  intro.style.opacity=1-seg(p,.02,.12);intro.style.transform=`translateY(${-seg(p,.02,.12)*40}px)`;
+  shade.style.opacity=seg(p,.55,.75);
+  copy.style.opacity=seg(p,.62,.8);copy.style.transform=`translateY(${(1-seg(p,.62,.8))*40}px)`;
+  chips.forEach((c,i)=>{const s=seg(p,.28+i*.05,.4+i*.05),o=s*(1-seg(p,.58,.66));
+    c.style.opacity=o;c.style.transform=`translateY(${(1-s)*30}px) rotate(${(i%2?4:-4)*(1-s)}deg)`});
+};
+const onScroll=()=>{if(!ticking){ticking=true;requestAnimationFrame(frameFn)}};
+addEventListener('scroll',onScroll,{passive:true});addEventListener('resize',onScroll);frameFn();
+
+/* contact form: opens an email draft to the team */
+const form=document.getElementById('form'),note=document.getElementById('note');
+form.addEventListener('submit',e=>{e.preventDefault();
+  const v=id=>document.getElementById(id).value.trim();
+  if(!v('f-nombre')||!v('f-rest')||!/^\S+@\S+\.\S+$/.test(v('f-email'))){note.textContent='Completa tu nombre, restaurante y un email válido.';return}
+  const body=`Nombre: ${v('f-nombre')}\nRestaurante: ${v('f-rest')}\nEmail: ${v('f-email')}\nWhatsApp: ${v('f-wa')}\nPlataformas: ${v('f-plat')}\n\n${v('f-msg')}`;
+  location.href=`mailto:comercial@sazonpartner.com?subject=${encodeURIComponent('Diagnóstico gratuito – '+v('f-rest'))}&body=${encodeURIComponent(body)}`;
+  note.textContent='Abrimos tu correo con el mensaje listo. Si no se abre, escríbenos a comercial@sazonpartner.com.';
+});
+}
 </script>
 </body>
 </html>
