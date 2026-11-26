@@ -46,6 +46,7 @@ async function init(){
   let session=null;
   try{ ({data:{session}}=await sb.auth.getSession()); }catch(e){}
   if(!session) return loginView();
+  try{ await sb.rpc('claim_admin'); }catch(e){}
   const {data:u}=await sb.from('users').select('role').eq('id',session.user.id).maybeSingle();
   if(!u||u.role!=='sazon_admin') return root.innerHTML='<div class="card">Esta página es solo para el equipo de Sazón.</div>';
   await load();
@@ -54,10 +55,10 @@ function loginView(msg){
   root.innerHTML=`<div class="card"><h1>Entrar</h1><div class="row"><input type="email" id="em" placeholder="tu correo" autocomplete="email"><button class="p" id="go">Enviar código</button></div><div class="msg" id="lm">${esc(msg||'')}</div></div>`;
   document.getElementById('go').onclick=async()=>{
     const email=document.getElementById('em').value.trim(); if(!email) return;
-    const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true}});
+    const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true,emailRedirectTo:location.origin+location.pathname}});
     if(error) return document.getElementById('lm').textContent=error.message;
     pendingEmail=email;
-    root.innerHTML=`<div class="card"><h1>Código</h1><p class="m">Te enviamos un código de 6 dígitos a ${esc(email)}.</p><div class="row"><input type="text" id="cd" inputmode="numeric" maxlength="6" placeholder="123456"><button class="p" id="vf">Entrar</button></div><div class="msg" id="lm"></div></div>`;
+    root.innerHTML=`<div class="card"><h1>Código</h1><p class="m">Te enviamos un correo a ${esc(email)}. Si trae un <b>código</b>, escríbelo abajo. Si trae un <b>link</b>, ábrelo en este mismo navegador y entrarás directo.</p><div class="row"><input type="text" id="cd" inputmode="numeric" maxlength="6" placeholder="123456"><button class="p" id="vf">Entrar</button></div><div class="msg" id="lm"></div></div>`;
     document.getElementById('vf').onclick=async()=>{
       const {error}=await sb.auth.verifyOtp({email:pendingEmail,token:document.getElementById('cd').value.trim(),type:'email'});
       if(error) return document.getElementById('lm').textContent='Código incorrecto o vencido.';
