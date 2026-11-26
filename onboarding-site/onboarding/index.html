@@ -74,7 +74,9 @@ a.wa{display:inline-block;margin-top:16px;padding:14px 22px;border-radius:10px;b
 'use strict';
 const CFG = window.SAZON_CONFIG;
 const sb = window.supabase.createClient(CFG.supabase.url, CFG.supabase.anonKey, { auth:{ persistSession:false, autoRefreshToken:false } });
-const TOKEN = new URLSearchParams(location.search).get('t') || '';
+const LSK='sazon_onb_token', LSF='sazon_onb_fp';
+const ls = { get:k=>{try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}, del:k=>{try{localStorage.removeItem(k)}catch(e){}} };
+let TOKEN = new URLSearchParams(location.search).get('t') || ls.get(LSK) || '';
 const WA = (CFG.contact.whatsapp||'').replace(/\D/g,'');
 const DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
 const STEPS = ['Tu restaurante','Logo','Carta','Fotos','Locales y delivery','Revisar y enviar'];
@@ -289,7 +291,9 @@ function done(){
   const nombre=esc(getp(S.data,'restaurante.nombre')||S.brand);
   $app.innerHTML=`<div class="logo">Sazón<span>.</span></div><div class="center"><div class="big">🎉</div><h1>¡Listo, ${nombre}!</h1>
   <p class="sub">Recibimos todo. Te escribimos por WhatsApp en las próximas 48 horas hábiles con el avance de tu página.</p>
-  <a class="wa" href="https://wa.me/${WA}?text=${encodeURIComponent('Hola, soy de '+(getp(S.data,'restaurante.nombre')||S.brand)+'. Ya envié mi información.')}">Escribir a Sazón</a></div>`;
+  <a class="wa" href="https://wa.me/${WA}?text=${encodeURIComponent('Hola, soy de '+(getp(S.data,'restaurante.nombre')||S.brand)+'. Ya envié mi información.')}">Escribir a Sazón</a>
+  <p class="hint" style="margin-top:22px"><a href="#" id="another" style="color:var(--m)">¿Tienes otra marca? Empezar otra</a></p></div>`;
+  document.getElementById('another').onclick=e=>{ e.preventDefault(); ls.del(LSK); location.href=location.pathname; };
 }
 function fail(msg){
   $nav.hidden=true;
@@ -297,15 +301,45 @@ function fail(msg){
 }
 
 // ───────── arranque
-(async function init(){
-  if(!/^[a-f0-9]{32}$/.test(TOKEN)) return fail('Este link no es válido');
+function startView(msg){
+  $nav.hidden=true;
+  $app.innerHTML=`<div class="logo">Sazón<span>.</span></div>
+  <h1>¡Bienvenido! Armemos tu página</h1>
+  <p class="sub">Son 6 pasos cortos, de unos 10 minutos. Tu avance se guarda solo: si cierras, vuelves a este mismo link y sigues donde ibas.</p>
+  <div class="card"><label>¿Cómo se llama tu restaurante? <span class="req">*</span></label>
+  <input type="text" id="stName" placeholder="Ej: Mr. Smash Burger" autocomplete="organization">
+  <div class="err" id="stErr">${esc(msg||'')}</div></div>
+  <button class="b p" id="stGo" style="width:100%">Empezar</button>`;
+  const go=async()=>{
+    const name=document.getElementById('stName').value.trim();
+    const er=document.getElementById('stErr'), btn=document.getElementById('stGo');
+    if(name.length<2){ er.textContent='Escribe el nombre de tu restaurante.'; return; }
+    btn.disabled=true; btn.textContent='Un momento…';
+    let fp=ls.get(LSF); if(!fp){ fp=uid(); ls.set(LSF,fp); }
+    const { data, error } = await sb.rpc('onboarding_start',{ p_name:name, p_fp:fp });
+    if(error){ btn.disabled=false; btn.textContent='Empezar';
+      er.textContent=/demasiados/.test(error.message)?'Hiciste varios intentos seguidos. Inténtalo en una hora o escríbenos por WhatsApp.':'No pudimos empezar. Revisa tu conexión e inténtalo de nuevo.'; return; }
+    TOKEN=data; ls.set(LSK,TOKEN);
+    try{ history.replaceState(null,'','?t='+TOKEN); }catch(e){}
+    loadState();
+  };
+  document.getElementById('stGo').onclick=go;
+  document.getElementById('stName').addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
+}
+async function loadState(){
   const { data, error } = await sb.rpc('onboarding_get',{ p_token:TOKEN });
   if(error) return fail('No pudimos cargar tu formulario');
-  if(!data) return fail('Este link no es válido');
+  if(!data){ ls.del(LSK); return startView(); }
+  ls.set(LSK,TOKEN);
+  try{ if(!new URLSearchParams(location.search).get('t')) history.replaceState(null,'','?t='+TOKEN); }catch(e){}
   S.brand=data.brand_name; S.data=data.data||{}; S.files=data.files||[];
   if(!getp(S.data,'restaurante.nombre')) setp(S.data,'restaurante.nombre',data.brand_name);
   if(data.status==='completo') return done();
   render();
+}
+(function init(){
+  if(!/^[a-f0-9]{32}$/.test(TOKEN)){ ls.del(LSK); return startView(); }
+  loadState();
 })();
 })();
 </script>
